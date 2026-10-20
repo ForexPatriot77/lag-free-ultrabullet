@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#262421">
+  <meta name="description" content="A tiny, offline-first speed chess playground.">
+  <title>Speedchess — fast chess, no clutter</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Speedchess home"><span class="brand-mark">♞</span><span>speedchess</span></a>
+    <div class="top-actions">
+      <span id="connectionBadge" class="connection offline"><span class="dot"></span><span id="connectionText">Offline-ready</span></span>
+      <button id="soundToggle" class="icon-button" title="Toggle sound" aria-label="Toggle sound">♫</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="board-column">
+      <div class="player-strip opponent-strip">
+        <div class="avatar" id="opponentAvatar">♟</div>
+        <div class="player-info"><strong id="opponentName">Opponent</strong><span id="opponentSub">Local practice</span></div>
+        <div class="clock" id="blackClock">00:30.0</div>
+      </div>
+      <div class="board-frame">
+        <div class="rank-labels" aria-hidden="true"><span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span></div>
+        <div id="board" class="board" role="grid" aria-label="Chess board"></div>
+        <div class="file-labels" aria-hidden="true"><span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span></div>
+      </div>
+      <div class="player-strip you-strip">
+        <div class="avatar you-avatar" id="youAvatar">♙</div>
+        <div class="player-info"><strong id="youName">You</strong><span id="youSub">White</span></div>
+        <div class="clock active" id="whiteClock">00:30.0</div>
+      </div>
+      <div class="board-actions">
+        <button id="flipBtn" class="secondary-button">⇅ Flip board</button>
+        <button id="newGameBtn" class="secondary-button">↻ New game</button>
+        <button id="resignBtn" class="secondary-button danger-button">Resign</button>
+      </div>
+    </section>
+
+    <aside class="side-panel">
+      <section class="panel-heading">
+        <p class="eyebrow">QUICK PLAY</p>
+        <h1>Just chess.<br><em>Really fast.</em></h1>
+        <p class="muted">No clutter. No accounts. Just the board and the clock.</p>
+      </section>
+
+      <section class="mode-card">
+        <label for="modeSelect">Time control</label>
+        <select id="modeSelect">
+          <option value="30">Hyperbullet · 30 seconds</option>
+          <option value="15">Ultrabullet · 15 seconds</option>
+          <option value="7.5">Nanobullet · 7.5 seconds</option>
+          <option value="3">Picobullet · 3 seconds</option>
+          <option value="1">Femtobullet · 1 second</option>
+        </select>
+        <div class="mode-pills">
+          <button data-mode="30" class="mode-pill selected">30s</button>
+          <button data-mode="15" class="mode-pill">15s</button>
+          <button data-mode="7.5" class="mode-pill">7.5s</button>
+          <button data-mode="3" class="mode-pill">3s</button>
+          <button data-mode="1" class="mode-pill">1s</button>
+        </div>
+        <button id="localBtn" class="primary-button">Play local practice</button>
+        <button id="onlineBtn" class="online-button">Find online opponent <span>↗</span></button>
+        <p id="onlineHint" class="tiny-note">Online matchmaking needs your Cloudflare Worker URL in <code>config.js</code>.</p>
+      </section>
+
+      <section class="status-card">
+        <div class="status-title"><span class="live-indicator"></span><strong id="gameStatus">Ready when you are</strong></div>
+        <p id="statusDetail" class="muted">Choose a time control and start a game.</p>
+        <div class="move-head"><span>MOVE LIST</span><span id="moveCount">0 moves</span></div>
+        <ol id="moveList" class="move-list"><li class="empty-moves">Moves will appear here.</li></ol>
+      </section>
+
+      <footer class="sidebar-footer">
+        <span>♞ A tiny community chess experiment</span>
+        <span>Offline board · PvP prototype</span>
+      </footer>
+    </aside>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./config.js"></script>
+  <script src="./chess.js"></script>
+  <script src="./app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    }
+  </script>
+</body>
+</html>

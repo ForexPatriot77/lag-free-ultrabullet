@@ -1,0 +1,10 @@
+{
+  "name": "Speedchess",
+  "short_name": "Speedchess",
+  "description": "An offline-first, no-clutter speed chess playground.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#171615",
+  "theme_color": "#262421"
+}
