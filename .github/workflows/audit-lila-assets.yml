@@ -1,0 +1,75 @@
+name: Audit and restore permitted Lila assets
+
+on:
+  push:
+    branches: [lila-import]
+    paths:
+      - .github/workflows/audit-lila-assets.yml
+
+permissions:
+  contents: write
+
+jobs:
+  assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Lila staging branch
+        uses: actions/checkout@v4
+        with:
+          ref: lila-import
+          fetch-depth: 1
+
+      - name: Fetch the exact imported upstream revision
+        run: |
+          git clone --no-checkout https://github.com/lichess-org/lila.git /tmp/lila
+          git -C /tmp/lila fetch --depth=1 origin eb880c521ccbf5b7dc573f9f84ff061ba1724ccd
+          git -C /tmp/lila checkout --detach FETCH_HEAD
+
+      - name: Restore only assets with identified redistribution terms
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p public/images public/sound
+
+          # COPYING.md identifies these image collections as AGPL, MIT, or GPL.
+          rsync -a /tmp/lila/public/images/board/ public/images/board/
+          rsync -a /tmp/lila/public/images/staunton/ public/images/staunton/
+          rsync -a /tmp/lila/public/images/trophy/ public/images/trophy/
+          # This specific Staunton set is separately identified as non-free.
+          rm -rf public/images/staunton/piece/Staunton
+          # This emoji is CC BY-NC-SA and is intentionally not redistributed.
+          rm -f public/images/emoji/horsey.webp
+
+          # COPYING.md identifies these sound collections as AGPL-3.0-or-later.
+          for soundset in futuristic nes piano sfx; do
+            rsync -a "/tmp/lila/public/sound/${soundset}/" "public/sound/${soundset}/"
+          done
+
+          # Keep only piece sets whose licenses are expressly identified in COPYING.md.
+          # Unknown, non-free, and CC BY-NC-SA sets are excluded.
+          allowed=' cburnett celtic chessnut fantasy firi kiwen-suwi letter merida mono mpchess papercut pirouetti pixel rhosgfx shapes spatial totoy '
+          for path in public/piece/*; do
+            [ -d "$path" ] || continue
+            name=$(basename "$path")
+            case "$allowed" in
+              *" $name "*) ;;
+              *) rm -rf "$path" ;;
+            esac
+          done
+
+          cat >> README.md <<'EOF'
+
+          ## AI assistance disclosure
+
+          The initial source import and migration scaffolding were prepared with assistance from
+          ChatGPT (GPT-6). This is an independent derivative project, not a contribution or pull
+          request to the upstream Lichess project. Human review, configuration, and testing are
+          still required before deployment.
+          EOF
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Restore audited Lila assets and document AI assistance [skip ci]"
+          git push origin HEAD:lila-import
