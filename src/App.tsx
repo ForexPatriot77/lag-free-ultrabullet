@@ -3,6 +3,7 @@ import type { User } from "@supabase/supabase-js";
 import { AuthDialog } from "./components/AuthDialog";
 import { OnlinePlay } from "./components/OnlinePlay";
 import { ProfileDialog } from "./components/ProfileDialog";
+import { ProfilePage } from "./components/ProfilePage";
 import { Chess } from "chess.js";
 import { Chessground } from "@lichess-org/chessground";
 import type { Api } from "@lichess-org/chessground/api";
@@ -12,7 +13,7 @@ import "@lichess-org/chessground/assets/chessground.brown.css";
 import "@lichess-org/chessground/assets/chessground.cburnett.css";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 
-type Page = "home" | "play" | "analysis" | "watch" | "players" | "puzzles" | "learn";
+type Page = "home" | "play" | "analysis" | "watch" | "players" | "puzzles" | "learn" | "profile";
 type Snapshot = {
   fen: string;
   turn: Color;
@@ -68,6 +69,7 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<{ username: string; display_name: string | null; bio?: string | null } | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [profileUsername, setProfileUsername] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<"signin" | "signup" | null>(null);
 
   useEffect(() => {
@@ -218,7 +220,7 @@ function App() {
           <span className="connection"><i /> {isSupabaseConfigured ? "Services online" : "Local mode"}</span>
           {user ? (
             <>
-              <button className="account-name" type="button" onClick={() => setProfileOpen(true)}>{displayName}</button>
+              <button className="account-name" type="button" onClick={() => { setProfileUsername(profile?.username ?? null); setPage("profile"); }}>{displayName}</button>
               <button className="login-button" type="button" onClick={signOut}>Log out</button>
             </>
           ) : (
@@ -299,6 +301,16 @@ function App() {
               <div className="content-page-heading"><div><span className="page-kicker">FIND A GAME</span><h1>Play online</h1><p>Challenge someone, join an open game, or review a recent match.</p></div><span className="time-control-label">⚡ 15 + 0 · Ultrabullet</span></div>
               {user ? <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} /> : (
                 <div className="signin-gate"><div className="gate-icon">♟</div><h2>Sign in to play online</h2><p>Your games, rating, and challenges are connected to your player account.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="gate-secondary" onClick={() => setAuthMode("signup")}>Create an account</button></div>
+              )}
+            </section>
+          )}
+
+          {page === "profile" && (
+            <section className="content-page profile-content-page">
+              {profileUsername ? (
+                <ProfilePage username={profileUsername} ownProfile={Boolean(user && profile?.username === profileUsername)} onEdit={() => setProfileOpen(true)} />
+              ) : (
+                <div className="signin-gate"><div className="gate-icon">♟</div><h2>Your player profile</h2><p>Sign in to open your profile and view your ultrabullet rating.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>
               )}
             </section>
           )}
