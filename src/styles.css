@@ -322,3 +322,16 @@ a { color: inherit; text-decoration: none; }
   box-shadow:0 0 0 2px #81b64c22;
 }
 .profile-dialog .auth-field textarea::placeholder { color:#77736c; }
+
+
+.history-head {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 18px 8px;
+  margin-top:4px;
+  border-top:1px solid #403d37;
+}
+.history-head strong { color:#e9e6df; font-size:13px; }
+.history-head button { color:#aaa69f; border:0; background:transparent; font-size:10px; }
+.history-empty { padding-top:12px; padding-bottom:17px; }
