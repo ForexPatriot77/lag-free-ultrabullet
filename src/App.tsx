@@ -147,7 +147,7 @@ function App() {
       },
       draggable: { showGhost: true },
       premovable: { enabled: false },
-      drawable: { enabled: true, visible: true, eraseOnClick: true }
+      drawable: { enabled: true, visible: true }
     });
     return () => {
       ground.current?.destroy();
