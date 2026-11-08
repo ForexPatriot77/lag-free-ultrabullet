@@ -14,6 +14,8 @@ type GameRow = {
   white_player: string;
   black_player: string | null;
   status: "waiting" | "active" | "finished";
+  initial_time_ms: number;
+  increment_ms: number;
   white_time_ms: number;
   black_time_ms: number;
   turn_color: "white" | "black";
@@ -38,6 +40,8 @@ type LobbyGame = {
   id: string;
   white_player: string;
   created_at: string;
+  initial_time_ms: number;
+  increment_ms: number;
   opponent: { username: string; display_name: string | null } | null;
 };
 
@@ -73,6 +77,26 @@ type LeaderboardPlayer = {
   losses: number;
   profile: { username: string; display_name: string | null } | null;
 };
+
+type TimeControl = { label: string; initialTimeMs: number; incrementMs: number; category: string };
+const TIME_CONTROLS: TimeControl[] = [
+  { label: "15 seconds", initialTimeMs: 15000, incrementMs: 0, category: "Ultrabullet" },
+  { label: "30 seconds", initialTimeMs: 30000, incrementMs: 0, category: "Bullet" },
+  { label: "1 + 0", initialTimeMs: 60000, incrementMs: 0, category: "Bullet" },
+  { label: "2 + 1", initialTimeMs: 120000, incrementMs: 1000, category: "Bullet" },
+  { label: "3 + 0", initialTimeMs: 180000, incrementMs: 0, category: "Blitz" },
+  { label: "3 + 2", initialTimeMs: 180000, incrementMs: 2000, category: "Blitz" },
+  { label: "5 + 0", initialTimeMs: 300000, incrementMs: 0, category: "Blitz" },
+  { label: "5 + 3", initialTimeMs: 300000, incrementMs: 3000, category: "Blitz" },
+  { label: "10 + 0", initialTimeMs: 600000, incrementMs: 0, category: "Rapid" },
+  { label: "10 + 5", initialTimeMs: 600000, incrementMs: 5000, category: "Rapid" },
+  { label: "15 + 10", initialTimeMs: 900000, incrementMs: 10000, category: "Rapid" },
+  { label: "30 + 0", initialTimeMs: 1800000, incrementMs: 0, category: "Classical" },
+  { label: "30 + 20", initialTimeMs: 1800000, incrementMs: 20000, category: "Classical" },
+];
+function controlLabel(initial: number, increment: number): string {
+  return TIME_CONTROLS.find((item) => item.initialTimeMs === initial && item.incrementMs === increment)?.label ?? "Custom";
+}
 
 function destinations(chess: Chess): Map<Key, Key[]> {
   const result = new Map<Key, Key[]>();
@@ -264,7 +288,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
       } },
       draggable: { showGhost: true },
       premovable: { enabled: false },
-      drawable: { enabled: true, visible: true, eraseOnClick: true },
+      drawable: { enabled: true, visible: true },
     });
     return () => {
       ground.current?.destroy();
