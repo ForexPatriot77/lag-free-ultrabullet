@@ -13,7 +13,7 @@ import "@lichess-org/chessground/assets/chessground.brown.css";
 import "@lichess-org/chessground/assets/chessground.cburnett.css";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 
-type Page = "home" | "play" | "analysis" | "watch" | "players" | "puzzles" | "learn" | "profile";
+type Page = "home" | "play" | "analysis" | "watch" | "players" | "profile";
 type Snapshot = {
   fen: string;
   turn: Color;
@@ -54,8 +54,6 @@ const navItems: { id: Page; label: string; icon: string; group: string }[] = [
   { id: "analysis", label: "Analysis board", icon: "⌗", group: "TOOLS" },
   { id: "watch", label: "Watch", icon: "◉", group: "COMMUNITY" },
   { id: "players", label: "Players", icon: "♙", group: "COMMUNITY" },
-  { id: "puzzles", label: "Puzzles", icon: "◇", group: "TRAINING" },
-  { id: "learn", label: "Learn", icon: "▤", group: "TRAINING" }
 ];
 
 function App() {
@@ -149,7 +147,7 @@ function App() {
       },
       draggable: { showGhost: true },
       premovable: { enabled: false },
-      drawable: { enabled: false }
+      drawable: { enabled: true, visible: true, eraseOnClick: true }
     });
     return () => {
       ground.current?.destroy();
@@ -212,9 +210,9 @@ function App() {
         </button>
         <nav className="top-links" aria-label="Main navigation">
           <button className={page === "play" ? "active" : ""} onClick={openPlay}>Play</button>
-          <button className={page === "puzzles" ? "active" : ""} onClick={() => go("puzzles")}>Puzzles</button>
-          <button className={page === "learn" ? "active" : ""} onClick={() => go("learn")}>Learn</button>
           <button className={page === "watch" ? "active" : ""} onClick={() => go("watch")}>Watch</button>
+          <button className={page === "players" ? "active" : ""} onClick={() => go("players")}>Players</button>
+          <button className={page === "analysis" ? "active" : ""} onClick={() => go("analysis")}>Analysis</button>
         </nav>
         <div className="top-actions">
           <span className="connection"><i /> {isSupabaseConfigured ? "Services online" : "Local mode"}</span>
@@ -234,7 +232,7 @@ function App() {
 
       <div className="app-body">
         <aside className="left-rail">
-          {["MAIN", "TOOLS", "COMMUNITY", "TRAINING"].map((group) => (
+          {["MAIN", "TOOLS", "COMMUNITY"].map((group) => (
             <div className="rail-group" key={group}>
               <div className="rail-heading">{group}</div>
               {navItems.filter((item) => item.group === group).map((item) => (
@@ -324,12 +322,7 @@ function App() {
             </section>
           )}
 
-          {(page === "puzzles" || page === "learn") && (
-            <section className="content-page">
-              <div className="content-page-heading"><div><span className="page-kicker">TRAINING</span><h1>{page === "puzzles" ? "Puzzles" : "Learn chess"}</h1><p>{page === "puzzles" ? "Tactical training is on the roadmap." : "Guides and lessons are on the roadmap."}</p></div></div>
-              <div className="roadmap-card"><div className="roadmap-icon">{page === "puzzles" ? "◇" : "▤"}</div><h2>{page === "puzzles" ? "Puzzle training is coming." : "A learning library is coming."}</h2><p>We're building the core playing experience first. These sections will become part of the same account and rating system as the rest of the site.</p><button className="text-link" onClick={openPlay}>Back to playing <span>→</span></button></div>
-            </section>
-          )}
+
         </main>
       </div>
 
