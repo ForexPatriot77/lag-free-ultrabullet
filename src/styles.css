@@ -497,3 +497,81 @@ body { background: var(--page); }
   .signin-gate, .roadmap-card { margin: 28px auto; padding: 27px 18px; }
   .time-control-label { white-space: normal; }
 }
+
+
+/* Player profile: compact Lichess-inspired layout */
+.profile-content-page { width: min(1180px, 100%); padding: 0; }
+.lichess-profile-page {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+  width: 100%;
+  color: #c8c5be;
+}
+.profile-ratings-rail { padding: 12px 8px 18px 2px; }
+.profile-variant-title { display:flex; align-items:center; gap:10px; margin: 8px 0 3px; color:#9c9a93; font-size:23px; }
+.profile-variant-title span { color:#bcb9b1; font-size:12px; letter-spacing:.7px; }
+.profile-variant-title.muted { margin-top:18px; color:#65635e; }
+.profile-variant-title.muted span { color:#77756f; }
+.profile-rating-block { display:flex; align-items:baseline; gap:8px; padding-left:43px; }
+.profile-rating-block strong { color:#e0ddd6; font-size:15px; font-weight:750; }
+.profile-rating-block span { color:#85827b; font-size:10px; }
+.profile-rating-block.muted strong { color:#89867f; }
+.profile-main-column { min-width:0; border:1px solid #3a3833; background:#292724; }
+.profile-hero { min-height:88px; display:flex; align-items:center; justify-content:space-between; gap:15px; padding:18px 25px; background:#302e2a; }
+.profile-identity { display:flex; align-items:center; gap:14px; min-width:0; }
+.profile-large-avatar { width:48px; height:48px; flex:0 0 48px; display:grid; place-items:center; overflow:hidden; border-radius:3px; color:#d9d6ce; background:#48453f; font-size:34px; }
+.profile-large-avatar img { width:100%; height:100%; object-fit:cover; }
+.profile-online-dot { display:inline-block; width:9px; height:9px; margin-right:8px; border-radius:50%; background:#77a84d; vertical-align:middle; }
+.profile-hero h1 { display:inline; margin:0; color:#d8d5ce; font-size:22px; font-weight:400; letter-spacing:-.4px; overflow-wrap:anywhere; }
+.profile-handle { display:block; margin-top:4px; color:#89867f; font-size:10px; }
+.profile-edit-action { border:1px solid #4b4841; border-radius:2px; padding:8px 11px; color:#d0ccc4; background:#3a3833; font-size:10px; cursor:pointer; white-space:nowrap; }
+.profile-edit-action:hover { background:#48453e; }
+.profile-overview-grid { display:grid; grid-template-columns:minmax(0, 1.55fr) minmax(210px, .9fr); }
+.profile-chart-card { min-width:0; min-height:295px; border-right:1px solid #3a3833; }
+.profile-card-tabs, .profile-activity-tabs { display:flex; align-items:center; gap:0; height:42px; padding:0 16px; border-bottom:1px solid #41403a; color:#aaa69e; font-size:11px; }
+.profile-card-tabs span, .profile-activity-tabs span { height:100%; display:flex; align-items:center; padding:0 12px; border-bottom:2px solid transparent; }
+.profile-card-tabs .active, .profile-activity-tabs .active { color:#e0ddd6; border-bottom-color:#d2d0ca; }
+.profile-rating-summary { display:flex; align-items:baseline; gap:9px; padding:12px 18px 0; }
+.profile-rating-summary strong { color:#e1ded7; font-size:23px; font-weight:500; }
+.profile-rating-summary span { color:#8e8b84; font-size:10px; }
+.rating-chart-empty { position:relative; display:flex; height:178px; margin:8px 14px 0 44px; border-bottom:1px solid #4a4740; background:repeating-linear-gradient(to bottom, transparent 0, transparent 34px, #45423c 35px, transparent 36px); }
+.rating-chart-grid { position:absolute; inset:0 auto 0 -34px; display:flex; flex-direction:column; justify-content:space-between; color:#77746d; font-size:9px; }
+.rating-chart-message { align-self:center; margin:0 auto; max-width:230px; color:#8e8a82; font-size:10px; line-height:1.6; text-align:center; }
+.rating-range-labels { display:flex; gap:5px; padding:8px 18px 12px; color:#a9a59d; font-size:9px; }
+.rating-range-labels span { padding:4px 6px; border:1px solid transparent; }
+.rating-range-labels span:first-child { border-color:#4d4942; background:#393630; }
+.profile-info-card { min-width:0; padding:18px 15px; background:#292724; }
+.profile-info-name { margin-bottom:12px; color:#d6d2ca; font-size:13px; }
+.profile-info-card p { margin:0 0 14px; color:#aaa69e; font-size:11px; line-height:1.6; overflow-wrap:anywhere; }
+.profile-info-line { margin:9px 0; color:#aaa69e; font-size:10px; line-height:1.5; }
+.profile-stats-strip { display:grid; grid-template-columns:repeat(5,1fr); border-top:1px solid #403d37; border-bottom:1px solid #403d37; background:#302e2a; }
+.profile-stats-strip div { display:flex; flex-direction:column; gap:4px; padding:13px 15px; border-right:1px solid #403d37; }
+.profile-stats-strip div:last-child { border-right:0; }
+.profile-stats-strip strong { color:#ddd9d1; font-size:17px; font-weight:500; }
+.profile-stats-strip span { color:#8f8b83; font-size:9px; }
+.profile-activity-panel { min-height:240px; }
+.profile-activity-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:190px; padding:22px; text-align:center; }
+.profile-activity-empty > span { color:#a87b35; font-size:32px; }
+.profile-activity-empty strong { margin-top:8px; color:#d1cdc5; font-size:12px; }
+.profile-activity-empty p { max-width:320px; margin:7px 0 0; color:#8e8a82; font-size:10px; line-height:1.6; }
+.profile-loading, .profile-error { padding:50px 20px; color:#bdb9b1; background:#292724; text-align:center; font-size:12px; }
+.profile-error { color:#e4a69c; }
+@media (max-width: 900px) {
+  .lichess-profile-page { grid-template-columns:150px minmax(0,1fr); gap:12px; }
+  .profile-overview-grid { grid-template-columns:1fr; }
+  .profile-chart-card { border-right:0; border-bottom:1px solid #3a3833; }
+}
+@media (max-width: 650px) {
+  .lichess-profile-page { display:block; }
+  .profile-ratings-rail { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px 12px; padding:8px 0 15px; }
+  .profile-variant-title { margin:0; font-size:17px; }
+  .profile-variant-title span { font-size:9px; }
+  .profile-rating-block { padding-left:30px; }
+  .profile-hero { padding:14px; }
+  .profile-hero h1 { font-size:18px; }
+  .profile-stats-strip { grid-template-columns:repeat(3,1fr); }
+  .profile-stats-strip div:nth-child(3) { border-right:0; }
+  .profile-stats-strip div:nth-child(n+4) { border-top:1px solid #403d37; }
+}
