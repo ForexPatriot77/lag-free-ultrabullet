@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { AuthDialog } from "./components/AuthDialog";
+import { OnlinePlay } from "./components/OnlinePlay";
 import { Chess } from "chess.js";
 import { Chessground } from "@lichess-org/chessground";
 import type { Api } from "@lichess-org/chessground/api";
@@ -226,6 +227,8 @@ function App() {
         </div>
       </header>
 
+      {user && <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} />}
+
       <main className="page-layout" id="play">
         <aside className="left-rail">
           <div className="rail-group">
@@ -320,8 +323,8 @@ function App() {
               <button type="button" onClick={copyFen} aria-label="Copy position">⧉</button>
             </div>
             <div className="panel-note">
-              <strong>Prototype mode</strong>
-              <p>This board is running locally. Online matchmaking, accounts, clocks, and saved games will be connected in later stages.</p>
+              <strong>Practice board</strong>
+              <p>This is your local analysis board. Use Online Ultrabullet above to challenge another player in a live 15-second game.</p>
               <span className={isSupabaseConfigured ? "backend-ready" : "backend-pending"}>
                 <i /> {isSupabaseConfigured ? "Supabase configured" : "Supabase connection pending"}
               </span>
