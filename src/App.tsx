@@ -112,7 +112,7 @@ function App() {
       fen: snapshot.fen,
       orientation,
       turnColor: snapshot.turn,
-      check: snapshot.check ? (game.current.turn() === "w" ? "e1" : "e8") : undefined,
+      check: snapshot.check,
       lastMove: snapshot.lastMove,
       movable: {
         color: snapshot.turn,
