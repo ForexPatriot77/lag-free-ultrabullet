@@ -99,6 +99,9 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
   const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([]);
   const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
   const [myRating, setMyRating] = useState<number | null>(null);
+  const [selectedControl, setSelectedControl] = useState<TimeControl>(TIME_CONTROLS[0]);
+  const [promotion, setPromotion] = useState<"q" | "r" | "b" | "n">("q");
+  const [boardOrientation, setBoardOrientation] = useState<Color>("white");
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -234,7 +237,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
     if (current.turn_color !== myColor) return;
     setBusy(true);
     try {
-      await invoke({ action: "move", gameId: current.id, from, to, promotion: "q" });
+      await invoke({ action: "move", gameId: current.id, from, to, promotion });
       await loadState(current.id);
       setMessage("");
     } catch (error) {
@@ -243,7 +246,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
     } finally {
       setBusy(false);
     }
-  }, [busy, invoke, loadState, userId]);
+  }, [busy, invoke, loadState, promotion, userId]);
 
   const moveHandler = useRef(sendMove);
   useEffect(() => { moveHandler.current = sendMove; }, [sendMove]);
@@ -252,7 +255,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
     if (!boardElement.current) return;
     ground.current = Chessground(boardElement.current, {
       fen: game?.fen,
-      orientation: game?.white_player === userId ? "white" : "black",
+      orientation: boardOrientation,
       coordinates: true,
       animation: { enabled: true, duration: 100 },
       highlight: { lastMove: true, check: true },
@@ -261,7 +264,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
       } },
       draggable: { showGhost: true },
       premovable: { enabled: false },
-      drawable: { enabled: false },
+      drawable: { enabled: true, visible: true, eraseOnClick: true },
     });
     return () => {
       ground.current?.destroy();
@@ -277,7 +280,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
     const canMove = isPlayer && game.status === "active" && game.turn_color === myColor && !busy;
     ground.current?.set({
       fen: game.fen,
-      orientation: myColor,
+      orientation: boardOrientation,
       turnColor: game.turn_color,
       check: chess.isCheck() ? game.turn_color : undefined,
       movable: {
@@ -285,13 +288,13 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
         dests: destinations(chess),
       },
     });
-  }, [game, userId, busy]);
+  }, [game, userId, busy, boardOrientation]);
 
   const createGame = async () => {
     setBusy(true);
     setMessage("");
     try {
-      const data = await invoke({ action: "create" });
+      const data = await invoke({ action: "create", initialTimeMs: selectedControl.initialTimeMs, incrementMs: selectedControl.incrementMs });
       const id = data.game.id as string;
       await openGame(id, false);
     } catch (error) {
@@ -344,7 +347,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
   const isParticipant = Boolean(game && (game.white_player === userId || game.black_player === userId));
   const myColor: Color = isParticipant ? (isWhite ? "white" : "black") : "white";
   const currentRemaining = useMemo(() => {
-    if (!game) return 15000;
+    if (!game) return selectedControl.initialTimeMs;
     const base = game.turn_color === "white" ? game.white_time_ms : game.black_time_ms;
     if (game.status !== "active" || !game.last_move_at) return base;
     const elapsed = Date.now() + serverOffset - new Date(game.last_move_at).getTime();
@@ -353,7 +356,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
   const whiteClock = game
     ? game.white_time_ms - (game.status === "active" && game.turn_color === "white" && game.last_move_at
       ? Math.max(0, Date.now() + serverOffset - new Date(game.last_move_at).getTime()) : 0)
-    : 15000;
+    : selectedControl.initialTimeMs;
   const blackClock = game
     ? game.black_time_ms - (game.status === "active" && game.turn_color === "black" && game.last_move_at
       ? Math.max(0, Date.now() + serverOffset - new Date(game.last_move_at).getTime()) : 0)
@@ -382,7 +385,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
         <div>
           <span className="online-kicker">LIVE CHESS</span>
           <h2>Online Ultrabullet</h2>
-          <p>15-second games · server-validated moves · live updates</p>
+          <p>Server-validated moves · live clocks · increment support</p>
           <span className="my-rating">Your ultrabullet rating: <strong>{myRating ?? "Unrated"}</strong></span>
         </div>
         {game && <button className="online-secondary" type="button" onClick={backToLobby}>Back to lobby</button>}
@@ -397,6 +400,17 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
               <strong>Challenge someone</strong>
               <span>Create a game and share its invite link.</span>
             </div>
+            <label className="time-control-picker">Time control
+              <select value={String(selectedControl.initialTimeMs) + "-" + String(selectedControl.incrementMs)} onChange={(event) => {
+                const parts = event.target.value.split("-").map(Number);
+                const found = TIME_CONTROLS.find((item) => item.initialTimeMs === parts[0] && item.incrementMs === parts[1]);
+                if (found) setSelectedControl(found);
+              }}>
+                {["Ultrabullet","Bullet","Blitz","Rapid","Classical"].map((category) => <optgroup key={category} label={category}>
+                  {TIME_CONTROLS.filter((item) => item.category === category).map((item) => <option key={item.initialTimeMs + "-" + item.incrementMs} value={item.initialTimeMs + "-" + item.incrementMs}>{item.label}</option>)}
+                </optgroup>)}
+              </select>
+            </label>
             <button className="online-primary" type="button" disabled={busy || loading} onClick={createGame}>
               {busy ? "Creating…" : "＋ Create challenge"}
             </button>
@@ -412,7 +426,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
               <div className="lobby-avatar">♟</div>
               <div className="lobby-player">
                 <strong>{item.opponent?.username && onOpenProfile ? <button className="player-name-link" onClick={() => onOpenProfile(item.opponent!.username)}>{item.opponent.display_name || item.opponent.username}</button> : (item.opponent?.display_name || item.opponent?.username || "Player")}</strong>
-                <span>15 seconds · waiting for opponent</span>
+                <span>{controlLabel(item.initial_time_ms, item.increment_ms)} · waiting for opponent</span>
               </div>
               <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id)}>
                 Join
@@ -477,6 +491,15 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
               </strong>
             </div>
             <div className="online-board-frame"><div className="online-board" ref={boardElement} /></div>
+            <div className="online-board-tools">
+              <button type="button" onClick={() => setBoardOrientation((value) => value === "white" ? "black" : "white")}>⇅ Flip board</button>
+              <label>Promotion
+                <select value={promotion} onChange={(event) => setPromotion(event.target.value as "q" | "r" | "b" | "n")}>
+                  <option value="q">Queen</option><option value="r">Rook</option><option value="b">Bishop</option><option value="n">Knight</option>
+                </select>
+              </label>
+              <span className="draw-help">Right-drag to draw arrows · right-click to erase</span>
+            </div>
             <div className="online-player-bar">
               <span className="online-player-piece">♙</span>
               <div><strong>{isParticipant ? (isWhite ? "You" : "Opponent") : "White"}</strong><small>White</small></div>
@@ -504,7 +527,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
                 ))}
             </div>
             <div className="online-game-actions">
-              <span>15 + 0 · Ultrabullet</span>
+              <span>{controlLabel(game.initial_time_ms, game.increment_ms)} · {TIME_CONTROLS.find((item) => item.initialTimeMs === game.initial_time_ms && item.incrementMs === game.increment_ms)?.category ?? "Chess"}</span>
               {game.status === "active" && isParticipant && <button type="button" onClick={resign} disabled={busy}>Resign</button>}
               {game.status === "finished" && <button type="button" onClick={backToLobby}>Find another game</button>}
             </div>
