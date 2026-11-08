@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { AuthDialog } from "./components/AuthDialog";
 import { OnlinePlay } from "./components/OnlinePlay";
+import { ProfileDialog } from "./components/ProfileDialog";
 import { Chess } from "chess.js";
 import { Chessground } from "@lichess-org/chessground";
 import type { Api } from "@lichess-org/chessground/api";
@@ -55,7 +56,8 @@ function App() {
   const [snapshot, setSnapshot] = useState(() => getSnapshot(game.current));
   const [copiedFen, setCopiedFen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<{ username: string; display_name: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ username: string; display_name: string | null; bio?: string | null } | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup" | null>(null);
 
   useEffect(() => {
@@ -81,7 +83,7 @@ function App() {
     let active = true;
     supabase
       .from("profiles")
-      .select("username, display_name")
+      .select("username, display_name, bio")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -216,6 +218,7 @@ function App() {
           {user ? (
             <>
               <span className="account-name">{profile?.display_name || profile?.username || "Player"}</span>
+              <button className="login-button" type="button" onClick={() => setProfileOpen(true)}>Profile</button>
               <button className="login-button" type="button" onClick={signOut}>Log out</button>
             </>
           ) : (
@@ -333,6 +336,7 @@ function App() {
         </section>
       </main>
       {authMode && <AuthDialog initialMode={authMode} onClose={() => setAuthMode(null)} />}
+      {profileOpen && user && <ProfileDialog user={user} profile={profile} onClose={() => setProfileOpen(false)} onSaved={setProfile} />}
       <footer className="site-footer">
         <span>Lag-Free Ultrabullet</span>
         <span>Independent chess project · Not affiliated with Lichess</span>
