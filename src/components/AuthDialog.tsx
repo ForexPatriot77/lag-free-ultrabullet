@@ -27,6 +27,7 @@ export function AuthDialog({ initialMode, onClose }: AuthDialogProps) {
           email: email.trim(),
           password,
           options: {
+            emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
             data: displayName.trim() ? { display_name: displayName.trim() } : {}
           }
         });
