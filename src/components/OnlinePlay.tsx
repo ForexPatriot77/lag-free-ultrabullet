@@ -136,7 +136,17 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
 
   const invoke = useCallback(async (body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke("ultrabullet", { body });
-    if (error) throw new Error(error.message || "Could not reach the game server.");
+    if (error) {
+      // Supabase FunctionsHttpError carries the actual HTTP response in context.
+      // Surface the server's JSON error instead of the generic non-2xx message.
+      const context = (error as { context?: unknown }).context;
+      if (context instanceof Response) {
+        const payload = await context.clone().json().catch(() => null) as { error?: unknown; message?: unknown } | null;
+        if (typeof payload?.error === "string") throw new Error(payload.error);
+        if (typeof payload?.message === "string") throw new Error(payload.message);
+      }
+      throw new Error(error.message || "Could not reach the game server.");
+    }
     if (data?.error) throw new Error(data.error);
     return data;
   }, []);
