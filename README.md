@@ -11,3 +11,10 @@ as a reference for custom product features, including the requested hyperfast ti
 It is not the active application.
 
 This project is independent and is not affiliated with or endorsed by Lichess.
+
+## AI assistance disclosure
+
+The initial source import and migration scaffolding were prepared with assistance from
+ChatGPT (GPT-6). This is an independent derivative project, not a contribution or pull
+request to the upstream Lichess project. Human review, configuration, and testing are
+still required before deployment.
