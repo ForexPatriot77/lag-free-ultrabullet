@@ -48,7 +48,19 @@ type HistoryGame = {
   result: string | null;
   termination: string | null;
   finished_at: string | null;
+  white_rating_change: number | null;
+  black_rating_change: number | null;
   opponent: { username: string; display_name: string | null } | null;
+};
+
+type LeaderboardPlayer = {
+  user_id: string;
+  ultrabullet_rating: number;
+  games_played: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  profile: { username: string; display_name: string | null } | null;
 };
 
 function destinations(chess: Chess): Map<Key, Key[]> {
@@ -73,6 +85,8 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
   const [moves, setMoves] = useState<MoveRow[]>([]);
   const [lobby, setLobby] = useState<LobbyGame[]>([]);
   const [history, setHistory] = useState<HistoryGame[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([]);
+  const [myRating, setMyRating] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -109,6 +123,24 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
     }
   }, [invoke]);
 
+  const loadLeaderboard = useCallback(async () => {
+    try {
+      const data = await invoke({ action: "leaderboard" });
+      setLeaderboard((data.players ?? []) as LeaderboardPlayer[]);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not load the leaderboard.");
+    }
+  }, [invoke]);
+
+  const loadMyRating = useCallback(async () => {
+    const { data } = await supabase
+      .from("player_ratings")
+      .select("ultrabullet_rating")
+      .eq("user_id", userId)
+      .maybeSingle();
+    setMyRating(data?.ultrabullet_rating ?? null);
+  }, [userId]);
+
   const loadState = useCallback(async (id: string) => {
     const data = await invoke({ action: "state", gameId: id });
     setServerOffset((data.serverTime ?? Date.now()) - Date.now());
@@ -143,8 +175,10 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
     else {
       void loadLobby();
       void loadHistory();
+      void loadLeaderboard();
     }
-  }, [initialGameId, openGame, loadLobby, loadHistory]);
+    void loadMyRating();
+  }, [initialGameId, openGame, loadLobby, loadHistory, loadLeaderboard, loadMyRating]);
 
   useEffect(() => {
     if (!gameId) return;
@@ -276,6 +310,8 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
     window.history.replaceState({}, "", url);
     void loadLobby();
     void loadHistory();
+    void loadLeaderboard();
+    void loadMyRating();
   };
 
   const isWhite = game?.white_player === userId;
@@ -303,6 +339,10 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
     }
   }, [game?.id, game?.status, currentRemaining, loadState]);
 
+  useEffect(() => {
+    if (game?.status === "finished") void loadMyRating();
+  }, [game?.status, loadMyRating]);
+
   const status = !game ? "Choose an online game" :
     game.status === "waiting" ? "Waiting for an opponent" :
     game.status === "finished" ? `Game finished · ${game.result ?? ""} · ${game.termination ?? ""}` :
@@ -315,6 +355,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
           <span className="online-kicker">LIVE CHESS</span>
           <h2>Online Ultrabullet</h2>
           <p>15-second games · server-validated moves · live updates</p>
+          <span className="my-rating">Your ultrabullet rating: <strong>{myRating ?? "Unrated"}</strong></span>
         </div>
         {game && <button className="online-secondary" type="button" onClick={backToLobby}>Back to lobby</button>}
       </div>
@@ -358,11 +399,24 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
               <div className="lobby-avatar">♜</div>
               <div className="lobby-player">
                 <strong>{item.opponent?.display_name || item.opponent?.username || "Former opponent"}</strong>
-                <span>{item.result} · {item.termination}</span>
+                <span>{item.result} · {item.termination} · {((item.white_player === userId ? item.white_rating_change : item.black_rating_change) ?? 0) >= 0 ? "+" : ""}{(item.white_player === userId ? item.white_rating_change : item.black_rating_change) ?? 0}</span>
               </div>
               <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id, false)}>
                 Review
               </button>
+            </div>
+          ))}
+          <div className="history-head"><strong>Ultrabullet leaderboard</strong><button type="button" onClick={() => void loadLeaderboard()}>↻ Refresh</button></div>
+          {leaderboard.length === 0 ? (
+            <div className="lobby-empty history-empty">Ratings appear after players finish their first game.</div>
+          ) : leaderboard.map((player, index) => (
+            <div className="lobby-row leaderboard-row" key={player.user_id}>
+              <span className="leaderboard-rank">{index + 1}</span>
+              <div className="lobby-player">
+                <strong>{player.profile?.display_name || player.profile?.username || "Player"}</strong>
+                <span>{player.games_played} games · {player.wins} wins · {player.draws} draws</span>
+              </div>
+              <strong className="leaderboard-rating">{player.ultrabullet_rating}</strong>
             </div>
           ))}
         </div>
