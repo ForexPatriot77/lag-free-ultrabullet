@@ -1,0 +1,51 @@
+name: Validate Lila application
+
+on:
+  push:
+    branches: [lila-import]
+    paths:
+      - 'app/**'
+      - 'conf/**'
+      - 'modules/**'
+      - 'project/**'
+      - 'public/**'
+      - 'translation/**'
+      - 'ui/**'
+      - 'build.sbt'
+      - 'lila.sh'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.node-version'
+      - '.github/workflows/lila-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Build and test Lila frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: ./ui/build --no-install -p
+      - run: ./ui/test
+
+  backend:
+    name: Compile and test Lila backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: sbt
+      - uses: sbt/setup-sbt@67d461eba2c4753196c230e02da850757ba4775e
+      - run: ./lila.sh -Depoll=true "test;stage"
