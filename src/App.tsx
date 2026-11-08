@@ -12,6 +12,7 @@ import "@lichess-org/chessground/assets/chessground.brown.css";
 import "@lichess-org/chessground/assets/chessground.cburnett.css";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 
+type Page = "home" | "play" | "analysis" | "watch" | "players" | "puzzles" | "learn";
 type Snapshot = {
   fen: string;
   turn: Color;
@@ -29,9 +30,7 @@ function legalDestinations(game: Chess): Map<Key, Key[]> {
     for (const file of "abcdefgh") {
       const square = `${file}${rank}`;
       const moves = game.moves({ square: square as never, verbose: true });
-      if (moves.length) {
-        destinations.set(square as Key, moves.map((move) => move.to as Key));
-      }
+      if (moves.length) destinations.set(square as Key, moves.map((move) => move.to as Key));
     }
   }
   return destinations;
@@ -48,7 +47,18 @@ function getSnapshot(game: Chess, lastMove?: [Key, Key]): Snapshot {
   };
 }
 
+const navItems: { id: Page; label: string; icon: string; group: string }[] = [
+  { id: "home", label: "Home", icon: "⌂", group: "MAIN" },
+  { id: "play", label: "Play", icon: "♟", group: "MAIN" },
+  { id: "analysis", label: "Analysis board", icon: "⌗", group: "TOOLS" },
+  { id: "watch", label: "Watch", icon: "◉", group: "COMMUNITY" },
+  { id: "players", label: "Players", icon: "♙", group: "COMMUNITY" },
+  { id: "puzzles", label: "Puzzles", icon: "◇", group: "TRAINING" },
+  { id: "learn", label: "Learn", icon: "▤", group: "TRAINING" }
+];
+
 function App() {
+  const [page, setPage] = useState<Page>("home");
   const boardElement = useRef<HTMLDivElement>(null);
   const ground = useRef<Api | null>(null);
   const game = useRef(createGame());
@@ -81,23 +91,16 @@ function App() {
       return;
     }
     let active = true;
-    supabase
-      .from("profiles")
-      .select("username, display_name, bio")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (active && data) setProfile(data);
-      });
-    return () => {
-      active = false;
-    };
+    supabase.from("profiles").select("username, display_name, bio").eq("id", user.id).maybeSingle()
+      .then(({ data }) => { if (active && data) setProfile(data); });
+    return () => { active = false; };
   }, [user]);
 
   const signOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
     setProfile(null);
+    setPage("home");
   };
 
   const movePairs = useMemo(() => {
@@ -114,8 +117,7 @@ function App() {
   const playMove = (from: string, to: string) => {
     try {
       const move = game.current.move({ from, to, promotion: "q" });
-      if (!move) return;
-      setSnapshot(getSnapshot(game.current, [from as Key, to as Key]));
+      if (move) setSnapshot(getSnapshot(game.current, [from as Key, to as Key]));
     } catch {
       ground.current?.set({
         fen: game.current.fen(),
@@ -129,7 +131,7 @@ function App() {
   };
 
   useEffect(() => {
-    if (!boardElement.current) return;
+    if (page !== "analysis" || !boardElement.current) return;
     ground.current = Chessground(boardElement.current, {
       fen: snapshot.fen,
       orientation,
@@ -151,9 +153,9 @@ function App() {
       ground.current?.destroy();
       ground.current = null;
     };
-    // Chessground is mounted once; move callbacks read the current game ref.
+    // The analysis board is mounted only on its own page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     ground.current?.set({
@@ -162,10 +164,7 @@ function App() {
       turnColor: snapshot.turn,
       check: snapshot.check,
       lastMove: snapshot.lastMove,
-      movable: {
-        color: snapshot.turn,
-        dests: legalDestinations(game.current)
-      }
+      movable: { color: snapshot.turn, dests: legalDestinations(game.current) }
     });
   }, [snapshot, orientation]);
 
@@ -178,12 +177,7 @@ function App() {
     if (!game.current.undo()) return;
     const history = game.current.history({ verbose: true });
     const previous = history.at(-1);
-    setSnapshot(
-      getSnapshot(
-        game.current,
-        previous ? [previous.from as Key, previous.to as Key] : undefined
-      )
-    );
+    setSnapshot(getSnapshot(game.current, previous ? [previous.from as Key, previous.to as Key] : undefined));
   };
 
   const copyFen = async () => {
@@ -200,25 +194,31 @@ function App() {
       ? `${snapshot.turn === "white" ? "White" : "Black"} to move · Check`
       : `${snapshot.turn === "white" ? "White" : "Black"} to move`;
 
+  const displayName = profile?.display_name || profile?.username || "Player";
+  const go = (next: Page) => setPage(next);
+  const openPlay = () => {
+    setPage("play");
+    if (!user) setAuthMode("signin");
+  };
+
   return (
     <div className="site-shell">
       <header className="topbar">
-        <a className="brand" href={import.meta.env.BASE_URL} aria-label="Lag-Free Ultrabullet home">
+        <button className="brand" type="button" onClick={() => go("home")} aria-label="Lag-Free Ultrabullet home">
           <span className="brand-mark">♞</span>
           <span className="brand-name">LAG-FREE <b>ULTRABULLET</b></span>
-        </a>
+        </button>
         <nav className="top-links" aria-label="Main navigation">
-          <a className="active" href="#play">Play</a>
-          <a href="#puzzles">Puzzles</a>
-          <a href="#learn">Learn</a>
-          <a href="#watch">Watch</a>
+          <button className={page === "play" ? "active" : ""} onClick={openPlay}>Play</button>
+          <button className={page === "puzzles" ? "active" : ""} onClick={() => go("puzzles")}>Puzzles</button>
+          <button className={page === "learn" ? "active" : ""} onClick={() => go("learn")}>Learn</button>
+          <button className={page === "watch" ? "active" : ""} onClick={() => go("watch")}>Watch</button>
         </nav>
         <div className="top-actions">
-          <span className="connection"><i /> Local board</span>
+          <span className="connection"><i /> {isSupabaseConfigured ? "Services online" : "Local mode"}</span>
           {user ? (
             <>
-              <span className="account-name">{profile?.display_name || profile?.username || "Player"}</span>
-              <button className="login-button" type="button" onClick={() => setProfileOpen(true)}>Profile</button>
+              <button className="account-name" type="button" onClick={() => setProfileOpen(true)}>{displayName}</button>
               <button className="login-button" type="button" onClick={signOut}>Log out</button>
             </>
           ) : (
@@ -230,118 +230,126 @@ function App() {
         </div>
       </header>
 
-      {user && <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} />}
-
-      <main className="page-layout" id="play">
+      <div className="app-body">
         <aside className="left-rail">
-          <div className="rail-group">
-            <div className="rail-heading">PLAY</div>
-            <a className="rail-link selected" href="#play"><span>♟</span> Play</a>
-            <a className="rail-link" href="#puzzles"><span>◈</span> Puzzles</a>
-            <a className="rail-link" href="#learn"><span>▤</span> Learn</a>
-            <a className="rail-link" href="#watch"><span>◉</span> Watch</a>
-          </div>
-          <div className="rail-group">
-            <div className="rail-heading">COMMUNITY</div>
-            <a className="rail-link" href="#players"><span>♙</span> Players</a>
-            <a className="rail-link" href="#teams"><span>♜</span> Teams</a>
-          </div>
-          <div className="rail-footer">
-            <span className="rail-dot" />
-            <span>Independent project</span>
-          </div>
+          {["MAIN", "TOOLS", "COMMUNITY", "TRAINING"].map((group) => (
+            <div className="rail-group" key={group}>
+              <div className="rail-heading">{group}</div>
+              {navItems.filter((item) => item.group === group).map((item) => (
+                <button key={item.id} className={`rail-link ${page === item.id ? "selected" : ""}`} onClick={() => item.id === "play" ? openPlay() : go(item.id)}>
+                  <span>{item.icon}</span>{item.label}
+                </button>
+              ))}
+            </div>
+          ))}
+          <div className="rail-footer"><span className="rail-dot" /><span>Independent chess project</span></div>
         </aside>
 
-        <section className="play-area">
-          <div className="board-column">
-            <div className="player-strip opponent">
-              <div className="avatar avatar-dark">♟</div>
-              <div className="player-details">
-                <strong>Opponent</strong>
-                <span>Waiting for a game</span>
-              </div>
-              <div className="rating">—</div>
-            </div>
-            <div className="board-frame">
-              <div className="board" ref={boardElement} />
-            </div>
-            <div className="player-strip you">
-              <div className="avatar avatar-light">♙</div>
-              <div className="player-details">
-                <strong>You</strong>
-                <span>Local practice board</span>
-              </div>
-              <div className="rating">—</div>
-            </div>
-            <div className="board-tools">
-              <button type="button" onClick={() => setOrientation((value) => value === "white" ? "black" : "white")}>
-                <span>⇅</span> Flip board
-              </button>
-              <button type="button" onClick={copyFen}>
-                <span>▣</span> {copiedFen ? "Copied FEN" : "Copy FEN"}
-              </button>
-            </div>
-          </div>
-
-          <aside className="game-panel">
-            <div className="panel-tabs">
-              <button className="panel-tab active" type="button">Game</button>
-              <button className="panel-tab" type="button" disabled>Chat</button>
-            </div>
-            <div className="game-mode">
-              <div>
-                <span className="eyebrow">TIME CONTROL</span>
-                <strong>Ultrabullet</strong>
-              </div>
-              <span className="time-pill">15 seconds</span>
-            </div>
-            <div className="game-status">
-              <span className={snapshot.gameOver ? "status-indicator ended" : "status-indicator"} />
-              <strong>{status}</strong>
-            </div>
-            <div className="move-list" aria-label="Move history">
-              {movePairs.length === 0 ? (
-                <div className="empty-moves">
-                  <span className="empty-board-icon">♘</span>
-                  <strong>Your game starts here</strong>
-                  <span>Make a move on the board to begin.</span>
+        <main className="main-content">
+          {page === "home" && (
+            <section className="home-dashboard">
+              <div className="welcome-row">
+                <div>
+                  <span className="page-kicker">LAG-FREE ULTRABULLET</span>
+                  <h1>Chess, without the lag.</h1>
+                  <p>A focused home for fast games, analysis, and the chess community.</p>
                 </div>
-              ) : (
-                <table>
-                  <tbody>
-                    {movePairs.map((pair) => (
-                      <tr key={pair.number}>
-                        <th>{pair.number}.</th>
-                        <td>{pair.white ?? ""}</td>
-                        <td>{pair.black ?? ""}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="welcome-mark">♞</div>
+              </div>
+              <div className="home-grid">
+                <button className="home-action primary-action" onClick={openPlay}>
+                  <span className="action-icon">⚡</span>
+                  <span className="action-copy"><strong>Play online</strong><small>Challenge another player in 15-second chess</small></span>
+                  <span className="action-arrow">→</span>
+                </button>
+                <button className="home-action" onClick={() => go("analysis")}>
+                  <span className="action-icon">⌗</span>
+                  <span className="action-copy"><strong>Analysis board</strong><small>Explore positions and test moves</small></span>
+                  <span className="action-arrow">→</span>
+                </button>
+                <button className="home-action" onClick={() => go("watch")}>
+                  <span className="action-icon">◉</span>
+                  <span className="action-copy"><strong>Watch games</strong><small>Follow games in progress</small></span>
+                  <span className="action-arrow">→</span>
+                </button>
+              </div>
+              <div className="dashboard-lower">
+                <section className="dashboard-card">
+                  <div className="section-heading"><div><span className="page-kicker">YOUR CHESS</span><h2>Player dashboard</h2></div><span className="subtle-tag">{user ? "SIGNED IN" : "GUEST"}</span></div>
+                  {user ? (
+                    <div className="player-welcome"><div className="profile-avatar">♟</div><div><strong>{displayName}</strong><span>{profile?.username ? `@${profile.username}` : "Your player account"}</span></div><button onClick={() => setProfileOpen(true)}>Edit profile</button></div>
+                  ) : (
+                    <div className="guest-prompt"><div><strong>Your chess profile starts here.</strong><span>Sign in to keep your rating and game history connected to your account.</span></div><button className="small-green-button" onClick={() => setAuthMode("signup")}>Create account</button></div>
+                  )}
+                  <div className="dashboard-stats"><div><strong>15s</strong><span>Time control</span></div><div><strong>1500</strong><span>Starting rating</span></div><div><strong>∞</strong><span>Room to improve</span></div></div>
+                </section>
+                <section className="dashboard-card project-card">
+                  <span className="page-kicker">BUILT FOR SPEED</span>
+                  <h2>Ultrabullet is the focus.</h2>
+                  <p>Quick games, a clean board, and a simple interface. The live game service validates moves and clocks on the server.</p>
+                  <button className="text-link" onClick={openPlay}>Enter the lobby <span>→</span></button>
+                </section>
+              </div>
+              <div className="home-footnote"><span>♞</span> An independent chess project. Not affiliated with Lichess.</div>
+            </section>
+          )}
+
+          {page === "play" && (
+            <section className="content-page">
+              <div className="content-page-heading"><div><span className="page-kicker">FIND A GAME</span><h1>Play online</h1><p>Challenge someone, join an open game, or review a recent match.</p></div><span className="time-control-label">⚡ 15 + 0 · Ultrabullet</span></div>
+              {user ? <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} /> : (
+                <div className="signin-gate"><div className="gate-icon">♟</div><h2>Sign in to play online</h2><p>Your games, rating, and challenges are connected to your player account.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="gate-secondary" onClick={() => setAuthMode("signup")}>Create an account</button></div>
               )}
-            </div>
-            <div className="panel-controls">
-              <button type="button" onClick={undoMove} disabled={snapshot.moves.length === 0} aria-label="Undo move">↶</button>
-              <button type="button" onClick={resetGame} aria-label="New game">＋ New game</button>
-              <button type="button" onClick={copyFen} aria-label="Copy position">⧉</button>
-            </div>
-            <div className="panel-note">
-              <strong>Practice board</strong>
-              <p>This is your local analysis board. Use Online Ultrabullet above to challenge another player in a live 15-second game.</p>
-              <span className={isSupabaseConfigured ? "backend-ready" : "backend-pending"}>
-                <i /> {isSupabaseConfigured ? "Supabase configured" : "Supabase connection pending"}
-              </span>
-            </div>
-          </aside>
-        </section>
-      </main>
+            </section>
+          )}
+
+          {page === "analysis" && (
+            <section className="content-page">
+              <div className="content-page-heading"><div><span className="page-kicker">TOOLS</span><h1>Analysis board</h1><p>A private local board for trying moves and exploring positions.</p></div><span className="time-control-label">LOCAL POSITION</span></div>
+              <section className="play-area analysis-area">
+                <div className="board-column">
+                  <div className="player-strip opponent"><div className="avatar avatar-dark">♟</div><div className="player-details"><strong>Black</strong><span>Analysis position</span></div><div className="rating">—</div></div>
+                  <div className="board-frame"><div className="board" ref={boardElement} /></div>
+                  <div className="player-strip you"><div className="avatar avatar-light">♙</div><div className="player-details"><strong>White</strong><span>Local analysis</span></div><div className="rating">—</div></div>
+                  <div className="board-tools">
+                    <button type="button" onClick={() => setOrientation((value) => value === "white" ? "black" : "white")}><span>⇅</span> Flip board</button>
+                    <button type="button" onClick={copyFen}><span>▣</span> {copiedFen ? "Copied FEN" : "Copy FEN"}</button>
+                  </div>
+                </div>
+                <aside className="game-panel">
+                  <div className="panel-tabs"><button className="panel-tab active" type="button">Moves</button><button className="panel-tab" type="button" disabled>Chat</button></div>
+                  <div className="game-status"><span className={snapshot.gameOver ? "status-indicator ended" : "status-indicator"} /><strong>{status}</strong></div>
+                  <div className="move-list" aria-label="Move history">
+                    {movePairs.length === 0 ? <div className="empty-moves"><span className="empty-board-icon">♘</span><strong>Ready to analyze</strong><span>Make moves on the board to explore.</span></div> : (
+                      <table><tbody>{movePairs.map((pair) => <tr key={pair.number}><th>{pair.number}.</th><td>{pair.white ?? ""}</td><td>{pair.black ?? ""}</td></tr>)}</tbody></table>
+                    )}
+                  </div>
+                  <div className="panel-controls"><button type="button" onClick={undoMove} disabled={snapshot.moves.length === 0} aria-label="Undo move">↶</button><button type="button" onClick={resetGame}>＋ Reset position</button><button type="button" onClick={copyFen} aria-label="Copy FEN">⧉</button></div>
+                  <div className="panel-note"><strong>Local analysis</strong><p>This board runs in your browser. Moves here are not submitted as online games.</p><span className={isSupabaseConfigured ? "backend-ready" : "backend-pending"}><i /> {isSupabaseConfigured ? "Account services configured" : "Account services unavailable"}</span></div>
+                </aside>
+              </section>
+            </section>
+          )}
+
+          {(page === "watch" || page === "players") && (
+            <section className="content-page">
+              <div className="content-page-heading"><div><span className="page-kicker">COMMUNITY</span><h1>{page === "watch" ? "Watch games" : "Players"}</h1><p>{page === "watch" ? "See live games and follow the action." : "Find the players climbing the ultrabullet ladder."}</p></div></div>
+              {user ? <OnlinePlay user={user} initialGameId={null} /> : <div className="signin-gate compact-gate"><div className="gate-icon">{page === "watch" ? "◉" : "♙"}</div><h2>Join the community</h2><p>Sign in to view live games, recent results, and the player leaderboard.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>}
+            </section>
+          )}
+
+          {(page === "puzzles" || page === "learn") && (
+            <section className="content-page">
+              <div className="content-page-heading"><div><span className="page-kicker">TRAINING</span><h1>{page === "puzzles" ? "Puzzles" : "Learn chess"}</h1><p>{page === "puzzles" ? "Tactical training is on the roadmap." : "Guides and lessons are on the roadmap."}</p></div></div>
+              <div className="roadmap-card"><div className="roadmap-icon">{page === "puzzles" ? "◇" : "▤"}</div><h2>{page === "puzzles" ? "Puzzle training is coming." : "A learning library is coming."}</h2><p>We're building the core playing experience first. These sections will become part of the same account and rating system as the rest of the site.</p><button className="text-link" onClick={openPlay}>Back to playing <span>→</span></button></div>
+            </section>
+          )}
+        </main>
+      </div>
+
       {authMode && <AuthDialog initialMode={authMode} onClose={() => setAuthMode(null)} />}
       {profileOpen && user && <ProfileDialog user={user} profile={profile} onClose={() => setProfileOpen(false)} onSaved={setProfile} />}
-      <footer className="site-footer">
-        <span>Lag-Free Ultrabullet</span>
-        <span>Independent chess project · Not affiliated with Lichess</span>
-        <span>GPL-3.0-or-later</span>
-      </footer>
+      <footer className="site-footer"><span>Lag-Free Ultrabullet</span><span>Independent chess project · Not affiliated with Lichess</span><span>GPL-3.0-or-later</span></footer>
     </div>
   );
 }
