@@ -648,3 +648,6 @@ body { background: var(--page); }
   .lobby-home-right { width:100%; grid-template-columns:1fr; }
   .lobby-home-right { padding-top:0; }
 }
+
+.player-name-link { border:0; padding:0; color:#b8c8d9; background:transparent; font:inherit; text-align:left; cursor:pointer; }
+.player-name-link:hover { color:#e4d2a9; text-decoration:underline; }
