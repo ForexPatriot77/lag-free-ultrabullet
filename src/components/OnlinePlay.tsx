@@ -160,6 +160,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
         await loadState(id);
       }
       setGameId(id);
+      await loadMyRating();
       const url = new URL(window.location.href);
       url.searchParams.set("game", id);
       window.history.replaceState({}, "", url);
@@ -168,7 +169,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
     } finally {
       setLoading(false);
     }
-  }, [invoke, loadState]);
+  }, [invoke, loadState, loadMyRating]);
 
   useEffect(() => {
     if (initialGameId) void openGame(initialGameId);
