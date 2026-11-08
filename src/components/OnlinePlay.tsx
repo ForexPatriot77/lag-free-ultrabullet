@@ -53,6 +53,17 @@ type HistoryGame = {
   opponent: { username: string; display_name: string | null } | null;
 };
 
+type LiveGame = {
+  id: string;
+  white_player: string;
+  black_player: string;
+  started_at: string | null;
+  ply: number;
+  turn_color: "white" | "black";
+  white: { username: string; display_name: string | null } | null;
+  black: { username: string; display_name: string | null } | null;
+};
+
 type LeaderboardPlayer = {
   user_id: string;
   ultrabullet_rating: number;
@@ -86,6 +97,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
   const [lobby, setLobby] = useState<LobbyGame[]>([]);
   const [history, setHistory] = useState<HistoryGame[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([]);
+  const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
   const [myRating, setMyRating] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -129,6 +141,15 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
       setLeaderboard((data.players ?? []) as LeaderboardPlayer[]);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not load the leaderboard.");
+    }
+  }, [invoke]);
+
+  const loadLiveGames = useCallback(async () => {
+    try {
+      const data = await invoke({ action: "live" });
+      setLiveGames((data.games ?? []) as LiveGame[]);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not load live games.");
     }
   }, [invoke]);
 
@@ -177,9 +198,10 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
       void loadLobby();
       void loadHistory();
       void loadLeaderboard();
+      void loadLiveGames();
     }
     void loadMyRating();
-  }, [initialGameId, openGame, loadLobby, loadHistory, loadLeaderboard, loadMyRating]);
+  }, [initialGameId, openGame, loadLobby, loadHistory, loadLeaderboard, loadLiveGames, loadMyRating]);
 
   useEffect(() => {
     if (!gameId) return;
@@ -207,6 +229,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
   const sendMove = useCallback(async (from: string, to: string) => {
     const current = gameRef.current;
     if (!current || current.status !== "active" || busy) return;
+    if (current.white_player !== userId && current.black_player !== userId) return;
     const myColor = current.white_player === userId ? "white" : "black";
     if (current.turn_color !== myColor) return;
     setBusy(true);
@@ -249,8 +272,9 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
   useEffect(() => {
     if (!game) return;
     const chess = new Chess(game.fen);
-    const myColor: Color = game.white_player === userId ? "white" : "black";
-    const canMove = game.status === "active" && game.turn_color === myColor && !busy;
+    const isPlayer = game.white_player === userId || game.black_player === userId;
+    const myColor: Color = isPlayer ? (game.white_player === userId ? "white" : "black") : "white";
+    const canMove = isPlayer && game.status === "active" && game.turn_color === myColor && !busy;
     ground.current?.set({
       fen: game.fen,
       orientation: myColor,
@@ -312,11 +336,13 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
     void loadLobby();
     void loadHistory();
     void loadLeaderboard();
+    void loadLiveGames();
     void loadMyRating();
   };
 
   const isWhite = game?.white_player === userId;
-  const myColor: Color = isWhite ? "white" : "black";
+  const isParticipant = Boolean(game && (game.white_player === userId || game.black_player === userId));
+  const myColor: Color = isParticipant ? (isWhite ? "white" : "black") : "white";
   const currentRemaining = useMemo(() => {
     if (!game) return 15000;
     const base = game.turn_color === "white" ? game.white_time_ms : game.black_time_ms;
@@ -347,6 +373,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
   const status = !game ? "Choose an online game" :
     game.status === "waiting" ? "Waiting for an opponent" :
     game.status === "finished" ? `Game finished · ${game.result ?? ""} · ${game.termination ?? ""}` :
+    !isParticipant ? "Watching live game" :
     game.turn_color === myColor ? "Your turn" : "Opponent's turn";
 
   return (
@@ -420,6 +447,22 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
               <strong className="leaderboard-rating">{player.ultrabullet_rating}</strong>
             </div>
           ))}
+          <div className="history-head"><strong>Live games</strong><button type="button" onClick={() => void loadLiveGames()}>↻ Refresh</button></div>
+          {liveGames.length === 0 ? (
+            <div className="lobby-empty history-empty">No live games to watch right now.</div>
+          ) : liveGames.map((item) => (
+            <div className="lobby-row" key={item.id}>
+              <div className="lobby-avatar">◉</div>
+              <div className="lobby-player">
+                <strong>{item.white?.display_name || item.white?.username || "White"} vs {item.black?.display_name || item.black?.username || "Black"}</strong>
+                <span>{item.ply} half-moves · {item.turn_color} to move</span>
+              </div>
+              <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id, false)}>
+                Watch
+              </button>
+            </div>
+          ))}
+
         </div>
       )}
 
@@ -428,7 +471,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
           <div className="online-board-column">
             <div className="online-player-bar">
               <span className="online-player-piece">♟</span>
-              <div><strong>{isWhite ? "Opponent" : "You"}</strong><small>Black</small></div>
+              <div><strong>{isParticipant ? (isWhite ? "Opponent" : "You") : "Black"}</strong><small>Black</small></div>
               <strong className={game.turn_color === "black" && game.status === "active" ? "clock active-clock" : "clock"}>
                 {clockText(blackClock)}
               </strong>
@@ -436,7 +479,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
             <div className="online-board-frame"><div className="online-board" ref={boardElement} /></div>
             <div className="online-player-bar">
               <span className="online-player-piece">♙</span>
-              <div><strong>{isWhite ? "You" : "Opponent"}</strong><small>White</small></div>
+              <div><strong>{isParticipant ? (isWhite ? "You" : "Opponent") : "White"}</strong><small>White</small></div>
               <strong className={game.turn_color === "white" && game.status === "active" ? "clock active-clock" : "clock"}>
                 {clockText(whiteClock)}
               </strong>
@@ -462,7 +505,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
             </div>
             <div className="online-game-actions">
               <span>15 + 0 · Ultrabullet</span>
-              {game.status === "active" && <button type="button" onClick={resign} disabled={busy}>Resign</button>}
+              {game.status === "active" && isParticipant && <button type="button" onClick={resign} disabled={busy}>Resign</button>}
               {game.status === "finished" && <button type="button" onClick={backToLobby}>Find another game</button>}
             </div>
           </aside>
