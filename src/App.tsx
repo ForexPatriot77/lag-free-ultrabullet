@@ -257,13 +257,13 @@ function App() {
               </div>
               <div className="lobby-home-center">
                 <div className="lobby-tabs"><button className="active">Lobby</button><button disabled>Quick pairing</button><button disabled>Correspondence</button></div>
-                {user ? <OnlinePlay user={user} initialGameId={null} /> : (
+                {user ? <OnlinePlay user={user} initialGameId={null} onOpenProfile={(username) => { setProfileUsername(username); setPage("profile"); }} /> : (
                   <div className="lobby-login-panel"><div className="lobby-login-symbol">♞</div><h1>Find your next game.</h1><p>Sign in to create a challenge, join an open game, and track your ultrabullet rating.</p><div><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="lobby-secondary-button" onClick={() => setAuthMode("signup")}>Create account</button></div></div>
                 )}
               </div>
               <aside className="lobby-home-right">
                 <button className="lobby-big-action" onClick={() => user ? setPage("play") : setAuthMode("signin")}><span>♟</span><strong>Create lobby game</strong></button>
-                <button className="lobby-big-action" onClick={() => setAuthMode(user ? "signin" : "signup")}><span>♙</span><strong>Challenge a friend</strong></button>
+                <button className="lobby-big-action" onClick={() => user ? setPage("play") : setAuthMode("signup")}><span>♙</span><strong>Challenge a friend</strong></button>
                 <button className="lobby-big-action" onClick={() => setPage("analysis")}><span>⌗</span><strong>Analysis board</strong></button>
                 <div className="lobby-live-summary"><strong>15 + 0</strong><span>Ultrabullet time control</span><small>Fast games. Instant decisions.</small></div>
               </aside>
@@ -273,7 +273,7 @@ function App() {
           {page === "play" && (
             <section className="content-page">
               <div className="content-page-heading"><div><span className="page-kicker">FIND A GAME</span><h1>Play online</h1><p>Challenge someone, join an open game, or review a recent match.</p></div><span className="time-control-label">⚡ 15 + 0 · Ultrabullet</span></div>
-              {user ? <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} /> : (
+              {user ? <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} onOpenProfile={(username) => { setProfileUsername(username); setPage("profile"); }} /> : (
                 <div className="signin-gate"><div className="gate-icon">♟</div><h2>Sign in to play online</h2><p>Your games, rating, and challenges are connected to your player account.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="gate-secondary" onClick={() => setAuthMode("signup")}>Create an account</button></div>
               )}
             </section>
