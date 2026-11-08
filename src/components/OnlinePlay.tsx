@@ -90,7 +90,7 @@ function clockText(ms: number): string {
   return `${Math.max(0, ms / 1000).toFixed(1)}s`;
 }
 
-export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?: string | null }) {
+export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User; initialGameId?: string | null; onOpenProfile?: (username: string) => void }) {
   const [gameId, setGameId] = useState<string | null>(initialGameId ?? null);
   const [game, setGame] = useState<GameRow | null>(null);
   const [moves, setMoves] = useState<MoveRow[]>([]);
@@ -411,7 +411,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
             <div className="lobby-row" key={item.id}>
               <div className="lobby-avatar">♟</div>
               <div className="lobby-player">
-                <strong>{item.opponent?.display_name || item.opponent?.username || "Player"}</strong>
+                <strong>{item.opponent?.username && onOpenProfile ? <button className="player-name-link" onClick={() => onOpenProfile(item.opponent!.username)}>{item.opponent.display_name || item.opponent.username}</button> : (item.opponent?.display_name || item.opponent?.username || "Player")}</strong>
                 <span>15 seconds · waiting for opponent</span>
               </div>
               <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id)}>
@@ -441,7 +441,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
             <div className="lobby-row leaderboard-row" key={player.user_id}>
               <span className="leaderboard-rank">{index + 1}</span>
               <div className="lobby-player">
-                <strong>{player.profile?.display_name || player.profile?.username || "Player"}</strong>
+                <strong>{player.profile?.username && onOpenProfile ? <button className="player-name-link" onClick={() => onOpenProfile(player.profile!.username)}>{player.profile.display_name || player.profile.username}</button> : (player.profile?.display_name || player.profile?.username || "Player")}</strong>
                 <span>{player.games_played} games · {player.wins} wins · {player.draws} draws</span>
               </div>
               <strong className="leaderboard-rating">{player.ultrabullet_rating}</strong>
