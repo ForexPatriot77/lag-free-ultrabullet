@@ -651,3 +651,18 @@ body { background: var(--page); }
 
 .player-name-link { border:0; padding:0; color:#b8c8d9; background:transparent; font:inherit; text-align:left; cursor:pointer; }
 .player-name-link:hover { color:#e4d2a9; text-decoration:underline; }
+
+/* Functional controls for live chess */
+.time-control-picker,.online-board-tools label {
+  display:flex; flex-direction:column; gap:5px; color:#aaa69e; font-size:9px; font-weight:700; letter-spacing:.5px;
+}
+.time-control-picker select,.online-board-tools select {
+  min-width:105px; border:1px solid #4b473f; border-radius:3px; padding:8px 10px;
+  color:#ded9cf; background:#302e29; font:inherit; font-size:11px; letter-spacing:0;
+}
+.lobby-create { flex-wrap:wrap; gap:12px; }
+.online-board-tools { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:10px 0; }
+.online-board-tools button { border:1px solid #48443d; border-radius:3px; padding:7px 10px; color:#d0cbc2; background:#302e29; font-size:10px; cursor:pointer; }
+.online-board-tools button:hover { background:#403c34; }
+.online-board-tools label { flex-direction:row; align-items:center; }
+.draw-help { color:#8d887f; font-size:9px; }
