@@ -41,6 +41,16 @@ type LobbyGame = {
   opponent: { username: string; display_name: string | null } | null;
 };
 
+type HistoryGame = {
+  id: string;
+  white_player: string;
+  black_player: string | null;
+  result: string | null;
+  termination: string | null;
+  finished_at: string | null;
+  opponent: { username: string; display_name: string | null } | null;
+};
+
 function destinations(chess: Chess): Map<Key, Key[]> {
   const result = new Map<Key, Key[]>();
   for (const rank of "12345678") {
@@ -62,6 +72,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
   const [game, setGame] = useState<GameRow | null>(null);
   const [moves, setMoves] = useState<MoveRow[]>([]);
   const [lobby, setLobby] = useState<LobbyGame[]>([]);
+  const [history, setHistory] = useState<HistoryGame[]>([]);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -86,6 +97,15 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
       setLobby((data.games ?? []) as LobbyGame[]);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not load open challenges.");
+    }
+  }, [invoke]);
+
+  const loadHistory = useCallback(async () => {
+    try {
+      const data = await invoke({ action: "history" });
+      setHistory((data.games ?? []) as HistoryGame[]);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not load game history.");
     }
   }, [invoke]);
 
@@ -120,8 +140,11 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
 
   useEffect(() => {
     if (initialGameId) void openGame(initialGameId);
-    else void loadLobby();
-  }, [initialGameId, openGame, loadLobby]);
+    else {
+      void loadLobby();
+      void loadHistory();
+    }
+  }, [initialGameId, openGame, loadLobby, loadHistory]);
 
   useEffect(() => {
     if (!gameId) return;
@@ -252,6 +275,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
     url.searchParams.delete("game");
     window.history.replaceState({}, "", url);
     void loadLobby();
+    void loadHistory();
   };
 
   const isWhite = game?.white_player === userId;
@@ -323,6 +347,21 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
               </div>
               <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id)}>
                 Join
+              </button>
+            </div>
+          ))}
+          <div className="history-head"><strong>Recent games</strong><button type="button" onClick={() => void loadHistory()}>↻ Refresh</button></div>
+          {history.length === 0 ? (
+            <div className="lobby-empty history-empty">Completed games will appear here.</div>
+          ) : history.map((item) => (
+            <div className="lobby-row" key={item.id}>
+              <div className="lobby-avatar">♜</div>
+              <div className="lobby-player">
+                <strong>{item.opponent?.display_name || item.opponent?.username || "Former opponent"}</strong>
+                <span>{item.result} · {item.termination}</span>
+              </div>
+              <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id, false)}>
+                Review
               </button>
             </div>
           ))}
