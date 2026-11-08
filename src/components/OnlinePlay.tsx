@@ -80,19 +80,14 @@ type LeaderboardPlayer = {
 
 type TimeControl = { label: string; initialTimeMs: number; incrementMs: number; category: string };
 const TIME_CONTROLS: TimeControl[] = [
-  { label: "15 seconds", initialTimeMs: 15000, incrementMs: 0, category: "Ultrabullet" },
-  { label: "30 seconds", initialTimeMs: 30000, incrementMs: 0, category: "Bullet" },
-  { label: "1 + 0", initialTimeMs: 60000, incrementMs: 0, category: "Bullet" },
-  { label: "2 + 1", initialTimeMs: 120000, incrementMs: 1000, category: "Bullet" },
-  { label: "3 + 0", initialTimeMs: 180000, incrementMs: 0, category: "Blitz" },
-  { label: "3 + 2", initialTimeMs: 180000, incrementMs: 2000, category: "Blitz" },
-  { label: "5 + 0", initialTimeMs: 300000, incrementMs: 0, category: "Blitz" },
-  { label: "5 + 3", initialTimeMs: 300000, incrementMs: 3000, category: "Blitz" },
-  { label: "10 + 0", initialTimeMs: 600000, incrementMs: 0, category: "Rapid" },
-  { label: "10 + 5", initialTimeMs: 600000, incrementMs: 5000, category: "Rapid" },
-  { label: "15 + 10", initialTimeMs: 900000, incrementMs: 10000, category: "Rapid" },
-  { label: "30 + 0", initialTimeMs: 1800000, incrementMs: 0, category: "Classical" },
-  { label: "30 + 20", initialTimeMs: 1800000, incrementMs: 20000, category: "Classical" },
+  { label: "30 seconds · Hyperbullet", initialTimeMs: 30000, incrementMs: 0, category: "Hyperbullet" },
+  { label: "15 seconds · Ultrabullet", initialTimeMs: 15000, incrementMs: 0, category: "Ultrabullet" },
+  { label: "7.5 seconds · Nanobullet", initialTimeMs: 7500, incrementMs: 0, category: "Nanobullet" },
+  { label: "3.25 seconds", initialTimeMs: 3250, incrementMs: 0, category: "Hyperfast" },
+  { label: "1.625 seconds", initialTimeMs: 1625, incrementMs: 0, category: "Hyperfast" },
+  { label: "0.8125 seconds", initialTimeMs: 812.5, incrementMs: 0, category: "Hyperfast" },
+  { label: "0.40625 seconds", initialTimeMs: 406.25, incrementMs: 0, category: "Hyperfast" },
+  { label: "0.203125 seconds", initialTimeMs: 203.125, incrementMs: 0, category: "Hyperfast" },
 ];
 function controlLabel(initial: number, increment: number): string {
   return TIME_CONTROLS.find((item) => item.initialTimeMs === initial && item.incrementMs === increment)?.label ?? "Custom";
@@ -111,7 +106,8 @@ function destinations(chess: Chess): Map<Key, Key[]> {
 }
 
 function clockText(ms: number): string {
-  return `${Math.max(0, ms / 1000).toFixed(1)}s`;
+  const seconds = Math.max(0, ms / 1000);
+  return seconds < 1 ? seconds.toFixed(3) + "s" : seconds.toFixed(2).replace(/0+$/, "").replace(/\.$/, "") + "s";
 }
 
 export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User; initialGameId?: string | null; onOpenProfile?: (username: string) => void }) {
@@ -123,7 +119,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
   const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([]);
   const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
   const [myRating, setMyRating] = useState<number | null>(null);
-  const [selectedControl, setSelectedControl] = useState<TimeControl>(TIME_CONTROLS[0]);
+  const [selectedControl, setSelectedControl] = useState<TimeControl>(TIME_CONTROLS[1]);
   const [promotion, setPromotion] = useState<"q" | "r" | "b" | "n">("q");
   const [boardOrientation, setBoardOrientation] = useState<Color>("white");
   const [loading, setLoading] = useState(false);
@@ -429,7 +425,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
           <div className="lobby-create">
             <div>
               <strong>Challenge someone</strong>
-              <span>15 seconds is rated; other time controls are casual for now.</span>
+              <span>Choose your speed. 15-second Ultrabullet is currently the rated pool.</span>
             </div>
             <label className="time-control-picker">Time control
               <select value={String(selectedControl.initialTimeMs) + "-" + String(selectedControl.incrementMs)} onChange={(event) => {
@@ -437,9 +433,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
                 const found = TIME_CONTROLS.find((item) => item.initialTimeMs === parts[0] && item.incrementMs === parts[1]);
                 if (found) setSelectedControl(found);
               }}>
-                {["Ultrabullet","Bullet","Blitz","Rapid","Classical"].map((category) => <optgroup key={category} label={category}>
-                  {TIME_CONTROLS.filter((item) => item.category === category).map((item) => <option key={item.initialTimeMs + "-" + item.incrementMs} value={item.initialTimeMs + "-" + item.incrementMs}>{item.label}</option>)}
-                </optgroup>)}
+                {TIME_CONTROLS.map((item) => <option key={item.initialTimeMs + "-" + item.incrementMs} value={item.initialTimeMs + "-" + item.incrementMs}>{item.label}</option>)}
               </select>
             </label>
             <button className="online-primary" type="button" disabled={busy || loading} onClick={createGame}>
