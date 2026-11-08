@@ -9,11 +9,11 @@ An independent chess platform built from scratch. The interface takes inspiratio
 - React + TypeScript + Vite
 - [Chessground](https://github.com/lichess-org/chessground) for board rendering and interaction
 - [chess.js](https://github.com/jhlywa/chess.js) for legal chess moves and game state
-- Supabase for the planned authentication, database, and realtime services
+- Supabase Auth, Postgres, Realtime, and Edge Functions
 
 ## Requirements
 
-- Node.js 20.19+ (or a compatible newer release)
+- Node.js 24+
 - npm
 
 ## Local development
@@ -25,7 +25,7 @@ An independent chess platform built from scratch. The interface takes inspiratio
    npm install
    ```
 
-3. Copy `.env.example` to `.env` and set the Supabase publishable key.
+3. Copy `.env.example` to `.env` and set the Supabase project URL and publishable key.
 4. Start the dev server:
 
    ```sh
@@ -38,15 +38,39 @@ An independent chess platform built from scratch. The interface takes inspiratio
    npm run build
    ```
 
-## Supabase
+## Supabase configuration
 
-The project is configured to use the new Supabase project through environment variables. The browser app must only use the project's publishable key. Never place a Supabase secret key or service-role key in frontend code or commit either one to Git.
+The browser application uses the project's publishable key. The deployed Edge Function uses Supabase's `@supabase/server` authentication context and server-side credentials supplied by the Supabase runtime.
 
-No database schema has been applied yet. Tables, RLS policies, and Realtime configuration will be introduced in deliberate, reviewable migrations once the multiplayer data model is designed.
+Never put a Supabase secret key or service-role key in frontend code, GitHub Pages build variables, or any public repository file.
 
-## Current milestone
+The connected Supabase project currently contains these tables:
 
-The first milestone is the independent play-screen shell and a local legal-move board. Online matchmaking, server-authoritative games, clocks, accounts, ratings, and persistence are not implemented yet.
+- `profiles` — player usernames, display names, and bios
+- `games` — authoritative 15-second ultrabullet game state and clocks
+- `game_moves` — server-accepted move history
+- `player_ratings` — server-maintained ultrabullet Elo ratings and records
+
+All exposed tables use Row Level Security. Game creation, joining, move commits, game completion, and rating changes are performed through server-controlled database functions called by the authenticated Edge Function. Clients cannot write game state or rating values directly.
+
+The `ultrabullet` Edge Function validates the user's session, checks legal moves with `chess.js`, maintains the authoritative clock state, and returns game snapshots. Supabase Realtime publishes game updates to participants and signed-in spectators.
+
+## Current implementation
+
+- Email/password registration and sign-in
+- Editable player username, display name, and bio
+- Local Chessground practice board
+- 15-second online ultrabullet challenges and invite links
+- Open challenge lobby and live-game spectator list
+- Server-validated legal moves and promotion-to-queen
+- Server-authoritative clocks, timeout, resignation, checkmate, and draw handling
+- Realtime game updates
+- Completed-game history and move review
+- Initial Elo rating system and ultrabullet leaderboard
+
+## Still in development
+
+This is an early playable foundation, not a finished Lichess-scale platform. Matchmaking queues, puzzles, deeper analysis tools, chat, teams, moderation, account recovery polish, and broader testing remain to be built. Online play also needs end-to-end testing with real signed-in players.
 
 ## Chessground license
 
