@@ -70,6 +70,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
   const boardElement = useRef<HTMLDivElement>(null);
   const ground = useRef<Api | null>(null);
   const gameRef = useRef<GameRow | null>(null);
+  const timeoutRequested = useRef<string | null>(null);
   const userId = user.id;
 
   const invoke = useCallback(async (body: Record<string, unknown>) => {
@@ -272,9 +273,9 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
     : 15000;
 
   useEffect(() => {
-    if (game?.status === "active" && currentRemaining <= 0) {
-      const id = game.id;
-      void loadState(id).catch(() => undefined);
+    if (game?.status === "active" && currentRemaining <= 0 && timeoutRequested.current !== game.id) {
+      timeoutRequested.current = game.id;
+      void loadState(game.id).catch(() => undefined);
     }
   }, [game?.id, game?.status, currentRemaining, loadState]);
 
@@ -358,7 +359,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
             )}
             <div className="online-moves">
               {moves.length === 0 ? <span className="moves-placeholder">Moves will appear here.</span> :
-                moves.map((move, index) => (
+                moves.map((move) => (
                   <div className="online-move" key={move.ply}>
                     <span>{Math.ceil(move.ply / 2)}{move.ply % 2 ? "." : "…"}</span>
                     <strong>{move.san}</strong>
