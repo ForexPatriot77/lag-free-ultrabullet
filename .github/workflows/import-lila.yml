@@ -1,0 +1,140 @@
+name: Import Lila into the existing repository
+
+on:
+  push:
+    branches: [lila-import]
+    paths:
+      - .github/workflows/import-lila.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lila-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the staging branch
+        uses: actions/checkout@v4
+        with:
+          ref: lila-import
+          fetch-depth: 1
+
+      - name: Fetch the upstream Lila source snapshot
+        run: |
+          git clone --depth 1 --branch master https://github.com/lichess-org/lila.git /tmp/lila
+          echo "LILA_SHA=$(git -C /tmp/lila rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Preserve the current application and import Lila
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Keep the existing app intact for reference and migration of its custom features.
+          mkdir -p legacy-ultrabullet/.github/workflows
+          for file in .github/workflows/build.yml .github/workflows/deploy.yml; do
+            if [ -f "$file" ]; then
+              mv "$file" legacy-ultrabullet/.github/workflows/
+            fi
+          done
+
+          find . -mindepth 1 -maxdepth 1 \
+            ! -name '.git' \
+            ! -name '.github' \
+            ! -name 'legacy-ultrabullet' \
+            -exec mv {} legacy-ultrabullet/ \;
+
+          # Import Lila's source tree, not its Git metadata or upstream CI workflows.
+          # Some artwork and piece sets have non-free or CC BY-NC-SA terms; omit them.
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='public/logo' \
+            --exclude='public/favicon.ico' \
+            --exclude='public/apple-touch-icon.png' \
+            --exclude='public/piece/alpha' \
+            --exclude='public/piece/chess7' \
+            --exclude='public/piece/companion' \
+            --exclude='public/piece/leipzig' \
+            --exclude='public/piece/reillycraig' \
+            --exclude='public/piece/riohacha' \
+            --exclude='public/piece/shahi-ivory-brown' \
+            --exclude='public/piece/horsey' \
+            --exclude='public/piece/california' \
+            --exclude='public/piece/caliente' \
+            --exclude='public/piece/maestro' \
+            --exclude='public/piece/fresca' \
+            --exclude='public/piece/cardinal' \
+            --exclude='public/piece/icpieces' \
+            --exclude='public/piece/gioco' \
+            --exclude='public/piece/tatiana' \
+            --exclude='public/piece/staunty' \
+            --exclude='public/piece/dubrovny' \
+            --exclude='public/piece/anarcandy' \
+            --exclude='public/piece/disguised' \
+            --exclude='public/piece/cooke' \
+            --exclude='public/piece/monarchy' \
+            --exclude='public/piece/xkcd' \
+            --exclude='public/piece/minimal-warmth' \
+            --exclude='public/images/***' \
+            --include='public/images/' \
+            --include='public/images/board/***' \
+            --include='public/images/staunton/***' \
+            --include='public/images/trophy/***' \
+            --exclude='public/sounds/***' \
+            --include='public/sounds/' \
+            --include='public/sounds/futuristic/***' \
+            --include='public/sounds/nes/***' \
+            --include='public/sounds/piano/***' \
+            --include='public/sounds/sfx/***' \
+            /tmp/lila/ ./
+
+          # This particular Staunton asset is separately identified as non-free.
+          rm -rf public/images/staunton/piece/Staunton
+          rm -f public/images/emoji/horsey.webp
+
+          cat > UPSTREAM.md <<EOF
+          # Upstream source and attribution
+
+          This repository incorporates source code from [lichess-org/lila](https://github.com/lichess-org/lila).
+
+          - Upstream repository: https://github.com/lichess-org/lila
+          - Upstream branch: master
+          - Imported upstream commit: ${LILA_SHA}
+          - Import date: $(date -u +%Y-%m-%d)
+
+          Lila is copyright (c) 2012-2026 the Lila authors and is licensed under
+          the GNU Affero General Public License, version 3 or (at your option) any
+          later version. The upstream license text and asset-specific notices are
+          retained in LICENSE and COPYING.md.
+
+          This project is an independent modification. It is not affiliated with,
+          endorsed by, or operated by Lichess. Lichess branding and assets restricted
+          to identifying lichess.org are not included in this import.
+          EOF
+
+          cat > README.md <<'EOF'
+          # Lag-Free Ultrabullet
+
+          An independent hyperfast chess platform based on the open-source Lila application.
+
+          This repository incorporates modified source code from [lichess-org/lila](https://github.com/lichess-org/lila).
+          See [UPSTREAM.md](UPSTREAM.md), [COPYING.md](COPYING.md), and [LICENSE](LICENSE) for provenance,
+          copyright, licensing, and third-party asset notices.
+
+          The previous React/Supabase prototype is preserved in [legacy-ultrabullet/](legacy-ultrabullet/)
+          as a reference for custom product features, including the requested hyperfast time controls.
+          It is not the active application.
+
+          This project is independent and is not affiliated with or endorsed by Lichess.
+          EOF
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Import Lila source snapshot (AGPL-3.0-or-later) [skip ci]"
+          git push origin HEAD:lila-import
