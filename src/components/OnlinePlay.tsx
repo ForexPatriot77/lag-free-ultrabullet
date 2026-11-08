@@ -185,7 +185,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
       ground.current?.destroy();
       ground.current = null;
     };
-  }, [userId]);
+  }, [userId, Boolean(game)]);
 
   useEffect(() => {
     if (!game) return;
