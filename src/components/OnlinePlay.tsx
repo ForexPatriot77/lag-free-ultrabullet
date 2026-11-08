@@ -135,6 +135,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
   const ground = useRef<Api | null>(null);
   const gameRef = useRef<GameRow | null>(null);
   const timeoutRequested = useRef<string | null>(null);
+  const orientedGameId = useRef<string | null>(null);
   const userId = user.id;
 
   const invoke = useCallback(async (body: Record<string, unknown>) => {
@@ -193,6 +194,11 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
     const data = await invoke({ action: "state", gameId: id });
     setServerOffset((data.serverTime ?? Date.now()) - Date.now());
     setGame(data.game as GameRow);
+    if (orientedGameId.current !== id) {
+      orientedGameId.current = id;
+      const row = data.game as GameRow;
+      setBoardOrientation(row.white_player === userId ? "white" : row.black_player === userId ? "black" : "white");
+    }
     setMoves((data.moves ?? []) as MoveRow[]);
   }, [invoke]);
 
@@ -357,6 +363,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
     setGame(null);
     setMoves([]);
     setGameId(null);
+    orientedGameId.current = null;
     const url = new URL(window.location.href);
     url.searchParams.delete("game");
     window.history.replaceState({}, "", url);
@@ -384,7 +391,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
   const blackClock = game
     ? game.black_time_ms - (game.status === "active" && game.turn_color === "black" && game.last_move_at
       ? Math.max(0, Date.now() + serverOffset - new Date(game.last_move_at).getTime()) : 0)
-    : 15000;
+    : selectedControl.initialTimeMs;
 
   useEffect(() => {
     if (game?.status === "active" && currentRemaining <= 0 && timeoutRequested.current !== game.id) {
@@ -422,7 +429,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
           <div className="lobby-create">
             <div>
               <strong>Challenge someone</strong>
-              <span>Create a game and share its invite link.</span>
+              <span>15 seconds is rated; other time controls are casual for now.</span>
             </div>
             <label className="time-control-picker">Time control
               <select value={String(selectedControl.initialTimeMs) + "-" + String(selectedControl.incrementMs)} onChange={(event) => {
