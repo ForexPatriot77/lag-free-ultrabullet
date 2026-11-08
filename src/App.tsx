@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+import { AuthDialog } from "./components/AuthDialog";
 import { Chess } from "chess.js";
 import { Chessground } from "@lichess-org/chessground";
 import type { Api } from "@lichess-org/chessground/api";
@@ -6,7 +8,7 @@ import type { Color, Key } from "@lichess-org/chessground/types";
 import "@lichess-org/chessground/assets/chessground.base.css";
 import "@lichess-org/chessground/assets/chessground.brown.css";
 import "@lichess-org/chessground/assets/chessground.cburnett.css";
-import { isSupabaseConfigured } from "./lib/supabase";
+import { isSupabaseConfigured, supabase } from "./lib/supabase";
 
 type Snapshot = {
   fen: string;
@@ -51,6 +53,49 @@ function App() {
   const [orientation, setOrientation] = useState<Color>("white");
   const [snapshot, setSnapshot] = useState(() => getSnapshot(game.current));
   const [copiedFen, setCopiedFen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<{ username: string; display_name: string | null } | null>(null);
+  const [authMode, setAuthMode] = useState<"signin" | "signup" | null>(null);
+
+  useEffect(() => {
+    if (!supabase) return;
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (active) setUser(data.session?.user ?? null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!supabase || !user) {
+      setProfile(null);
+      return;
+    }
+    let active = true;
+    supabase
+      .from("profiles")
+      .select("username, display_name")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active && data) setProfile(data);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  const signOut = async () => {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    setProfile(null);
+  };
 
   const movePairs = useMemo(() => {
     const pairs: { number: number; white?: string; black?: string }[] = [];
@@ -155,7 +200,7 @@ function App() {
   return (
     <div className="site-shell">
       <header className="topbar">
-        <a className="brand" href="/" aria-label="Lag-Free Ultrabullet home">
+        <a className="brand" href={import.meta.env.BASE_URL} aria-label="Lag-Free Ultrabullet home">
           <span className="brand-mark">♞</span>
           <span className="brand-name">LAG-FREE <b>ULTRABULLET</b></span>
         </a>
@@ -167,8 +212,17 @@ function App() {
         </nav>
         <div className="top-actions">
           <span className="connection"><i /> Local board</span>
-          <button className="login-button" type="button">Log in</button>
-          <button className="signup-button" type="button">Sign up</button>
+          {user ? (
+            <>
+              <span className="account-name">{profile?.display_name || profile?.username || "Player"}</span>
+              <button className="login-button" type="button" onClick={signOut}>Log out</button>
+            </>
+          ) : (
+            <>
+              <button className="login-button" type="button" onClick={() => setAuthMode("signin")}>Log in</button>
+              <button className="signup-button" type="button" onClick={() => setAuthMode("signup")}>Sign up</button>
+            </>
+          )}
         </div>
       </header>
 
@@ -275,6 +329,7 @@ function App() {
           </aside>
         </section>
       </main>
+      {authMode && <AuthDialog initialMode={authMode} onClose={() => setAuthMode(null)} />}
       <footer className="site-footer">
         <span>Lag-Free Ultrabullet</span>
         <span>Independent chess project · Not affiliated with Lichess</span>
