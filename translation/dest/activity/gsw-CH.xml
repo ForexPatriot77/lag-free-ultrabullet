@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="activity">Aktivitäte</string>
+  <string name="hostedALiveStream">Hät en Live Stream g\'macht</string>
+  <plurals name="supportedNbMonths">
+    <item quantity="one">Underschtützt lichess.org sit %1$s Monet als %2$s</item>
+    <item quantity="other">Underschtützt lichess.org sit %1$s Mönet als %2$s</item>
+  </plurals>
+  <plurals name="practicedNbPositions">
+    <item quantity="one">Hät %1$s Schtellig bi %2$s g\'üebt</item>
+    <item quantity="other">Hät %1$s Schtellige bi %2$s g\'üebt</item>
+  </plurals>
+  <plurals name="solvedNbPuzzles">
+    <item quantity="one">Hät %s Taktikufgab g\'löst</item>
+    <item quantity="other">Hät %s Taktikufgabe g\'löst</item>
+  </plurals>
+  <plurals name="playedNbGames">
+    <item quantity="one">Hät %1$s Schpil %2$s g\'schpillt</item>
+    <item quantity="other">Hät %1$s Schpil %2$s g\'schpillt</item>
+  </plurals>
+  <plurals name="postedNbMessages">
+    <item quantity="one">Hät %1$s Nachricht in %2$s g\'schribe</item>
+    <item quantity="other">Hät %1$s Nachrichte in %2$s g\'schribe</item>
+  </plurals>
+  <plurals name="playedNbMoves">
+    <item quantity="one">Hät %1$s Zug g\'schpillt</item>
+    <item quantity="other">Hät %1$s Züg g\'schpillt</item>
+  </plurals>
+  <plurals name="inNbCorrespondenceGames">
+    <item quantity="one">in %1$s Fernschach Partie</item>
+    <item quantity="other">in %1$s Fernschach Partie</item>
+  </plurals>
+  <plurals name="completedNbGames">
+    <item quantity="one">Hät %s Fernschach Partie g\'schpillt</item>
+    <item quantity="other">Hät %s Fernschachs Partie g\'schpillt</item>
+  </plurals>
+  <plurals name="completedNbVariantGames">
+    <item quantity="one">%1$s %2$s Fernschach Partie g\'schpillt</item>
+    <item quantity="other">%1$s %2$s Fernschach Partie g\'schpillt</item>
+  </plurals>
+  <plurals name="followedNbPlayers">
+    <item quantity="one">Folgt jetzt %s Schpiler</item>
+    <item quantity="other">Folgt jetzt %s Schpiler</item>
+  </plurals>
+  <plurals name="gainedNbFollowers">
+    <item quantity="one">Hät %s neue Folgende erworbe</item>
+    <item quantity="other">Hät %s neui Folgendi erworbe</item>
+  </plurals>
+  <plurals name="hostedNbSimuls">
+    <item quantity="one">Hät %s Simultanschach veraschtaltet</item>
+    <item quantity="other">Hät %s Simultanschachs veraschtaltet</item>
+  </plurals>
+  <plurals name="joinedNbSimuls">
+    <item quantity="one">Hät a %s Simultanschach mitg\'macht</item>
+    <item quantity="other">Hät a %s Simultanschachs mitg\'macht</item>
+  </plurals>
+  <plurals name="createdNbStudies">
+    <item quantity="one">Hät %s neui Schtudie erschtellt</item>
+    <item quantity="other">Hät %s neui Schtudie erschtellt</item>
+  </plurals>
+  <plurals name="competedInNbTournaments">
+    <item quantity="one">Hät a %s Turnier teilg\'nah</item>
+    <item quantity="other">Hät a %s Turnier teilg\'nah</item>
+  </plurals>
+  <plurals name="rankedInTournament">
+    <item quantity="one">Hät Rang #%1$s (oberi %2$s%%) mit %3$s Schpil in %4$s erreicht</item>
+    <item quantity="other">Hät Rang #%1$s (oberi %2$s%%) mit %3$s Schpil in %4$s erreicht</item>
+  </plurals>
+  <plurals name="competedInNbSwissTournaments">
+    <item quantity="one">Hät a %s Turnier nach Schweizer System teilg\'nah</item>
+    <item quantity="other">Hät a %s Turnier nach Schweizer System teilg\'nah</item>
+  </plurals>
+  <string name="rankedInSwissTournament">Hät Rang #%1$s im Turnier %2$s erreicht</string>
+  <string name="signedUp">Hät sich bi lichess.org ag\'mäldet</string>
+  <plurals name="joinedNbTeams">
+    <item quantity="one">Isch %s Team biträte</item>
+    <item quantity="other">Isch %s Teams biträte</item>
+  </plurals>
+</resources>

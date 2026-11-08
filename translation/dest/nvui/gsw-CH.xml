@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="featuredEvents">Usgwählti Ereignis</string>
+  <string name="moveList">Zugs Lischte</string>
+  <string name="gameInfo">Schpil Info</string>
+  <string name="pieces">Figure</string>
+  <string name="gameStatus">Schpil Status</string>
+  <string name="lastMove">Letschte Zug</string>
+  <string name="inputForm">Befehlsigab Art</string>
+  <string name="actions">Akzione</string>
+  <string name="yourClock">Dini Zit</string>
+  <string name="opponentClock">Zit vum/vu de Gägner*i</string>
+  <string name="gameStart">Schpil Beginn</string>
+  <string name="boardCommandList">Befehls Lischte, wänn s\'Brätt im Fokus isch</string>
+  <string name="inputFormCommandList">Tipp die Befehl i de Befehls Igab Art.</string>
+  <string name="goToInputForm">Gang zu de Befels Igab Art.</string>
+  <string name="announceCurrentSquare">Zeig s\'aktuelli Fäld.</string>
+  <string name="announceLastMove">Zeig de letscht Zug.</string>
+  <string name="announceLastMoveCapture">Zeig die im letschte Zug g\'schlageni Figur.</string>
+  <string name="announcePossibleMoves">Zeig die mögliche Züg, für die g\'wählt Figur.</string>
+  <string name="announcePossibleCaptures">Zeig möglichi Schlagzüg mit de g\'wählte Figur.</string>
+  <string name="moveWithArrows">Zieh is benachbarti Fäld links, rächts, obe oder unne.</string>
+  <string name="moveToPieceByType">Zieh zu Fälder mit Figurenäme. z.B.: Es wiederholts k gaht zu jedem Fäld mit eme Schpringer. Mit em Grossbuechstabe drehsch d\'Reihefolg.</string>
+  <string name="moveToRank">Zieh uf d\'Reihe 1 bis 8.</string>
+  <string name="moveToFile">Zieh uf d\'Linie a bis h.</string>
+  <string name="announcePieceLocations">Gib a wo d\'Figure schtönd. z. B.: p grosses N für wissi Schpringer, p chlis k für de schwarz König, p grosses A für alli wisse Figure.</string>
+  <string name="announcePiecesOnRankOrFile">Gib d\'Figure uf einere Reihe oder Schpalte a. zB.: s a, s 1.</string>
+  <string name="goToBoard">Gang zum Brätt. s\'Schtandardfäld isch e-4. Du chasch es Fäld ageh: Mit \"board a-1\" oder \"b a-1\" chunsch zum Fäld a-1.</string>
+  <string name="movePiece">Zum Figure zieh, bruchsch üblich algebraisch Notazion.</string>
+  <string name="promotion">En Pur in anderi Figur als e Dame umwandle gaht mit \"gleich\" (=). z.B. git \"a-8-=-n\" en Schpringer uf Fäld a-8.</string>
+  <string name="king">König</string>
+  <string name="whiteKing">wisse König</string>
+  <string name="blackKing">schwarze König</string>
+  <string name="queen">Dame</string>
+  <string name="whiteQueen">wissi Dame</string>
+  <string name="blackQueen">schwarzi Dame</string>
+  <string name="rook">Turm</string>
+  <string name="whiteRook">wisse Turm</string>
+  <string name="blackRook">schwarze Turm</string>
+  <string name="bishop">Läufer</string>
+  <string name="whiteBishop">wisse Läufer</string>
+  <string name="blackBishop">schwarze Läufer</string>
+  <string name="knight">Schpringer</string>
+  <string name="whiteKnight">wisse Schpringer</string>
+  <string name="blackKnight">schwarze Schpringer</string>
+  <string name="pawn">Pur</string>
+  <string name="whitePawn">wisse Pur</string>
+  <string name="blackPawn">schwarze Pur</string>
+  <string name="sanSymbols" comment="Keep this order: king queen rook bishop knight takes">K D T L S x</string>
+  <string name="sanTakes" comment="x in standard notation">schlaht</string>
+  <string name="sanCheck" comment="+ in standard notation">Schach</string>
+  <string name="sanCheckmate" comment="# in standard notation">Schachmatt</string>
+  <string name="sanPromotesTo" comment="= in standard notation">Umwandlig in</string>
+  <string name="sanShortCastling" comment="O-O in standard notation">churzi Rochade</string>
+  <string name="sanLongCastling" comment="O-O-O in standard notation">langi Rochade</string>
+  <string name="sanDroppedOn" comment="crazyhouse @">uf\'s Fäld</string>
+  <string name="invalidMove">unmögliche oder illegale Zug</string>
+  <string name="premoveCancelled">Voruszieh deaktiviert</string>
+  <string name="premoveRecorded">Regischtrierti Voruszüg: %s. Druck Enter zum Beände</string>
+  <string name="pockets" comment="Crazyhouse pockets">Täsche</string>
+  <string name="copyToClipboard">Kopier %s uf\'s Clipboard</string>
+  <string name="copiedToClipboard">%s uf\'s Clipboard kopiert</string>
+  <string name="pgnAndFen">PGN und FEN</string>
+</resources>

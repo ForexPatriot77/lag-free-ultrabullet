@@ -1,0 +1,87 @@
+.streamer-header {
+  display: flex;
+
+  .picture {
+    flex: 0 0 300px;
+  }
+
+  .overview {
+    padding-inline-start: 2em;
+    display: flex;
+    flex: auto;
+    flex-flow: column;
+    justify-content: space-between;
+
+    > span {
+      @extend %flex-between;
+    }
+
+    .online-check {
+      padding: 0.5em 1em;
+      margin-inline-end: 2em;
+    }
+  }
+
+  .metas {
+    display: flex;
+    place-content: center space-between;
+  }
+
+  h1 {
+    @extend %roboto;
+
+    font-size: 2.2rem;
+  }
+
+  .headline {
+    font-style: italic;
+  }
+
+  .headline.medium {
+    font-size: 0.95em;
+  }
+
+  .headline.large {
+    font-size: 0.9em;
+  }
+
+  .services {
+    margin: 0.5em 0;
+  }
+
+  .services li {
+    font-size: 1.2em;
+    white-space: nowrap;
+    padding: 0.3em 0;
+  }
+
+  .service.live {
+    color: $c-brag;
+  }
+}
+
+.streamer-title {
+  @extend %flex-between;
+
+  gap: 1em;
+  margin: 1.5em $box-padding 1em 0;
+}
+
+.streamer-profile {
+  z-index: $z-link-overlay-2;
+}
+
+.live .streamer-lang {
+  margin-right: 100px;
+
+  @media (max-width: at-most($xx-small)) {
+    margin-right: 50px;
+  }
+}
+
+.streamer-footer {
+  @extend %flex-wrap;
+
+  align-items: center;
+  gap: 3em;
+}

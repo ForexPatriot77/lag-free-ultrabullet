@@ -1,0 +1,167 @@
+@import 'header';
+
+@mixin mq-at-least-picture {
+  @media (min-width: at-least($medium)) {
+    @content;
+  }
+}
+
+.streamer-list {
+  h1 {
+    &::before {
+      display: none;
+
+      @include mq-at-least-picture {
+        display: inline;
+      }
+    }
+  }
+
+  .streamer {
+    @include transition;
+
+    border-top: $border;
+    position: relative;
+    display: flex;
+
+    @include mq-subnav-top {
+      overflow-x: hidden;
+    }
+
+    .streamer-title {
+      margin: 0 1em 0.7em 0;
+    }
+
+    &:nth-child(even) {
+      background: $c-bg-zebra;
+      justify-content: space-between;
+
+      div.picture {
+        order: 3;
+      }
+    }
+
+    &:hover {
+      background: color-mix(in oklab, $c-primary 15%, $c-bg);
+
+      .streamer-lang,
+      .service {
+        background: color-mix(in oklab, $c-primary 25%, $c-bg);
+      }
+    }
+
+    h1 {
+      @include fluid-size('font-size', 16px, 32px);
+
+      &::before {
+        display: inline;
+        margin-inline-end: 0.2em;
+
+        @include mq-at-least-picture {
+          display: none;
+        }
+      }
+
+      &.live {
+        &::before {
+          color: $c-live;
+        }
+      }
+    }
+
+    .streamer-lang {
+      @extend %box-radius;
+
+      padding: 3px 8px;
+      background: $c-bg-low;
+    }
+  }
+
+  .overlay {
+    @extend %link-overlay;
+  }
+
+  .thumbnail-wrapper {
+    margin: 16px 0 12px 24px;
+    display: none;
+    position: relative;
+
+    @include mq-at-least-picture {
+      display: block;
+    }
+
+    .live {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: $c-live;
+      color: #fff;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: $small-box-radius-size;
+      font-size: 0.9rem;
+    }
+  }
+
+  img.picture {
+    @extend %box-radius;
+
+    flex: 0 0 150px;
+    overflow: hidden;
+    border: $border;
+  }
+
+  .overview {
+    margin: 18px 10px 10px 24px;
+    display: flex;
+    flex: auto;
+    flex-flow: column;
+    padding-bottom: 8px;
+  }
+
+  .headline.medium {
+    font-size: 0.95em;
+  }
+
+  .headline.large {
+    font-size: 0.9em;
+  }
+
+  .services {
+    display: none;
+    font-size: 0.9rem;
+
+    @media (min-width: at-least($large)) {
+      display: block;
+    }
+  }
+
+  .service {
+    @extend %nowrap-ellipsis, %box-radius, %flex-wrap;
+
+    padding: 3px 8px;
+    background: $c-bg-low;
+
+    svg {
+      width: 1.4em;
+      height: 1.4em;
+      margin-inline-end: 0.4em;
+      opacity: 0.7;
+    }
+  }
+
+  .ats {
+    @extend %flex-center;
+
+    gap: 1rem;
+    margin-bottom: 12px;
+
+    .at {
+      margin-bottom: 0;
+
+      @include mq-at-least-picture {
+        line-height: 1;
+      }
+    }
+  }
+}

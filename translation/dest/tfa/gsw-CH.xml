@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="twoFactorAuth">Zwei Faktor Autentifizierig</string>
+  <string name="twoFactorHelp">Mit de Zwei Faktor Authentifizierig wird dis Konto um es witers Level sicherer.</string>
+  <string name="twoFactorAppRecommend">Hol dir doch e App, für e Zwei Faktor Authentifizierig. Mir empfehled dir folgendi Apps:</string>
+  <string name="scanTheCode">Dänn scänn de QR Code mit de App.</string>
+  <string name="enterPassword">Zum Abschluss vu de Ischtellig muesch dis Passwort und de, vu de App generierte Authentifizierig Code, igeh. Künftig bruchsch - für d\'Amäldig - jedesmal so en generierte Code.</string>
+  <string name="ifYouCannotScanEnterX">Falls du de Code nöd chasch iscänne, tip de G\'heimcode %s i dini App.</string>
+  <string name="authenticationCode">Authentifizierigs Code</string>
+  <string name="ifYouLoseAccessTwoFactor">Hiwis: Wänn du de Zuegriff uf din Zwei Faktor Authentifizierig Code verlürsch, chasch per E-Mail dis %s.</string>
+  <string name="enableTwoFactor">Aktivier d\'Zwei Faktor Authentifizierig</string>
+  <string name="disableTwoFactor">Zwei Faktor Authentifizierig deaktiviere</string>
+  <string name="twoFactorEnabled">Zwei Faktor Authentifizierig aktiviert</string>
+  <string name="twoFactorToDisable">
+Zur Deaktivierig bruchsch dis Passwort und en Code vu de Authenticator App.</string>
+  <string name="openTwoFactorApp">Gang uf dini App für Zwei Faktor Autentifizierig, det wird dir en Code, zur Beschtätigung vu dinere Identität, generiert.</string>
+  <string name="setupReminder">Bitte Zwei Faktor Authentifizierig aktiviere und dis Konto uf - 
+https://lichess.org/account/twofactor - sichere!
+Die Mäldig erschint, will du - mit dim Konto - b\'sunderi Funkzione usüebsch, z.B. als Teamfüerer*i, als Trainer*i, als Lehrer*i oder Streamer*i.</string>
+</resources>

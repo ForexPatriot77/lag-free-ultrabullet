@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="coordinates">Koordinate</string>
+  <string name="coordinateTraining">Koordinate Training</string>
+  <string name="averageScoreAsWhiteX">Durchschnittlichi Punktzahl mit Wiss: %s</string>
+  <string name="averageScoreAsBlackX">Durchschnittlichi Punktzahl mit Schwarz: %s</string>
+  <string name="knowingTheChessBoard">D\'Koordinate vom Schachbrätt z\'känne, 
+isch e wichtigi Fähigkeit:</string>
+  <string name="mostChessCourses">Die meischte Schach Kürs und Üebige 
+verwänded die algebraischi Notazion.</string>
+  <string name="talkToYourChessFriends">Es macht\'s eifacher mit Schachfründe z\'rede, 
+wänn alli d\'Schprach vum Schach verschtöhnd.</string>
+  <string name="youCanAnalyseAGameMoreEffectively">Me chann es Schpil effektiver analysiere, 
+wänn me d\'Koordinate schnäll g\'seht.</string>
+  <string name="aCoordinateAppears">Uf em Brätt erschint e Koordinate (z.B. \"c3\") dänn muesch schnäll uf\'s bezeichneti Fäld klicke.</string>
+  <string name="aSquareIsHighlightedExplanation">Uf em Brätt wird es Fäld grüen ig\'rahmet und du muesch d\'Koordinate vu dem Fäld (z.B. \"e4\") ageh.</string>
+  <string name="youHaveThirtySeconds">Du häsch 30 Sekunde, zum soviel Fälder wie möglich, korräkt z\'bezeichne!</string>
+  <string name="goAsLongAsYouWant">Mach so lang wie du wettsch, es git keis Zitlimitt!</string>
+  <string name="showCoordinates">Koordinate am Rand zeige</string>
+  <string name="showCoordsOnAllSquares">Alli Fälder bezeichne</string>
+  <string name="showPieces">Figure zeige</string>
+  <string name="startTraining">Training schtarte</string>
+  <string name="findSquare">Fäld finde</string>
+  <string name="nameSquare">Fäld benänne</string>
+  <string name="practiceOnlySomeFilesAndRanks" comment="Label for a checkbox, keep it very short">Üeb nur es paar Schpalte und Reihe</string>
+  <string name="enterTheCoordinate">Tipp d\'Koordinate ine</string>
+  <string name="pressEnterToStart">Klick %s zum Afange</string>
+</resources>
