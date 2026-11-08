@@ -434,7 +434,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
               </button>
             </div>
           ))}
-          <div className="history-head"><strong>Ultrabullet leaderboard</strong><button type="button" onClick={() => void loadLeaderboard()}>↻ Refresh</button></div>
+          <div className="history-head" id="players"><strong>Ultrabullet leaderboard</strong><button type="button" onClick={() => void loadLeaderboard()}>↻ Refresh</button></div>
           {leaderboard.length === 0 ? (
             <div className="lobby-empty history-empty">Ratings appear after players finish their first game.</div>
           ) : leaderboard.map((player, index) => (
@@ -447,7 +447,7 @@ export function OnlinePlay({ user, initialGameId }: { user: User; initialGameId?
               <strong className="leaderboard-rating">{player.ultrabullet_rating}</strong>
             </div>
           ))}
-          <div className="history-head"><strong>Live games</strong><button type="button" onClick={() => void loadLiveGames()}>↻ Refresh</button></div>
+          <div className="history-head" id="watch"><strong>Live games</strong><button type="button" onClick={() => void loadLiveGames()}>↻ Refresh</button></div>
           {liveGames.length === 0 ? (
             <div className="lobby-empty history-empty">No live games to watch right now.</div>
           ) : liveGames.map((item) => (
