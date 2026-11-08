@@ -249,50 +249,24 @@ function App() {
 
         <main className="main-content">
           {page === "home" && (
-            <section className="home-dashboard">
-              <div className="welcome-row">
-                <div>
-                  <span className="page-kicker">LAG-FREE ULTRABULLET</span>
-                  <h1>Chess, without the lag.</h1>
-                  <p>A focused home for fast games, analysis, and the chess community.</p>
-                </div>
-                <div className="welcome-mark">♞</div>
+            <section className="lobby-home">
+              <div className="lobby-home-left">
+                <div className="lobby-promo-card"><span className="lobby-promo-icon">⚡</span><div><strong>Ultrabullet</strong><small>15-second chess</small></div></div>
+                <div className="lobby-side-card"><span className="page-kicker">YOUR ACCOUNT</span>{user ? <><strong>{displayName}</strong><small>@{profile?.username ?? "player"}</small><button onClick={() => { setProfileUsername(profile?.username ?? null); setPage("profile"); }}>View profile →</button></> : <><strong>Play as a member</strong><small>Keep your rating and games in one place.</small><button onClick={() => setAuthMode("signup")}>Create account →</button></>}</div>
+                <div className="lobby-side-card muted-lobby-card"><span className="page-kicker">PROJECT</span><strong>Lag-Free Ultrabullet</strong><small>An independent chess project, built for fast games.</small></div>
               </div>
-              <div className="home-grid">
-                <button className="home-action primary-action" onClick={openPlay}>
-                  <span className="action-icon">⚡</span>
-                  <span className="action-copy"><strong>Play online</strong><small>Challenge another player in 15-second chess</small></span>
-                  <span className="action-arrow">→</span>
-                </button>
-                <button className="home-action" onClick={() => go("analysis")}>
-                  <span className="action-icon">⌗</span>
-                  <span className="action-copy"><strong>Analysis board</strong><small>Explore positions and test moves</small></span>
-                  <span className="action-arrow">→</span>
-                </button>
-                <button className="home-action" onClick={() => go("watch")}>
-                  <span className="action-icon">◉</span>
-                  <span className="action-copy"><strong>Watch games</strong><small>Follow games in progress</small></span>
-                  <span className="action-arrow">→</span>
-                </button>
+              <div className="lobby-home-center">
+                <div className="lobby-tabs"><button className="active">Lobby</button><button disabled>Quick pairing</button><button disabled>Correspondence</button></div>
+                {user ? <OnlinePlay user={user} initialGameId={null} /> : (
+                  <div className="lobby-login-panel"><div className="lobby-login-symbol">♞</div><h1>Find your next game.</h1><p>Sign in to create a challenge, join an open game, and track your ultrabullet rating.</p><div><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="lobby-secondary-button" onClick={() => setAuthMode("signup")}>Create account</button></div></div>
+                )}
               </div>
-              <div className="dashboard-lower">
-                <section className="dashboard-card">
-                  <div className="section-heading"><div><span className="page-kicker">YOUR CHESS</span><h2>Player dashboard</h2></div><span className="subtle-tag">{user ? "SIGNED IN" : "GUEST"}</span></div>
-                  {user ? (
-                    <div className="player-welcome"><div className="profile-avatar">♟</div><div><strong>{displayName}</strong><span>{profile?.username ? `@${profile.username}` : "Your player account"}</span></div><button onClick={() => setProfileOpen(true)}>Edit profile</button></div>
-                  ) : (
-                    <div className="guest-prompt"><div><strong>Your chess profile starts here.</strong><span>Sign in to keep your rating and game history connected to your account.</span></div><button className="small-green-button" onClick={() => setAuthMode("signup")}>Create account</button></div>
-                  )}
-                  <div className="dashboard-stats"><div><strong>15s</strong><span>Time control</span></div><div><strong>1500</strong><span>Starting rating</span></div><div><strong>∞</strong><span>Room to improve</span></div></div>
-                </section>
-                <section className="dashboard-card project-card">
-                  <span className="page-kicker">BUILT FOR SPEED</span>
-                  <h2>Ultrabullet is the focus.</h2>
-                  <p>Quick games, a clean board, and a simple interface. The live game service validates moves and clocks on the server.</p>
-                  <button className="text-link" onClick={openPlay}>Enter the lobby <span>→</span></button>
-                </section>
-              </div>
-              <div className="home-footnote"><span>♞</span> An independent chess project. Not affiliated with Lichess.</div>
+              <aside className="lobby-home-right">
+                <button className="lobby-big-action" onClick={() => user ? setPage("play") : setAuthMode("signin")}><span>♟</span><strong>Create lobby game</strong></button>
+                <button className="lobby-big-action" onClick={() => setAuthMode(user ? "signin" : "signup")}><span>♙</span><strong>Challenge a friend</strong></button>
+                <button className="lobby-big-action" onClick={() => setPage("analysis")}><span>⌗</span><strong>Analysis board</strong></button>
+                <div className="lobby-live-summary"><strong>15 + 0</strong><span>Ultrabullet time control</span><small>Fast games. Instant decisions.</small></div>
+              </aside>
             </section>
           )}
 
