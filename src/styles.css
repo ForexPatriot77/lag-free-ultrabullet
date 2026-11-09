@@ -234,3 +234,38 @@ a { color: var(--c-link, #7ba7d8); }
   .online-primary { white-space: nowrap; }
   .auth-dialog, .profile-dialog { padding: 1.2rem; }
 }
+
+
+.auth-lichess-button {
+  width: 100%;
+  min-height: 2.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .65rem;
+  border: 1px solid #719b42;
+  border-radius: 4px;
+  background: #81b64c;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.auth-lichess-button:hover { background: #91c45a; }
+.auth-lichess-button:disabled { opacity: .65; cursor: wait; }
+.auth-lichess-mark { font-size: 1.35rem; line-height: 1; }
+.auth-provider-divider {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin: .9rem 0;
+  color: var(--c-font-dim, #999);
+  font-size: .75rem;
+}
+.auth-provider-divider::before, .auth-provider-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--c-border, #444);
+}
