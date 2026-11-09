@@ -37,7 +37,7 @@ The five Psycho clocks share the Psycho name but have separate rating pools. Lic
 - Chessground board with legal moves checked by chess.js on the server.
 - Server-maintained clocks, move history, checkmate, stalemate, draw, resignation, and timeout handling.
 - Separate Elo pools for all eight exact time controls.
-- Rating history snapshots for games completed after the rating-history migration.
+- Rating-history charts for each of the eight rating pools, using snapshots from games completed after the rating-history migration.
 - Time-control leaderboard, recent games, and live-game viewing.
 
 ## Stack
@@ -75,7 +75,7 @@ Requirements: Node.js 24+ and npm.
 
 ## Supabase setup
 
-The timestamped SQL migrations in `supabase/migrations` evolve the database. For a brand-new Supabase project, first run `supabase/bootstrap.sql` in the SQL editor, then apply every migration in ascending timestamp order. **Do not run the bootstrap file against the existing populated project.**
+The timestamped SQL migrations in `supabase/migrations` evolve the database. For a brand-new Supabase project, first run `supabase/bootstrap.sql` in the SQL editor, then apply every migration in ascending timestamp order. **Do not run the bootstrap file against the existing populated project.** After applying migrations, run `supabase/smoke_test.sql` to verify all eight game-creation paths and the queue insert/cancel path inside a transaction that rolls back its test data.
 
 Deploy the Edge Functions from their source directories:
 
