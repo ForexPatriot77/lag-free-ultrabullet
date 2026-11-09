@@ -291,3 +291,18 @@ a { color: var(--c-link, #7ba7d8); }
 .profile-chart-controls select { max-width: 15rem; padding: .4rem .5rem; border: 1px solid var(--c-border, #444); color: var(--c-font, #ddd); background: var(--c-bg-input, #1d1b19); }
 
 .latency-warning { padding: .65rem 1rem; color: #e9d7a6; background: #4a3d22; font-size: .76rem; line-height: 1.5; }
+
+.profile-game-list { display: flex; flex-direction: column; }
+.profile-game-row { display: grid; grid-template-columns: 4.25rem minmax(0,1fr) 3rem; align-items: center; gap: .75rem; min-height: 3.3rem; padding: .55rem .85rem; border-top: 1px solid var(--c-border, #414141); }
+.profile-game-row:nth-child(even) { background: var(--c-bg-zebra, #302e2b); }
+.profile-game-outcome { font-size: .76rem; font-weight: 800; }
+.profile-game-outcome.win, .profile-game-rating.positive { color: #8dbd5d; }
+.profile-game-outcome.loss, .profile-game-rating.negative { color: #d98278; }
+.profile-game-outcome.draw { color: var(--c-font-dim, #999); }
+.profile-game-details { display: flex; min-width: 0; flex-direction: column; gap: .18rem; }
+.profile-game-details strong { overflow: hidden; color: var(--c-font-clearer, #ddd); font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
+.profile-game-details span { color: var(--c-font-dim, #999); font-size: .68rem; }
+.profile-game-rating { font-size: .82rem; font-weight: 800; text-align: right; }
+@media (max-width: 520px) {
+  .profile-game-row { grid-template-columns: 3.2rem minmax(0,1fr) 2.5rem; gap: .45rem; padding-inline: .55rem; }
+}
