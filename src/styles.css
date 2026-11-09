@@ -271,3 +271,10 @@ a { color: var(--c-link, #7ba7d8); }
   flex: 1;
   background: var(--c-border, #444);
 }
+
+.invite-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.auth-reset-link { align-self: flex-end; padding: .1rem 0; font-size: .75rem; }
+@media (max-width: 520px) {
+  .invite-actions { align-items: stretch; flex-direction: column; }
+  .invite-actions button { width: 100%; }
+}
