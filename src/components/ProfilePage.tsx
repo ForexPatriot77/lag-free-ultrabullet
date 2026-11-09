@@ -72,19 +72,23 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
         error ? <div className="profile-error">{error}</div> : profile && (
           <>
             <aside className="profile-ratings-rail">
-              <div className="profile-variant-title">♞ <span>ULTRABULLET</span></div>
-              <div className="profile-rating-block">
-                <strong>{rating?.ultrabullet_rating ?? "?"}</strong>
-                <span>{rating?.games_played ?? 0} games</span>
-              </div>
-              <div className="profile-variant-title muted">♟ <span>BULLET</span></div>
-              <div className="profile-rating-block muted"><strong>—</strong><span>Not rated</span></div>
-              <div className="profile-variant-title muted">♞ <span>BLITZ</span></div>
-              <div className="profile-rating-block muted"><strong>—</strong><span>Not rated</span></div>
-              <div className="profile-variant-title muted">♘ <span>RAPID</span></div>
-              <div className="profile-rating-block muted"><strong>—</strong><span>Not rated</span></div>
-              <div className="profile-variant-title muted">♙ <span>CLASSICAL</span></div>
-              <div className="profile-rating-block muted"><strong>—</strong><span>0 games</span></div>
+              <h2 className="profile-ratings-heading">Ratings by time control</h2>
+              <div className="profile-variant-title muted"><span>30s · Hyperbullet</span></div>
+              <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
+              <div className="profile-variant-title"><span>15s · Ultrabullet</span></div>
+              <div className="profile-rating-block"><strong>{rating?.ultrabullet_rating ?? "?" }</strong><span>Rated pool</span></div>
+              <div className="profile-variant-title muted"><span>7.5s · Nanobullet</span></div>
+              <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
+              <div className="profile-variant-title muted"><span>3.25s · Hyperfast</span></div>
+              <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
+              <div className="profile-variant-title muted"><span>1.625s · Hyperfast</span></div>
+              <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
+              <div className="profile-variant-title muted"><span>0.8125s · Hyperfast</span></div>
+              <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
+              <div className="profile-variant-title muted"><span>0.40625s · Hyperfast</span></div>
+              <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
+              <div className="profile-variant-title muted"><span>0.203125s · Hyperfast</span></div>
+              <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
             </aside>
 
             <div className="profile-main-column">
@@ -104,10 +108,10 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
 
               <div className="profile-overview-grid">
                 <section className="profile-chart-card">
-                  <div className="profile-card-tabs"><span className="active">Rating</span><span>Activity</span></div>
+                  <div className="profile-card-tabs"><span className="active">15-second Ultrabullet rating</span></div>
                   <div className="profile-rating-summary">
                     <strong>{rating?.ultrabullet_rating ?? "Unrated"}</strong>
-                    <span>Ultrabullet rating</span>
+                    <span>15 seconds · no increment</span>
                   </div>
                   <div className="rating-chart-empty">
                     <div className="rating-chart-grid"><span>2200</span><span>2000</span><span>1800</span><span>1600</span><span>1400</span></div>
@@ -119,7 +123,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
                   <div className="profile-info-name">{profile.display_name || profile.username}</div>
                   {profile.bio && <p>{profile.bio}</p>}
                   {joined && <div className="profile-info-line">Member since {joined}</div>}
-                  <div className="profile-info-line">Ultrabullet player</div>
+                  <div className="profile-info-line">Rated pool: 15-second Ultrabullet</div>
                   <div className="profile-info-line">Games played: {rating?.games_played ?? 0}</div>
                 </aside>
               </div>
