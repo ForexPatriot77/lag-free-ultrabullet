@@ -144,10 +144,10 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
         .from("player_rating_history")
         .select("rating, rating_pool, recorded_at")
         .eq("user_id", person.id)
-        .order("recorded_at", { ascending: true })
-        .limit(100);
+         .order("recorded_at", { ascending: false })
+        .limit(800);
       if (!active) return;
-      setRatingHistory((historyRows ?? []) as RatingHistoryPoint[]);
+      setRatingHistory(((historyRows ?? []) as RatingHistoryPoint[]).reverse());
       setLoading(false);
     })();
     return () => { active = false; };
