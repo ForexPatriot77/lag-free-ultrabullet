@@ -101,24 +101,17 @@ Deno.serve(async (req: Request) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const authorization = req.headers.get("Authorization") ?? "";
-    const bearerToken = authorization.match(/^Bearer\\s+(.+)$/i)?.[1] ?? "";
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
     let signedInUserId: string | undefined;
     if (bearerToken.split(".").length === 3) {
       const { data: sessionUser, error: sessionError } = await admin.auth.getUser(bearerToken);
-      if (sessionError || !sessionUser.user) {
-        return json({ error: "Your Lag-Free session expired. Sign in again, then connect Lichess from your profile." }, 401);
-      }
+      if (sessionError || !sessionUser.user) return json({ error: "Your Lag-Free session expired. Sign in again, then connect Lichess from your profile." }, 401);
       signedInUserId = sessionUser.user.id;
     }
 
-    const { data: linked, error: lookupError } = await admin
-      .from("lichess_accounts")
-      .select("user_id")
-      .eq("lichess_id", lichessId)
-      .maybeSingle();
+    const { data: linked, error: lookupError } = await admin.from("lichess_accounts").select("user_id").eq("lichess_id", lichessId).maybeSingle();
     if (lookupError) return json({ error: "Could not look up the Lichess account." }, 500);
-
     if (linked?.user_id && signedInUserId && linked.user_id !== signedInUserId) {
       return json({ error: "This Lichess account is already connected to a different Lag-Free account." }, 409);
     }
@@ -127,11 +120,9 @@ Deno.serve(async (req: Request) => {
     let userId = linked?.user_id as string | undefined;
     if (!userId && signedInUserId) {
       const { data: signedInAccount, error: signedInAccountError } = await admin.auth.admin.getUserById(signedInUserId);
-      if (signedInAccountError || !signedInAccount.user) {
-        return json({ error: "Could not verify your signed-in Lag-Free account." }, 401);
-      }
+      if (signedInAccountError || !signedInAccount.user) return json({ error: "Could not verify your signed-in Lag-Free account." }, 401);
       if ((signedInAccount.user.email ?? "").toLowerCase() !== accountEmail) {
-        return json({ error: "For account linking, sign into the Lag-Free account that uses the same email address as your Lichess account." }, 409);
+        return json({ error: "Sign into the Lag-Free account that uses the same email address as your Lichess account, then connect again." }, 409);
       }
       userId = signedInUserId;
     }
@@ -145,29 +136,18 @@ Deno.serve(async (req: Request) => {
       });
       if (createError || !created.user) {
         const duplicateEmail = /already|registered|exists/i.test(createError?.message ?? "");
-        return json({
-          error: duplicateEmail
-            ? "This email already has a Lag-Free account. Sign into that account, open your profile settings, and choose Connect Lichess."
-            : "We couldn't create your Lag-Free account. Please try again.",
-        }, duplicateEmail ? 409 : 500);
+        return json({ error: duplicateEmail
+          ? "This email already has a Lag-Free account. Sign into it, open profile settings, and choose Connect Lichess."
+          : "We couldn't create your Lag-Free account. Please try again." }, duplicateEmail ? 409 : 500);
       }
       userId = created.user.id;
     }
 
-    // Never request, store, or reuse the Lichess password. If the player is
-    // already signed into the matching Lag-Free account, link it in place.
     const { data: authUserResult, error: authUserError } = await admin.auth.admin.getUserById(userId);
-    if (authUserError || !authUserResult.user) {
-      return json({ error: "Could not load your Lag-Free account." }, 500);
-    }
+    if (authUserError || !authUserResult.user) return json({ error: "Could not load your Lag-Free account." }, 500);
     if ((authUserResult.user.email ?? "").toLowerCase() !== accountEmail) {
-      const { error: emailUpdateError } = await admin.auth.admin.updateUserById(userId, {
-        email: accountEmail,
-        email_confirm: true,
-      });
-      if (emailUpdateError) {
-        return json({ error: "This email is already connected to another Lag-Free account, or could not be updated." }, 409);
-      }
+      const { error: emailUpdateError } = await admin.auth.admin.updateUserById(userId, { email: accountEmail, email_confirm: true });
+      if (emailUpdateError) return json({ error: "This email is already connected to another Lag-Free account, or could not be updated." }, 409);
     }
 
     let base = lichessUsername.toLowerCase().replace(/[^a-z0-9_]/g, "_").replace(/_+/g, "_").slice(0, 20);
@@ -205,28 +185,13 @@ Deno.serve(async (req: Request) => {
     }
 
     if (signedInUserId) {
-      return json({
-        linked: true,
-        username: lichessUsername,
-        imported: { hyperbullet: bullet, ultrabullet: ultra },
-      });
+      return json({ linked: true, username: lichessUsername, imported: { hyperbullet: bullet, ultrabullet: ultra } });
     }
 
-    const { data: magic, error: magicError } = await admin.auth.admin.generateLink({
-      type: "magiclink",
-      email: accountEmail,
-    });
+    const { data: magic, error: magicError } = await admin.auth.admin.generateLink({ type: "magiclink", email: accountEmail });
     const tokenHash = magic?.properties?.hashed_token;
-    if (magicError || !tokenHash) {
-      return json({ error: "Your Lichess account was verified, but Lag-Free couldn't finish signing you in." }, 500);
-    }
-
-    return json({
-      token_hash: tokenHash,
-      username: lichessUsername,
-      imported: { hyperbullet: bullet, ultrabullet: ultra },
-    });
-
+    if (magicError || !tokenHash) return json({ error: "Your Lichess account was verified, but Lag-Free couldn't finish signing you in." }, 500);
+    return json({ token_hash: tokenHash, username: lichessUsername, imported: { hyperbullet: bullet, ultrabullet: ultra } });
   } catch (error) {
     console.error("lichess-auth unexpected error", error);
     return json({ error: "Lichess sign-in failed unexpectedly. Please try again." }, 500);
