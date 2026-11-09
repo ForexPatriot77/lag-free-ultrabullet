@@ -368,6 +368,20 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
     void loadMyRating();
   };
 
+  const cancelChallenge = async () => {
+    if (!game || game.status !== "waiting") return;
+    setBusy(true);
+    try {
+      await invoke({ action: "cancel", gameId: game.id });
+      backToLobby();
+      setMessage("Challenge cancelled.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not cancel the challenge.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const isWhite = game?.white_player === userId;
   const isParticipant = Boolean(game && (game.white_player === userId || game.black_player === userId));
   const myColor: Color = isParticipant ? (isWhite ? "white" : "black") : "white";
@@ -537,7 +551,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
               <div className="invite-box">
                 <strong>Your challenge is ready</strong>
                 <p>Share this link. Your clock starts when someone joins.</p>
-                <button className="online-primary" type="button" onClick={shareInvite}>Copy invite link</button>
+                <div className="invite-actions"><button className="online-primary" type="button" onClick={shareInvite}>Copy invite link</button><button className="online-secondary" type="button" onClick={cancelChallenge} disabled={busy}>Cancel challenge</button></div>
               </div>
             )}
             <div className="online-moves">
