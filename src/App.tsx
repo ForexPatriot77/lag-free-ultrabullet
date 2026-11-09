@@ -300,7 +300,7 @@ function App() {
 
       {authMode && <AuthDialog initialMode={authMode} onClose={() => { setAuthMode(null); setAuthError(""); }} onLichess={() => { void startLichessOAuth().catch((cause) => setAuthError(cause instanceof Error ? cause.message : "Could not start Lichess sign-in.")); }} externalError={authError} />}
       {passwordRecoveryOpen && <PasswordRecoveryDialog onClose={() => setPasswordRecoveryOpen(false)} />}
-      {profileOpen && user && <ProfileDialog user={user} profile={profile} onClose={() => setProfileOpen(false)} onSaved={(nextProfile) => { setProfile(nextProfile); setProfileUsername(nextProfile.username); }} onLichess={() => { void startLichessOAuth().catch((cause) => setAuthError(cause instanceof Error ? cause.message : "Could not start Lichess connection.")); }} />}
+      {profileOpen && user && <ProfileDialog user={user} profile={profile} onClose={() => setProfileOpen(false)} onSaved={(nextProfile) => { setProfile(nextProfile); setProfileUsername(nextProfile.username); }} onLichess={startLichessOAuth} />}
       <footer className="site-footer">
         <span>Lag-Free Ultrabullet</span>
         <span>Independent project · Not affiliated with Lichess</span>
