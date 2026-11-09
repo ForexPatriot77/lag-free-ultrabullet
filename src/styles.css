@@ -306,3 +306,63 @@ a { color: var(--c-link, #7ba7d8); }
 @media (max-width: 520px) {
   .profile-game-row { grid-template-columns: 3.2rem minmax(0,1fr) 2.5rem; gap: .45rem; padding-inline: .55rem; }
 }
+
+
+/* Full-size live chess layout: keep the board as the primary element. */
+.online-game.round {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px) !important;
+  grid-template-areas: "app side";
+  align-items: start;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+.online-game.round > .round__app,
+.online-game.round > .online-board-column {
+  grid-area: app;
+  display: flex;
+  width: 100% !important;
+  min-width: 0;
+  flex-direction: column;
+}
+.online-game.round > .round__side,
+.online-game.round > .online-game-panel {
+  grid-area: side;
+  display: flex;
+  width: 100% !important;
+  min-width: 0;
+  flex-direction: column;
+}
+.online-game.round .online-board-frame {
+  width: 100%;
+  max-width: min(100%, 72vh);
+  aspect-ratio: 1 / 1;
+  margin-inline: auto;
+}
+.online-game.round .online-board {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+}
+.first-move-deadline {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  margin: .7rem;
+  padding: .75rem;
+  border-left: 3px solid #d5a84c;
+  background: #3b3324;
+  color: #f0dfb8;
+  font-size: .78rem;
+  line-height: 1.45;
+}
+.first-move-deadline span { color: #c9b991; }
+@media (max-width: 760px) {
+  .online-game.round {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas: "app" "side";
+  }
+  .online-game.round .online-board-frame { max-width: min(100%, 72vh); }
+}
