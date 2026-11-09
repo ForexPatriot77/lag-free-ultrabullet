@@ -187,6 +187,30 @@ a { color: var(--c-link, #7ba7d8); }
 .profile-stats-strip span, .profile-info-card p, .profile-info-line { color: var(--c-font-dim, #999); font-size: .75rem; }
 .profile-overview-grid { display: grid; grid-template-columns: 1.5fr 1fr; }
 .profile-chart-card, .profile-info-card { padding: 1rem; }
+
+.rating-chart-visual {
+  position: relative;
+  width: 100%;
+  height: 17rem;
+  margin-top: .8rem;
+  padding: .6rem .2rem .2rem;
+}
+.rating-chart-visual canvas { display: block; width: 100% !important; height: 14.5rem !important; }
+.rating-chart-message {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  min-height: 14rem;
+  color: var(--c-font-dim, #999);
+  font-size: .82rem;
+  text-align: center;
+}
+.rating-chart-note {
+  margin-top: .35rem;
+  color: var(--c-font-dimmer, #777);
+  font-size: .68rem;
+  text-align: right;
+}
 .profile-activity-panel { border-top: 1px solid var(--c-border, #444); }
 .profile-loading, .profile-error { padding: 2rem; color: var(--c-font, #ccc); }
 .site-footer { display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; padding: .8rem; color: var(--c-font-dim, #999); background: var(--c-bg, #262522); font-size: .72rem; }
