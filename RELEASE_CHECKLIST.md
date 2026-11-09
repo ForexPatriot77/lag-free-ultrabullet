@@ -18,11 +18,13 @@
 
 - [ ] Complete a real Lichess OAuth sign-in using an account with email-read permission.
 - [ ] Test two independent accounts in two browsers/devices.
+- [ ] Run `supabase/smoke_test.sql` and verify it leaves zero test games and queue entries.
 - [ ] Verify quick matchmaking for each time control, queue cancellation, and abandoned queue expiry.
 - [ ] Verify create, join, cancel, and 24-hour challenge expiry.
 - [ ] Play complete games at every time control and verify both clocks and exact rating pool updates.
 - [ ] Verify promotion choices, checkmate, stalemate, insufficient-material draw, resignation, and timeout.
-- [ ] Verify spectators, move history, profile visibility, leaderboard ordering, and rating-history chart.
+- [ ] Verify spectators, move history, profile visibility, leaderboard ordering, and rating-history charts for all eight pools.
+- [ ] Verify existing email accounts can connect their matching-email Lichess account from profile settings.
 - [ ] Verify refresh/reconnect behavior during an active game.
 - [ ] Decide whether WebRTC peer-to-peer move transport is a release requirement; it is not implemented yet.
 - [ ] Audit Supabase Auth redirect settings, email templates, rate limits, and abuse controls.
