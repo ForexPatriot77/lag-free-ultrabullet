@@ -77,17 +77,17 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
               <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
               <div className="profile-variant-title"><span>15s · Ultrabullet</span></div>
               <div className="profile-rating-block"><strong>{rating?.ultrabullet_rating ?? "?" }</strong><span>Rated pool</span></div>
-              <div className="profile-variant-title muted"><span>7.5s · Nanobullet</span></div>
+              <div className="profile-variant-title muted"><span>7.5s · Ultrazerk</span></div>
               <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
-              <div className="profile-variant-title muted"><span>3.25s · Hyperfast</span></div>
+              <div className="profile-variant-title muted"><span>3.25s · Psycho</span></div>
               <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
-              <div className="profile-variant-title muted"><span>1.625s · Hyperfast</span></div>
+              <div className="profile-variant-title muted"><span>1.625s · Psycho</span></div>
               <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
-              <div className="profile-variant-title muted"><span>0.8125s · Hyperfast</span></div>
+              <div className="profile-variant-title muted"><span>0.8125s · Psycho</span></div>
               <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
-              <div className="profile-variant-title muted"><span>0.40625s · Hyperfast</span></div>
+              <div className="profile-variant-title muted"><span>0.40625s · Psycho</span></div>
               <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
-              <div className="profile-variant-title muted"><span>0.203125s · Hyperfast</span></div>
+              <div className="profile-variant-title muted"><span>0.203125s · Psycho</span></div>
               <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
             </aside>
 
