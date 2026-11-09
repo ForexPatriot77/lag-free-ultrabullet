@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 
@@ -13,11 +13,13 @@ export function ProfileDialog({
   profile,
   onClose,
   onSaved,
+  onLichess,
 }: {
   user: User;
   profile: EditableProfile | null;
   onClose: () => void;
   onSaved: (profile: EditableProfile) => void;
+  onLichess: () => void;
 }) {
   const [username, setUsername] = useState(profile?.username ?? "");
   const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
@@ -28,6 +30,14 @@ export function ProfileDialog({
   const [emailSaving, setEmailSaving] = useState(false);
   const [emailMessage, setEmailMessage] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [lichessUsername, setLichessUsername] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    supabase.from("lichess_accounts").select("lichess_username").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => { if (active) setLichessUsername(data?.lichess_username ?? null); });
+    return () => { active = false; };
+  }, [user.id]);
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -113,6 +123,15 @@ export function ProfileDialog({
           {error && <p className="auth-message auth-error" role="alert">{error}</p>}
           <button className="auth-submit" type="submit" disabled={saving}>{saving ? "Saving…" : "Save profile"}</button>
         </form>
+        <div className="profile-email-section">
+          <p className="auth-eyebrow">CHESS ACCOUNT</p>
+          <h3>Lichess connection</h3>
+          <p className="auth-subtitle">{lichessUsername ? `Connected as ${lichessUsername}` : "Connect your Lichess account to sign in with it and import your Bullet and Ultrabullet starting ratings."}</p>
+          <button className="auth-lichess-button" type="button" onClick={onLichess}>
+            <span className="auth-lichess-mark">♞</span>
+            {lichessUsername ? "Reconnect Lichess" : "Connect Lichess"}
+          </button>
+        </div>
         <div className="profile-email-section">
           <p className="auth-eyebrow">ACCOUNT SECURITY</p>
           <h3>Change email address</h3>
