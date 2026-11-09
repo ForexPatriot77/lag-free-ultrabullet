@@ -3,14 +3,17 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "license": "GPL-3.0-or-later",
+  "license": "AGPL-3.0-or-later",
   "engines": {
     "node": ">=24"
   },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sass:build": "sass --no-source-map --quiet-deps --silence-deprecation=import,global-builtin src/lila.scss src/lila.css",
+    "predev": "npm run sass:build",
+    "prebuild": "npm run sass:build"
   },
   "dependencies": {
     "@lichess-org/chessground": "10.5.0",
@@ -23,6 +26,7 @@
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "typescript": "5.9.3",
-    "vite": "8.3.6"
+    "vite": "8.3.6",
+    "sass": "^1.89.2"
   }
 }

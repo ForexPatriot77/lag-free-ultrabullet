@@ -516,8 +516,8 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
       )}
 
       {game && (
-        <div className="online-game">
-          <div className="online-board-column">
+        <div className="online-game round">
+          <div className="online-board-column round__app">
             <div className="online-player-bar">
               <span className="online-player-piece">♟</span>
               <div><strong>{isParticipant ? (isWhite ? "Opponent" : "You") : "Black"}</strong><small>Black</small></div>
@@ -543,7 +543,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
               </strong>
             </div>
           </div>
-          <aside className="online-game-panel">
+          <aside className="online-game-panel round__side">
             <div className="online-game-status"><i className={game.status === "active" ? "live-dot" : "idle-dot"} />{status}</div>
             {game.status === "waiting" && (
               <div className="invite-box">

@@ -48,14 +48,6 @@ function getSnapshot(game: Chess, lastMove?: [Key, Key]): Snapshot {
   };
 }
 
-const navItems: { id: Page; label: string; icon: string; group: string }[] = [
-  { id: "home", label: "Home", icon: "⌂", group: "MAIN" },
-  { id: "play", label: "Play", icon: "♟", group: "MAIN" },
-  { id: "analysis", label: "Analysis board", icon: "⌗", group: "TOOLS" },
-  { id: "watch", label: "Watch", icon: "◉", group: "COMMUNITY" },
-  { id: "players", label: "Players", icon: "♙", group: "COMMUNITY" },
-];
-
 function App() {
   const [page, setPage] = useState<Page>("home");
   const boardElement = useRef<HTMLDivElement>(null);
@@ -203,69 +195,118 @@ function App() {
 
   return (
     <div className="site-shell">
-      <header className="topbar">
-        <button className="brand" type="button" onClick={() => go("home")} aria-label="Lag-Free Ultrabullet home">
-          <span className="brand-mark">♞</span>
-          <span className="brand-name">LAG-FREE <b>ULTRABULLET</b></span>
+      <header id="top">
+        <button className="site-title" type="button" onClick={() => go("home")} aria-label="Lag-Free Ultrabullet home">
+          <span className="site-icon">♞</span>
+          <span className="site-name">Lag-Free <span>Ultrabullet</span></span>
         </button>
-        <nav className="top-links" aria-label="Main navigation">
-          <button className={page === "play" ? "active" : ""} onClick={openPlay}>Play</button>
-          <button className={page === "watch" ? "active" : ""} onClick={() => go("watch")}>Watch</button>
-          <button className={page === "players" ? "active" : ""} onClick={() => go("players")}>Players</button>
-          <button className={page === "analysis" ? "active" : ""} onClick={() => go("analysis")}>Analysis</button>
+        <nav id="topnav" className="hover" aria-label="Main navigation">
+          <section className={page === "play" ? "active" : ""}><a href="#play" onClick={(event) => { event.preventDefault(); openPlay(); }}>Play</a></section>
+          <section className={page === "watch" ? "active" : ""}><a href="#watch" onClick={(event) => { event.preventDefault(); go("watch"); }}>Watch</a></section>
+          <section className={page === "players" ? "active" : ""}><a href="#players" onClick={(event) => { event.preventDefault(); go("players"); }}>Players</a></section>
+          <section className={page === "analysis" ? "active" : ""}><a href="#analysis" onClick={(event) => { event.preventDefault(); go("analysis"); }}>Analysis</a></section>
         </nav>
-        <div className="top-actions">
-          <span className="connection"><i /> {isSupabaseConfigured ? "Services online" : "Local mode"}</span>
+        <div className="site-buttons">
+          <span className="site-status"><i />{isSupabaseConfigured ? "Online" : "Local mode"}</span>
           {user ? (
             <>
-              <button className="account-name" type="button" onClick={() => { setProfileUsername(profile?.username ?? null); setPage("profile"); }}>{displayName}</button>
-              <button className="login-button" type="button" onClick={signOut}>Log out</button>
+              <button id="user_tag" className="link" type="button" onClick={() => { setProfileUsername(profile?.username ?? null); setPage("profile"); }}>{displayName}</button>
+              <button className="link" type="button" onClick={signOut}>Log out</button>
             </>
           ) : (
-            <>
-              <button className="login-button" type="button" onClick={() => setAuthMode("signin")}>Log in</button>
-              <button className="signup-button" type="button" onClick={() => setAuthMode("signup")}>Sign up</button>
-            </>
+            <div className="signin-or-signup">
+              <button className="link" type="button" onClick={() => setAuthMode("signin")}>Log in</button>
+              <button className="button button-green button-no-upper" type="button" onClick={() => setAuthMode("signup")}>Sign up</button>
+            </div>
           )}
         </div>
       </header>
 
-      <div className="app-body">
-        <aside className="left-rail">
-          {["MAIN", "TOOLS", "COMMUNITY"].map((group) => (
-            <div className="rail-group" key={group}>
-              <div className="rail-heading">{group}</div>
-              {navItems.filter((item) => item.group === group).map((item) => (
-                <button key={item.id} className={`rail-link ${page === item.id ? "selected" : ""}`} onClick={() => item.id === "play" ? openPlay() : go(item.id)}>
-                  <span>{item.icon}</span>{item.label}
-                </button>
-              ))}
-            </div>
-          ))}
-          <div className="rail-footer"><span className="rail-dot" /><span>Independent chess project</span></div>
-        </aside>
+      <div id="main-wrap">
+        <main className={page === "home" ? "lobby" : "main-content page-small"}>
 
-        <main className="main-content">
           {page === "home" && (
-            <section className="lobby-home">
-              <div className="lobby-home-left">
-                <div className="lobby-promo-card"><span className="lobby-promo-icon">⚡</span><div><strong>Ultrabullet</strong><small>15-second chess</small></div></div>
-                <div className="lobby-side-card"><span className="page-kicker">YOUR ACCOUNT</span>{user ? <><strong>{displayName}</strong><small>@{profile?.username ?? "player"}</small><button onClick={() => { setProfileUsername(profile?.username ?? null); setPage("profile"); }}>View profile →</button></> : <><strong>Play as a member</strong><small>Keep your rating and games in one place.</small><button onClick={() => setAuthMode("signup")}>Create account →</button></>}</div>
-                <div className="lobby-side-card muted-lobby-card"><span className="page-kicker">PROJECT</span><strong>Lag-Free Ultrabullet</strong><small>An independent chess project, built for fast games.</small></div>
-              </div>
-              <div className="lobby-home-center">
-                <div className="lobby-tabs"><button className="active">Lobby</button><button disabled>Quick pairing</button><button disabled>Correspondence</button></div>
-                {user ? <OnlinePlay user={user} initialGameId={null} onOpenProfile={(username) => { setProfileUsername(username); setPage("profile"); }} /> : (
-                  <div className="lobby-login-panel"><div className="lobby-login-symbol">♞</div><h1>Find your next game.</h1><p>Sign in to create a challenge, join an open game, and track your ultrabullet rating.</p><div><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="lobby-secondary-button" onClick={() => setAuthMode("signup")}>Create account</button></div></div>
-                )}
-              </div>
-              <aside className="lobby-home-right">
-                <button className="lobby-big-action" onClick={() => user ? setPage("play") : setAuthMode("signin")}><span>♟</span><strong>Create lobby game</strong></button>
-                <button className="lobby-big-action" onClick={() => user ? setPage("play") : setAuthMode("signup")}><span>♙</span><strong>Challenge a friend</strong></button>
-                <button className="lobby-big-action" onClick={() => setPage("analysis")}><span>⌗</span><strong>Analysis board</strong></button>
-                <div className="lobby-live-summary"><strong>15 + 0</strong><span>Ultrabullet time control</span><small>Fast games. Instant decisions.</small></div>
+            <>
+              <aside className="lobby__side">
+                <div className="lobby__box">
+                  <div className="lobby__box__top"><h2 className="title text">Player</h2></div>
+                  <div className="lobby__box__content lobby-player-card">
+                    {user ? (
+                      <>
+                        <strong>{displayName}</strong>
+                        <span>@{profile?.username ?? "player"}</span>
+                        <button className="button button-empty button-no-upper" type="button" onClick={() => { setProfileUsername(profile?.username ?? null); setPage("profile"); }}>View profile</button>
+                      </>
+                    ) : (
+                      <>
+                        <strong>Welcome to Lag-Free Ultrabullet</strong>
+                        <span>Sign in to keep your rating, games, and challenges together.</span>
+                        <button className="button button-green button-no-upper" type="button" onClick={() => setAuthMode("signup")}>Create account</button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="about-side">
+                  <h2>About</h2>
+                  <p>An independent chess platform focused on fast, low-latency games.</p>
+                  <a href="https://github.com/ForexPatriot77/lag-free-ultrabullet" target="_blank" rel="noreferrer">Source code</a>
+                </div>
               </aside>
-            </section>
+
+              <section className="lobby__app">
+                <div className="tabs-horiz"><span>Lobby</span></div>
+                <div className="lobby__app__content">
+                  {user ? (
+                    <OnlinePlay user={user} initialGameId={null} onOpenProfile={(username) => { setProfileUsername(username); setPage("profile"); }} />
+                  ) : (
+                    <div className="lobby-signin">
+                      <div className="lobby-signin__piece">♞</div>
+                      <h1>Play ultrabullet</h1>
+                      <p>Sign in to create a challenge, join an open game, and track your rating.</p>
+                      <div className="button-set">
+                        <button className="button button-green button-no-upper" type="button" onClick={() => setAuthMode("signin")}>Log in</button>
+                        <button className="button button-metal button-no-upper" type="button" onClick={() => setAuthMode("signup")}>Create account</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <section className="lobby__table">
+                <div className="lobby__start">
+                  <button className="button button-metal lobby__start__button lobby__start__button--hook" type="button" onClick={() => user ? setPage("play") : setAuthMode("signin")}>Play Ultrabullet</button>
+                  <button className="button button-metal lobby__start__button lobby__start__button--friend" type="button" onClick={() => user ? setPage("play") : setAuthMode("signup")}>Challenge a friend</button>
+                  <button className="button button-metal lobby__start__button lobby__start__button--ai" type="button" onClick={() => setPage("analysis")}>Analysis board</button>
+                </div>
+              </section>
+
+              <section className="lobby__tv">
+                <div className="lobby__box">
+                  <div className="lobby__box__top"><h2 className="title text">Ultrabullet</h2></div>
+                  <div className="lobby__box__content lobby-info-card">
+                    <strong>15 seconds · no increment</strong>
+                    <p>Fast games with server-validated moves and live clocks.</p>
+                    <button className="button button-empty button-no-upper" type="button" onClick={() => go("play")}>Open play page</button>
+                  </div>
+                </div>
+              </section>
+
+              <section className="lobby__puzzle">
+                <div className="lobby__box">
+                  <div className="lobby__box__top"><h2 className="title text">Time controls</h2></div>
+                  <div className="lobby__box__content lobby-info-card">
+                    <strong>Eight speeds</strong>
+                    <p>From 30 seconds down to 0.203125 seconds, all with zero increment.</p>
+                    <button className="button button-empty button-no-upper" type="button" onClick={() => go("play")}>Choose a time control</button>
+                  </div>
+                </div>
+              </section>
+
+              <section className="lobby__about lobby-about-links">
+                <a href="https://github.com/ForexPatriot77/lag-free-ultrabullet" target="_blank" rel="noreferrer">Source code</a>
+                <span>Independent project · Not affiliated with Lichess</span>
+              </section>
+            </>
           )}
 
           {page === "play" && (
@@ -290,8 +331,8 @@ function App() {
           {page === "analysis" && (
             <section className="content-page">
               <div className="content-page-heading"><div><span className="page-kicker">TOOLS</span><h1>Analysis board</h1><p>A private local board for trying moves and exploring positions.</p></div><span className="time-control-label">LOCAL POSITION</span></div>
-              <section className="play-area analysis-area">
-                <div className="board-column">
+              <section className="play-area analysis-area round">
+                <div className="board-column round__app">
                   <div className="player-strip opponent"><div className="avatar avatar-dark">♟</div><div className="player-details"><strong>Black</strong><span>Analysis position</span></div><div className="rating">—</div></div>
                   <div className="board-frame"><div className="board" ref={boardElement} /></div>
                   <div className="player-strip you"><div className="avatar avatar-light">♙</div><div className="player-details"><strong>White</strong><span>Local analysis</span></div><div className="rating">—</div></div>
@@ -300,7 +341,7 @@ function App() {
                     <button type="button" onClick={copyFen}><span>▣</span> {copiedFen ? "Copied FEN" : "Copy FEN"}</button>
                   </div>
                 </div>
-                <aside className="game-panel">
+                <aside className="game-panel round__side">
                   <div className="panel-tabs"><button className="panel-tab active" type="button">Moves</button><button className="panel-tab" type="button" disabled>Chat</button></div>
                   <div className="game-status"><span className={snapshot.gameOver ? "status-indicator ended" : "status-indicator"} /><strong>{status}</strong></div>
                   <div className="move-list" aria-label="Move history">
@@ -328,7 +369,7 @@ function App() {
 
       {authMode && <AuthDialog initialMode={authMode} onClose={() => setAuthMode(null)} />}
       {profileOpen && user && <ProfileDialog user={user} profile={profile} onClose={() => setProfileOpen(false)} onSaved={setProfile} />}
-      <footer className="site-footer"><span>Lag-Free Ultrabullet</span><span>Independent chess project · Not affiliated with Lichess</span><span>GPL-3.0-or-later</span></footer>
+      <footer className="site-footer"><span>Lag-Free Ultrabullet</span><span>Independent project · Not affiliated with Lichess</span><span>AGPL-3.0-or-later</span></footer>
     </div>
   );
 }
