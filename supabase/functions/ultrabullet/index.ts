@@ -97,7 +97,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     const { data, error } = await admin
       .from("player_ratings")
       .select("user_id, hyperbullet_rating, ultrabullet_rating, ultrazerk_rating, psycho_3250_rating, psycho_1625_rating, psycho_812_5_rating, psycho_406_25_rating, psycho_203_125_rating, games_played, wins, draws, losses")
-      .order(ratingPool, { ascending: false })
+      .order(ratingPool, { ascending: false, nullsFirst: false })
       .order("games_played", { ascending: false })
       .limit(50);
     if (error) return json({ error: error.message }, 400);
