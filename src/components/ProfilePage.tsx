@@ -305,6 +305,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
                   </div>
                 )}
               </div>
+            </div>
         )}
     </section>
   );
