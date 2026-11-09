@@ -26,6 +26,7 @@ type GameRow = {
   result: string | null;
   termination: string | null;
   last_move_at: string | null;
+  started_at: string | null;
   created_at: string;
 };
 
@@ -466,14 +467,20 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
   const myColor: Color = isParticipant ? (isWhite ? "white" : "black") : "white";
   const currentRemaining = useMemo(() => {
     if (!game) return selectedControl.initialTimeMs;
+    if (game.status === "active" && game.ply === 0 && game.started_at) {
+      const elapsed = Date.now() + serverOffset - new Date(game.started_at).getTime();
+      return Math.max(0, 15000 - elapsed);
+    }
     const base = game.turn_color === "white" ? game.white_time_ms : game.black_time_ms;
     if (game.status !== "active" || !game.last_move_at) return base;
     const elapsed = Date.now() + serverOffset - new Date(game.last_move_at).getTime();
     return Math.max(0, base - elapsed);
   }, [game, serverOffset, tick]);
   const whiteClock = game
-    ? game.white_time_ms - (game.status === "active" && game.turn_color === "white" && game.last_move_at
-      ? Math.max(0, Date.now() + serverOffset - new Date(game.last_move_at).getTime()) : 0)
+    ? game.status === "active" && game.ply === 0 && game.started_at
+      ? Math.max(0, 15000 - (Date.now() + serverOffset - new Date(game.started_at).getTime()))
+      : game.white_time_ms - (game.status === "active" && game.turn_color === "white" && game.last_move_at
+        ? Math.max(0, Date.now() + serverOffset - new Date(game.last_move_at).getTime()) : 0)
     : selectedControl.initialTimeMs;
   const blackClock = game
     ? game.black_time_ms - (game.status === "active" && game.turn_color === "black" && game.last_move_at
