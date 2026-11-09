@@ -285,8 +285,11 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
 
     let whiteTime = game.white_time_ms;
     let blackTime = game.black_time_ms;
-    if (isWhite) whiteTime = Math.max(0, whiteTime - elapsed) + game.increment_ms;
-    else blackTime = Math.max(0, blackTime - elapsed) + game.increment_ms;
+    // The 15-second first-move window is a separate ready-up deadline.
+    // Once White moves, the selected chess clock begins at its full value.
+    const clockElapsed = game.ply === 0 ? 0 : elapsed;
+    if (isWhite) whiteTime = Math.max(0, whiteTime - clockElapsed) + game.increment_ms;
+    else blackTime = Math.max(0, blackTime - clockElapsed) + game.increment_ms;
 
     let result: string | null = null;
     let termination: string | null = null;
