@@ -81,7 +81,19 @@ function App() {
         const { data, error } = await supabase.functions.invoke("lichess-auth", {
           body: { code, codeVerifier: pending.verifier, redirectUri },
         });
-        if (error) throw error;
+        if (error) {
+          const response = (error as { context?: Response }).context;
+          let serverMessage = "";
+          if (response) {
+            try {
+              const payload = await response.clone().json() as { error?: string };
+              serverMessage = typeof payload.error === "string" ? payload.error : "";
+            } catch {
+              // Keep the SDK message if the response body is not JSON.
+            }
+          }
+          throw new Error(serverMessage || error.message || "Lichess sign-in failed. Please try again.");
+        }
         if (!data?.token_hash) throw new Error(data?.error || "Lichess sign-in could not be completed.");
         const { error: verifyError } = await supabase.auth.verifyOtp({
           token_hash: data.token_hash,
