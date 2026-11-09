@@ -6,6 +6,39 @@ import { ProfileDialog } from "./components/ProfileDialog";
 import { ProfilePage } from "./components/ProfilePage";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 
+const LICHESS_CLIENT_ID = "lag-free-ultrabullet.github.io";
+const OAUTH_STORAGE_KEY = "lagfree_lichess_pkce";
+
+function base64Url(bytes: Uint8Array) {
+  let binary = "";
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+async function startLichessOAuth() {
+  const random = new Uint8Array(32);
+  crypto.getRandomValues(random);
+  const verifier = base64Url(random);
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+  const challenge = base64Url(new Uint8Array(digest));
+  const stateBytes = new Uint8Array(24);
+  crypto.getRandomValues(stateBytes);
+  const state = base64Url(stateBytes);
+  const redirectUri = new URL(import.meta.env.BASE_URL, window.location.origin).toString();
+  sessionStorage.setItem(OAUTH_STORAGE_KEY, JSON.stringify({ verifier, state }));
+  const authorize = new URL("https://lichess.org/oauth");
+  authorize.search = new URLSearchParams({
+    response_type: "code",
+    client_id: LICHESS_CLIENT_ID,
+    redirect_uri: redirectUri,
+    code_challenge_method: "S256",
+    code_challenge: challenge,
+    state,
+  }).toString();
+  window.location.assign(authorize.toString());
+}
+
+
 type Page = "home" | "play" | "watch" | "players" | "profile";
 function App() {
   const [page, setPage] = useState<Page>("home");
@@ -14,6 +47,57 @@ function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileUsername, setProfileUsername] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<"signin" | "signup" | null>(null);
+  const [authError, setAuthError] = useState("");
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get("code");
+    const oauthError = url.searchParams.get("error");
+    if (!code && !oauthError) return;
+    const cleanUrl = () => window.history.replaceState({}, document.title, url.pathname + url.hash);
+    if (oauthError) {
+      sessionStorage.removeItem(OAUTH_STORAGE_KEY);
+      setAuthError("Lichess sign-in was cancelled or denied. You can try again.");
+      setAuthMode("signin");
+      cleanUrl();
+      return;
+    }
+    const stored = sessionStorage.getItem(OAUTH_STORAGE_KEY);
+    if (!stored || !supabase) {
+      sessionStorage.removeItem(OAUTH_STORAGE_KEY);
+      setAuthError("Your sign-in session expired. Please try again.");
+      setAuthMode("signin");
+      cleanUrl();
+      return;
+    }
+    void (async () => {
+      try {
+        const pending = JSON.parse(stored) as { verifier: string; state: string };
+        if (!pending.verifier || pending.state !== url.searchParams.get("state")) {
+          throw new Error("The Lichess sign-in could not be verified. Please try again.");
+        }
+        const redirectUri = new URL(import.meta.env.BASE_URL, window.location.origin).toString();
+        const { data, error } = await supabase.functions.invoke("lichess-auth", {
+          body: { code, codeVerifier: pending.verifier, redirectUri },
+        });
+        if (error) throw error;
+        if (!data?.token_hash) throw new Error(data?.error || "Lichess sign-in could not be completed.");
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: data.token_hash,
+          type: "magiclink",
+        });
+        if (verifyError) throw verifyError;
+        setAuthError("");
+        setAuthMode(null);
+      } catch (cause) {
+        setAuthError(cause instanceof Error ? cause.message : "Lichess sign-in failed. Please try again.");
+        setAuthMode("signin");
+      } finally {
+        sessionStorage.removeItem(OAUTH_STORAGE_KEY);
+        cleanUrl();
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     if (!supabase) return;
@@ -188,7 +272,7 @@ function App() {
         </main>
       </div>
 
-      {authMode && <AuthDialog initialMode={authMode} onClose={() => setAuthMode(null)} />}
+      {authMode && <AuthDialog initialMode={authMode} onClose={() => { setAuthMode(null); setAuthError(""); }} onLichess={() => { void startLichessOAuth().catch((cause) => setAuthError(cause instanceof Error ? cause.message : "Could not start Lichess sign-in.")); }} externalError={authError} />}
       {profileOpen && user && <ProfileDialog user={user} profile={profile} onClose={() => setProfileOpen(false)} onSaved={setProfile} />}
       <footer className="site-footer"><span>Lag-Free Ultrabullet</span><span>Independent project · Not affiliated with Lichess</span><span>AGPL-3.0-or-later</span></footer>
     </div>
