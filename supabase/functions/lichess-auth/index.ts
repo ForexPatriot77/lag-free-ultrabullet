@@ -101,33 +101,61 @@ Deno.serve(async (req: Request) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    let { data: linked, error: lookupError } = await admin
+    const authorization = req.headers.get("Authorization") ?? "";
+    const bearerToken = authorization.match(/^Bearer\\s+(.+)$/i)?.[1] ?? "";
+    let signedInUserId: string | undefined;
+    if (bearerToken.split(".").length === 3) {
+      const { data: sessionUser, error: sessionError } = await admin.auth.getUser(bearerToken);
+      if (sessionError || !sessionUser.user) {
+        return json({ error: "Your Lag-Free session expired. Sign in again, then connect Lichess from your profile." }, 401);
+      }
+      signedInUserId = sessionUser.user.id;
+    }
+
+    const { data: linked, error: lookupError } = await admin
       .from("lichess_accounts")
       .select("user_id")
       .eq("lichess_id", lichessId)
       .maybeSingle();
     if (lookupError) return json({ error: "Could not look up the Lichess account." }, 500);
 
+    if (linked?.user_id && signedInUserId && linked.user_id !== signedInUserId) {
+      return json({ error: "This Lichess account is already connected to a different Lag-Free account." }, 409);
+    }
+
     const isFirstLichessLink = !linked?.user_id;
     let userId = linked?.user_id as string | undefined;
+    if (!userId && signedInUserId) {
+      const { data: signedInAccount, error: signedInAccountError } = await admin.auth.admin.getUserById(signedInUserId);
+      if (signedInAccountError || !signedInAccount.user) {
+        return json({ error: "Could not verify your signed-in Lag-Free account." }, 401);
+      }
+      if ((signedInAccount.user.email ?? "").toLowerCase() !== accountEmail) {
+        return json({ error: "For account linking, sign into the Lag-Free account that uses the same email address as your Lichess account." }, 409);
+      }
+      userId = signedInUserId;
+    }
+
     if (!userId) {
       const { data: created, error: createError } = await admin.auth.admin.createUser({
         email: accountEmail,
         password: `${crypto.randomUUID()}-Aa9!`,
         email_confirm: true,
-        user_metadata: { display_name: lichessUsername },
+        user_metadata: { display_name: lichessUsername, auth_provider: "lichess", lichess_id: lichessId },
       });
       if (createError || !created.user) {
         const duplicateEmail = /already|registered|exists/i.test(createError?.message ?? "");
-        return json({ error: duplicateEmail
-          ? "This email already has a Lag-Free account. Sign in to that account first; we cannot safely merge accounts automatically."
-          : "We couldn't create your Lag-Free account. Please try again." }, duplicateEmail ? 409 : 500);
+        return json({
+          error: duplicateEmail
+            ? "This email already has a Lag-Free account. Sign into that account, open your profile settings, and choose Connect Lichess."
+            : "We couldn't create your Lag-Free account. Please try again.",
+        }, duplicateEmail ? 409 : 500);
       }
       userId = created.user.id;
     }
 
-    // Existing Lichess-linked users are upgraded from the old synthetic address
-    // to the verified address returned by Lichess. Never request or reuse the Lichess password.
+    // Never request, store, or reuse the Lichess password. If the player is
+    // already signed into the matching Lag-Free account, link it in place.
     const { data: authUserResult, error: authUserError } = await admin.auth.admin.getUserById(userId);
     if (authUserError || !authUserResult.user) {
       return json({ error: "Could not load your Lag-Free account." }, 500);
@@ -138,7 +166,7 @@ Deno.serve(async (req: Request) => {
         email_confirm: true,
       });
       if (emailUpdateError) {
-        return json({ error: "This email is already connected to another Lag-Free account, or could not be updated. Sign in to that account first and contact support to link Lichess." }, 409);
+        return json({ error: "This email is already connected to another Lag-Free account, or could not be updated." }, 409);
       }
     }
 
@@ -176,6 +204,14 @@ Deno.serve(async (req: Request) => {
       if (ratingError) return json({ error: "Your account was signed in, but ratings could not be imported." }, 500);
     }
 
+    if (signedInUserId) {
+      return json({
+        linked: true,
+        username: lichessUsername,
+        imported: { hyperbullet: bullet, ultrabullet: ultra },
+      });
+    }
+
     const { data: magic, error: magicError } = await admin.auth.admin.generateLink({
       type: "magiclink",
       email: accountEmail,
@@ -185,12 +221,12 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Your Lichess account was verified, but Lag-Free couldn't finish signing you in." }, 500);
     }
 
-    // The Lichess access token is intentionally not persisted or returned.
     return json({
       token_hash: tokenHash,
       username: lichessUsername,
       imported: { hyperbullet: bullet, ultrabullet: ultra },
     });
+
   } catch (error) {
     console.error("lichess-auth unexpected error", error);
     return json({ error: "Lichess sign-in failed unexpectedly. Please try again." }, 500);
