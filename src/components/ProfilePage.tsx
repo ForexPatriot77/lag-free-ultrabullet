@@ -12,6 +12,7 @@ type ProfileData = {
 };
 
 type RatingData = {
+  hyperbullet_rating: number;
   ultrabullet_rating: number;
   games_played: number;
   wins: number;
@@ -122,7 +123,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
       setProfile(person as ProfileData);
       const { data: stats } = await supabase
         .from("player_ratings")
-        .select("ultrabullet_rating, games_played, wins, draws, losses")
+        .select("hyperbullet_rating, ultrabullet_rating, games_played, wins, draws, losses")
         .eq("user_id", person.id)
         .maybeSingle();
       if (!active) return;
@@ -146,8 +147,8 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
           <>
             <aside className="profile-ratings-rail">
               <h2 className="profile-ratings-heading">Ratings by time control</h2>
-              <div className="profile-variant-title muted"><span>30s · Hyperbullet</span></div>
-              <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
+              <div className="profile-variant-title"><span>30s · Hyperbullet</span></div>
+              <div className="profile-rating-block"><strong>{rating?.hyperbullet_rating ?? "?"}</strong><span>{rating?.hyperbullet_rating ? "Imported from Lichess Bullet" : "Not rated yet"}</span></div>
               <div className="profile-variant-title"><span>15s · Ultrabullet</span></div>
               <div className="profile-rating-block"><strong>{rating?.ultrabullet_rating ?? "?" }</strong><span>Rated pool</span></div>
               <div className="profile-variant-title muted"><span>7.5s · Ultrazerk</span></div>
@@ -192,7 +193,8 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
                   <div className="profile-info-name">{profile.display_name || profile.username}</div>
                   {profile.bio && <p>{profile.bio}</p>}
                   {joined && <div className="profile-info-line">Member since {joined}</div>}
-                  <div className="profile-info-line">Rated pool: 15-second Ultrabullet</div>
+                  <div className="profile-info-line">Lichess Bullet → 30s Hyperbullet</div>
+                  <div className="profile-info-line">Lichess Ultrabullet → 15s Ultrabullet</div>
                   <div className="profile-info-line">Games played: {rating?.games_played ?? 0}</div>
                 </aside>
               </div>
