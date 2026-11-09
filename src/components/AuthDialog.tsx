@@ -4,9 +4,11 @@ import { supabase } from "../lib/supabase";
 type AuthDialogProps = {
   initialMode: "signin" | "signup";
   onClose: () => void;
+  onLichess: () => void;
+  externalError?: string;
 };
 
-export function AuthDialog({ initialMode, onClose }: AuthDialogProps) {
+export function AuthDialog({ initialMode, onClose, onLichess, externalError }: AuthDialogProps) {
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -74,6 +76,10 @@ export function AuthDialog({ initialMode, onClose }: AuthDialogProps) {
         <p className="auth-subtitle">
           {mode === "signup" ? "Join the board. Your player profile will be created automatically." : "Sign in to continue to your player profile."}
         </p>
+        <button className="auth-lichess-button" type="button" onClick={onLichess} disabled={busy}>
+          <span className="auth-lichess-mark">♞</span> Continue with Lichess
+        </button>
+        <div className="auth-provider-divider"><span>or use email</span></div>
         <form onSubmit={submit}>
           {mode === "signup" && (
             <label className="auth-field">
@@ -111,7 +117,7 @@ export function AuthDialog({ initialMode, onClose }: AuthDialogProps) {
               required
             />
           </label>
-          {error && <p className="auth-message auth-error" role="alert">{error}</p>}
+          {(error || externalError) && <p className="auth-message auth-error" role="alert">{error || externalError}</p>}
           {message && <p className="auth-message auth-success" role="status">{message}</p>}
           <button className="auth-submit" type="submit" disabled={busy}>
             {busy ? "Please wait…" : mode === "signup" ? "Create account" : "Log in"}
