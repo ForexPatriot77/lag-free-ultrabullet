@@ -82,12 +82,12 @@ type TimeControl = { label: string; initialTimeMs: number; incrementMs: number; 
 const TIME_CONTROLS: TimeControl[] = [
   { label: "30 seconds · Hyperbullet", initialTimeMs: 30000, incrementMs: 0, category: "Hyperbullet" },
   { label: "15 seconds · Ultrabullet", initialTimeMs: 15000, incrementMs: 0, category: "Ultrabullet" },
-  { label: "7.5 seconds · Nanobullet", initialTimeMs: 7500, incrementMs: 0, category: "Nanobullet" },
-  { label: "3.25 seconds", initialTimeMs: 3250, incrementMs: 0, category: "Hyperfast" },
-  { label: "1.625 seconds", initialTimeMs: 1625, incrementMs: 0, category: "Hyperfast" },
-  { label: "0.8125 seconds", initialTimeMs: 812.5, incrementMs: 0, category: "Hyperfast" },
-  { label: "0.40625 seconds", initialTimeMs: 406.25, incrementMs: 0, category: "Hyperfast" },
-  { label: "0.203125 seconds", initialTimeMs: 203.125, incrementMs: 0, category: "Hyperfast" },
+  { label: "7.5 seconds · Ultrazerk", initialTimeMs: 7500, incrementMs: 0, category: "Ultrazerk" },
+  { label: "3.25 seconds", initialTimeMs: 3250, incrementMs: 0, category: "Psycho" },
+  { label: "1.625 seconds", initialTimeMs: 1625, incrementMs: 0, category: "Psycho" },
+  { label: "0.8125 seconds", initialTimeMs: 812.5, incrementMs: 0, category: "Psycho" },
+  { label: "0.40625 seconds", initialTimeMs: 406.25, incrementMs: 0, category: "Psycho" },
+  { label: "0.203125 seconds", initialTimeMs: 203.125, incrementMs: 0, category: "Psycho" },
 ];
 function controlLabel(initial: number, increment: number): string {
   return TIME_CONTROLS.find((item) => item.initialTimeMs === initial && item.incrementMs === increment)?.label ?? "Custom";
