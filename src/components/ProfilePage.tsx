@@ -238,7 +238,6 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
                     {profile.avatar_url ? <img src={profile.avatar_url} alt="" /> : "♟"}
                   </div>
                   <div>
-                    <div className="profile-online-dot" />
                     <h1>{profile.display_name || profile.username}</h1>
                     <span className="profile-handle">@{profile.username}</span>
                   </div>
