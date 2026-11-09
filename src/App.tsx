@@ -31,6 +31,7 @@ async function startLichessOAuth() {
     response_type: "code",
     client_id: LICHESS_CLIENT_ID,
     redirect_uri: redirectUri,
+    scope: "email:read",
     code_challenge_method: "S256",
     code_challenge: challenge,
     state,
