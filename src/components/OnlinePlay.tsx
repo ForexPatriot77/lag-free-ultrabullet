@@ -658,7 +658,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
             <div className="ruser ruser-top user-link online">
               <i className="line" />
               <span>{boardOrientation === "white" ? "Opponent" : "You"}</span>
-              <rating>{boardOrientation === "white" ? "Black" : "White"}</rating>
+              <span className="ruser-rating">{boardOrientation === "white" ? "Black" : "White"}</span>
             </div>
             <div className={`rclock rclock-top ${game.status === "active" && game.turn_color === "black" ? "running" : ""}`}>
               <div className="time">{clockText(blackClock)}</div>
@@ -671,7 +671,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
             <div className="ruser ruser-bottom user-link online">
               <i className="line" />
               <span>{boardOrientation === "white" ? "You" : "Opponent"}</span>
-              <rating>{boardOrientation === "white" ? "White" : "Black"}</rating>
+              <span className="ruser-rating">{boardOrientation === "white" ? "White" : "Black"}</span>
             </div>
             <div className={`rclock rclock-bottom ${game.status === "active" && game.turn_color === "white" ? "running" : ""}`}>
               <div className="time">{clockText(whiteClock)}</div>
