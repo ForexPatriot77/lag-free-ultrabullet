@@ -112,12 +112,15 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [queueing, setQueueing] = useState(false);
+  const [queueMessage, setQueueMessage] = useState("");
   const [tick, setTick] = useState(0);
   const [serverOffset, setServerOffset] = useState(0);
   const boardElement = useRef<HTMLDivElement>(null);
   const ground = useRef<Api | null>(null);
   const gameRef = useRef<GameRow | null>(null);
   const timeoutRequested = useRef<string | null>(null);
+  const matchmakingInFlight = useRef(false);
   const orientedGameId = useRef<string | null>(null);
   const userId = user.id;
 
@@ -218,6 +221,49 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
       setLoading(false);
     }
   }, [invoke, loadState, loadMyRating]);
+
+  const runMatchmaking = useCallback(async () => {
+    if (matchmakingInFlight.current) return;
+    matchmakingInFlight.current = true;
+    try {
+      const data = await invoke({ action: "matchmake", initialTimeMs: selectedControl.initialTimeMs });
+      if (data.queued) {
+        setQueueMessage("Searching for an opponent at " + selectedControl.label + "…");
+      } else if (data.game?.id) {
+        setQueueing(false);
+        setQueueMessage("");
+        await openGame(data.game.id, false);
+      }
+    } catch (error) {
+      setQueueing(false);
+      setQueueMessage("");
+      setMessage(error instanceof Error ? error.message : "Matchmaking could not be completed.");
+    } finally {
+      matchmakingInFlight.current = false;
+    }
+  }, [invoke, openGame, selectedControl.initialTimeMs, selectedControl.label]);
+
+  const startMatchmaking = () => {
+    setQueueing(true);
+    setQueueMessage("Finding an opponent…");
+    void runMatchmaking();
+  };
+
+  const cancelMatchmaking = async () => {
+    try {
+      await invoke({ action: "cancel_matchmaking" });
+      setQueueing(false);
+      setQueueMessage("");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not leave the matchmaking queue.");
+    }
+  };
+
+  useEffect(() => {
+    if (!queueing) return;
+    const interval = window.setInterval(() => void runMatchmaking(), 2000);
+    return () => window.clearInterval(interval);
+  }, [queueing, runMatchmaking]);
 
   useEffect(() => {
     if (initialGameId) void openGame(initialGameId);
@@ -448,10 +494,17 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
                 {TIME_CONTROLS.map((item) => <option key={item.initialTimeMs + "-" + item.incrementMs} value={item.initialTimeMs + "-" + item.incrementMs}>{item.label}</option>)}
               </select>
             </label>
-            <button className="online-primary" type="button" disabled={busy || loading} onClick={createGame}>
-              {busy ? "Creating…" : "＋ Create challenge"}
-            </button>
+            <div className="lobby-create-actions">
+              <button className="online-primary" type="button" disabled={busy || loading || queueing} onClick={startMatchmaking}>
+                ⚡ Play now
+              </button>
+              <button className="online-secondary" type="button" disabled={busy || loading || queueing} onClick={createGame}>
+                ＋ Create challenge
+              </button>
+              {queueing && <button className="online-secondary" type="button" onClick={cancelMatchmaking}>Cancel search</button>}
+            </div>
           </div>
+          {queueing && <div className="queue-status" role="status">{queueMessage}</div>}
           <div className="lobby-list-head">
             <strong>Open challenges</strong>
             <button type="button" onClick={() => void loadLobby()}>↻ Refresh</button>
