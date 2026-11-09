@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -22,12 +22,16 @@ jobs:
           node-version: 24
       - name: Install dependencies
         run: npm install
-      - name: Upload resolved dependency lock
-        uses: actions/upload-artifact@v4
-        with:
-          name: npm-lockfile
-          path: package-lock.json
-          retention-days: 1
+      - name: Commit dependency lockfile
+        if: github.event_name == 'push'
+        run: |
+          git add package-lock.json
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore: add npm dependency lockfile"
+            git push
+          fi
       - name: Run automated tests
         run: npm test
       - name: Build production app
