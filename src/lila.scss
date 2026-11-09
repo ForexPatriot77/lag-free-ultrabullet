@@ -7,3 +7,174 @@
 @import "../ui/lib/css/page/lichess";
 @import "../ui/lobby/css/build/lobby";
 @import "../ui/round/css/build/round";
+
+
+// Lag-Free integration layer for the Lila round interface.
+// The underlying layout, clocks, player bars, and board styling come from Lila.
+.online-game.round {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  align-items: start;
+}
+.online-game.round .round__app {
+  width: 100%;
+  min-width: 0;
+}
+.online-game.round .round__app__board {
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1;
+  position: relative;
+}
+.online-game.round .round__app__board .online-board {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.online-game.round .round__app__board cg-board {
+  border-radius: 0;
+}
+.online-game.round .ruser {
+  min-width: 0;
+  gap: 0.5em;
+}
+.online-game.round .ruser span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.online-game.round .rclock .time {
+  min-width: 4.2em;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+.online-game.round .rmoves {
+  grid-area: moves;
+  min-width: 0;
+  min-height: 8rem;
+  max-height: 24rem;
+  overflow: auto;
+  background: $c-bg-box;
+}
+.online-game.round .moves {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+}
+.online-game.round .lila-move-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65em;
+  min-height: 2.15em;
+  padding: 0.25em 0.6em;
+  color: $c-font;
+  font-size: 1.05em;
+}
+.online-game.round .lila-move-row:nth-child(4n + 1),
+.online-game.round .lila-move-row:nth-child(4n + 2) {
+  background: $c-bg-zebra;
+}
+.online-game.round .lila-move-number {
+  min-width: 1.5em;
+  color: $c-font-dimmer;
+  text-align: right;
+}
+.online-game.round .round__app__table {
+  pointer-events: none;
+}
+.online-game.round .rcontrols {
+  grid-area: controls;
+  min-width: 0;
+  text-align: left;
+}
+.online-game.round .ricons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45em;
+  padding: 0.4em 0;
+}
+.online-game.round .lila-promotion-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  color: $c-font-dim;
+  font-size: 0.85em;
+}
+.online-game.round .lila-promotion-control select {
+  padding: 0.35em 0.5em;
+  border: $border;
+  color: $c-font;
+  background: $c-bg-input;
+}
+.online-game.round .lila-round-caption {
+  padding: 0.5em 0;
+  color: $c-font-dim;
+  font-size: 0.78em;
+}
+.online-game.round .round__side {
+  min-width: 0;
+}
+.online-game.round .game__meta {
+  overflow: hidden;
+}
+.online-game.round .game__meta__infos {
+  overflow-wrap: anywhere;
+}
+.online-game.round .game__meta__players .player {
+  justify-content: space-between;
+  gap: 0.75em;
+}
+.online-game.round .round-side-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  margin-top: 0.8em;
+}
+.online-game.round .round-side-actions .fbt {
+  flex: 1 1 8em;
+  min-height: 2.5em;
+}
+.online-game.round .first-move-deadline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  margin-top: 0.8em;
+  padding: 0.75em;
+  border-inline-start: 3px solid #d5a84c;
+  background: $c-bg-zebra;
+  color: $c-font;
+  font-size: 0.82em;
+  line-height: 1.45;
+}
+.online-game.round .first-move-deadline span {
+  color: $c-font-dim;
+}
+.online-game.round .round__underboard {
+  min-width: 0;
+  color: $c-font-dim;
+  font-size: 0.8em;
+}
+.online-game.round .round__underboard-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6em 1em;
+  align-items: center;
+}
+@media (max-width: 760px) {
+  .online-game.round .round__side {
+    order: 3;
+  }
+  .online-game.round .round__app {
+    max-width: 100%;
+  }
+  .online-game.round .round__app__board {
+    width: min(100vw - 1rem, 72vh);
+    justify-self: center;
+  }
+  .online-game.round .rmoves {
+    max-height: 12rem;
+  }
+}
