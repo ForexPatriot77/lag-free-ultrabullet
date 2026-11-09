@@ -300,7 +300,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
   }, [initialGameId, openGame, loadLobby, loadHistory, loadLeaderboard, loadLiveGames, loadMyRating]);
 
   useEffect(() => {
-    if (!gameId) return;
+    if (!gameId || game?.status === "finished") return;
     const channel = supabase
       .channel(`game:${gameId}`)
       .on("postgres_changes", {
@@ -314,12 +314,12 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
     // from dropped websocket events or temporary connection interruptions.
     const recoveryPoll = window.setInterval(() => {
       void loadState(gameId).catch(() => undefined);
-    }, 1500);
+    }, 2500);
     return () => {
       window.clearInterval(recoveryPoll);
       void supabase.removeChannel(channel);
     };
-  }, [gameId, loadState]);
+  }, [gameId, game?.status, loadState]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setTick((value) => value + 1), 50);
