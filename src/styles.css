@@ -278,3 +278,10 @@ a { color: var(--c-link, #7ba7d8); }
   .invite-actions { align-items: stretch; flex-direction: column; }
   .invite-actions button { width: 100%; }
 }
+
+.lobby-create-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; }
+.queue-status { padding: .65rem 1rem; color: var(--c-font, #ddd); background: var(--c-bg-zebra, #302e2b); font-size: .8rem; }
+@media (max-width: 520px) {
+  .lobby-create-actions { width: 100%; flex-direction: column; align-items: stretch; }
+  .lobby-create-actions button { width: 100%; }
+}
