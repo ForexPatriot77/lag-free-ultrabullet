@@ -712,7 +712,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
             </div>
           </div>
         </div>
-      )})}
+      )}
       {loading && <div className="online-loading">Connecting to game…</div>}
     </section>
   );
