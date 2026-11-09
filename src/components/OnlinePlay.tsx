@@ -484,7 +484,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
           <span className="online-kicker">LIVE CHESS</span>
           <h2>Online chess</h2>
           <p>Server-validated moves · live clocks · eight no-increment time controls</p>
-          <span className="my-rating">Your {selectedControl.category} rating: <strong>{myRating ?? "Unrated"}</strong></span>
+          <span className="my-rating">Your {selectedControl.label} rating: <strong>{myRating ?? "Unrated"}</strong></span>
         </div>
         {game && <button className="online-secondary" type="button" onClick={backToLobby}>Back to lobby</button>}
       </div>
@@ -556,7 +556,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
               </button>
             </div>
           ))}
-          <div className="history-head" id="players"><strong>{selectedControl.category} leaderboard</strong><button type="button" onClick={() => void loadLeaderboard()}>↻ Refresh</button></div>
+          <div className="history-head" id="players"><strong>{selectedControl.label} leaderboard</strong><button type="button" onClick={() => void loadLeaderboard()}>↻ Refresh</button></div>
           {leaderboard.length === 0 ? (
             <div className="lobby-empty history-empty">Ratings appear after players finish their first game.</div>
           ) : leaderboard.map((player, index) => (
