@@ -70,7 +70,7 @@ type LiveGame = {
 
 type LeaderboardPlayer = {
   user_id: string;
-  ultrabullet_rating: number;
+  rating: number;
   games_played: number;
   wins: number;
   draws: number;
@@ -91,6 +91,25 @@ const TIME_CONTROLS: TimeControl[] = [
 ];
 function controlLabel(initial: number, increment: number): string {
   return TIME_CONTROLS.find((item) => item.initialTimeMs === initial && item.incrementMs === increment)?.label ?? "Custom";
+}
+
+type RatingColumn =
+  | "hyperbullet_rating" | "ultrabullet_rating" | "ultrazerk_rating"
+  | "psycho_3250_rating" | "psycho_1625_rating" | "psycho_812_5_rating"
+  | "psycho_406_25_rating" | "psycho_203_125_rating";
+
+function ratingColumnForTime(initialTimeMs: number): RatingColumn {
+  const columns: Record<number, RatingColumn> = {
+    30000: "hyperbullet_rating",
+    15000: "ultrabullet_rating",
+    7500: "ultrazerk_rating",
+    3250: "psycho_3250_rating",
+    1625: "psycho_1625_rating",
+    812.5: "psycho_812_5_rating",
+    406.25: "psycho_406_25_rating",
+    203.125: "psycho_203_125_rating",
+  };
+  return columns[initialTimeMs] ?? "ultrabullet_rating";
 }
 
 function destinations(chess: Chess): Map<Key, Key[]> {
@@ -171,12 +190,12 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
 
   const loadLeaderboard = useCallback(async () => {
     try {
-      const data = await invoke({ action: "leaderboard" });
+      const data = await invoke({ action: "leaderboard", ratingPool: ratingColumnForTime(selectedControl.initialTimeMs) });
       setLeaderboard((data.players ?? []) as LeaderboardPlayer[]);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not load the leaderboard.");
     }
-  }, [invoke]);
+  }, [invoke, selectedControl.initialTimeMs]);
 
   const loadLiveGames = useCallback(async () => {
     try {
@@ -190,11 +209,12 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
   const loadMyRating = useCallback(async () => {
     const { data } = await supabase
       .from("player_ratings")
-      .select("ultrabullet_rating")
+      .select("hyperbullet_rating, ultrabullet_rating, ultrazerk_rating, psycho_3250_rating, psycho_1625_rating, psycho_812_5_rating, psycho_406_25_rating, psycho_203_125_rating")
       .eq("user_id", userId)
       .maybeSingle();
-    setMyRating(data?.ultrabullet_rating ?? null);
-  }, [userId]);
+    const column = ratingColumnForTime(selectedControl.initialTimeMs);
+    setMyRating(data?.[column] ?? null);
+  }, [userId, selectedControl.initialTimeMs]);
 
   const loadState = useCallback(async (id: string) => {
     const data = await invoke({ action: "state", gameId: id });
@@ -421,9 +441,9 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
       <div className="online-heading">
         <div>
           <span className="online-kicker">LIVE CHESS</span>
-          <h2>Online Ultrabullet</h2>
-          <p>Server-validated moves · live clocks · increment support</p>
-          <span className="my-rating">Your ultrabullet rating: <strong>{myRating ?? "Unrated"}</strong></span>
+          <h2>Online chess</h2>
+          <p>Server-validated moves · live clocks · eight no-increment time controls</p>
+          <span className="my-rating">Your {selectedControl.category} rating: <strong>{myRating ?? "Unrated"}</strong></span>
         </div>
         {game && <button className="online-secondary" type="button" onClick={backToLobby}>Back to lobby</button>}
       </div>
@@ -435,7 +455,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
           <div className="lobby-create">
             <div>
               <strong>Challenge someone</strong>
-              <span>Choose your speed. 15-second Ultrabullet is currently the rated pool.</span>
+              <span>Choose your speed. Each time control has its own rating pool.</span>
             </div>
             <label className="time-control-picker">Time control
               <select value={String(selectedControl.initialTimeMs) + "-" + String(selectedControl.incrementMs)} onChange={(event) => {
@@ -483,7 +503,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
               </button>
             </div>
           ))}
-          <div className="history-head" id="players"><strong>Ultrabullet leaderboard</strong><button type="button" onClick={() => void loadLeaderboard()}>↻ Refresh</button></div>
+          <div className="history-head" id="players"><strong>{selectedControl.category} leaderboard</strong><button type="button" onClick={() => void loadLeaderboard()}>↻ Refresh</button></div>
           {leaderboard.length === 0 ? (
             <div className="lobby-empty history-empty">Ratings appear after players finish their first game.</div>
           ) : leaderboard.map((player, index) => (
@@ -493,7 +513,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
                 <strong>{player.profile?.username && onOpenProfile ? <button className="player-name-link" onClick={() => onOpenProfile(player.profile!.username)}>{player.profile.display_name || player.profile.username}</button> : (player.profile?.display_name || player.profile?.username || "Player")}</strong>
                 <span>{player.games_played} games · {player.wins} wins · {player.draws} draws</span>
               </div>
-              <strong className="leaderboard-rating">{player.ultrabullet_rating}</strong>
+              <strong className="leaderboard-rating">{player.rating}</strong>
             </div>
           ))}
           <div className="history-head" id="watch"><strong>Live games</strong><button type="button" onClick={() => void loadLiveGames()}>↻ Refresh</button></div>
@@ -548,7 +568,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
             {game.status === "waiting" && (
               <div className="invite-box">
                 <strong>Your challenge is ready</strong>
-                <p>Share this link. Your 15-second clock starts when someone joins.</p>
+                <p>Share this link. Your clock starts when someone joins.</p>
                 <button className="online-primary" type="button" onClick={shareInvite}>Copy invite link</button>
               </div>
             )}
