@@ -4,6 +4,7 @@ import { AuthDialog } from "./components/AuthDialog";
 import { OnlinePlay } from "./components/OnlinePlay";
 import { ProfileDialog } from "./components/ProfileDialog";
 import { ProfilePage } from "./components/ProfilePage";
+import { PasswordRecoveryDialog } from "./components/PasswordRecoveryDialog";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 
 const LICHESS_CLIENT_ID = "lag-free-ultrabullet.github.io";
@@ -49,6 +50,7 @@ function App() {
   const [profileUsername, setProfileUsername] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<"signin" | "signup" | null>(null);
   const [authError, setAuthError] = useState("");
+  const [passwordRecoveryOpen, setPasswordRecoveryOpen] = useState(false);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -121,8 +123,9 @@ function App() {
     supabase.auth.getSession().then(({ data }) => {
       if (active) setUser(data.session?.user ?? null);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (event === "PASSWORD_RECOVERY") setPasswordRecoveryOpen(true);
     });
     return () => {
       active = false;
@@ -289,6 +292,7 @@ function App() {
       </div>
 
       {authMode && <AuthDialog initialMode={authMode} onClose={() => { setAuthMode(null); setAuthError(""); }} onLichess={() => { void startLichessOAuth().catch((cause) => setAuthError(cause instanceof Error ? cause.message : "Could not start Lichess sign-in.")); }} externalError={authError} />}
+      {passwordRecoveryOpen && <PasswordRecoveryDialog onClose={() => setPasswordRecoveryOpen(false)} />}
       {profileOpen && user && <ProfileDialog user={user} profile={profile} onClose={() => setProfileOpen(false)} onSaved={(nextProfile) => { setProfile(nextProfile); setProfileUsername(nextProfile.username); }} />}
       <footer className="site-footer">
         <span>Lag-Free Ultrabullet</span>
