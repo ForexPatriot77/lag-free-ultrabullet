@@ -96,6 +96,7 @@ The site footer links to the source and license. The public source repository is
 
 - No WebRTC peer-to-peer move channel yet; moves still make a server round-trip.
 - No in-game chat, draw offers, rematch flow, or moderation/reporting tools.
+- Privacy/terms pages and a self-service account-deletion flow are not yet published; these must be addressed before a broad public launch.
 - No automated two-browser integration test suite; live two-player behavior still needs manual verification.
 - Supabase's security advisor currently reports leaked-password protection disabled. Supabase documents this control as available on Pro and above; enable it if the project plan supports it, or reconsider password-based signup. See [Supabase password security](https://supabase.com/docs/guides/auth/password-security).
 - Rating history starts at the deployment of the rating-history migration; older games were not backfilled.
