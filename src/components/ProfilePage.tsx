@@ -26,7 +26,7 @@ type RatingData = {
   losses: number;
 };
 
-function RatingChart({ rating }: { rating: number | null }) {
+function RatingChart({ rating, history }: { rating: number | null; history: RatingHistoryPoint[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -36,10 +36,10 @@ function RatingChart({ rating }: { rating: number | null }) {
     const chart = new Chart(canvas, {
       type: "line",
       data: {
-        labels: ["Current"],
+        labels: history.length ? history.map((point) => new Date(point.recorded_at).toLocaleDateString()) : ["Current"],
         datasets: [{
           label: "Ultrabullet rating",
-          data: [rating],
+          data: history.length ? history.map((point) => point.rating) : [rating],
           borderColor: "#91b85b",
           backgroundColor: "rgba(145, 184, 91, .14)",
           pointBackgroundColor: "#a8cf70",
@@ -82,7 +82,7 @@ function RatingChart({ rating }: { rating: number | null }) {
     });
 
     return () => chart.destroy();
-  }, [rating]);
+  }, [rating, history]);
 
   return (
     <div className="rating-chart-visual">
@@ -206,7 +206,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
                     <strong>{rating?.ultrabullet_rating ?? "Unrated"}</strong>
                     <span>15 seconds · no increment</span>
                   </div>
-                  <RatingChart rating={rating?.ultrabullet_rating ?? null} />
+                  <RatingChart rating={rating?.ultrabullet_rating ?? null} history={ratingHistory} />
                 </section>
                 <aside className="profile-info-card">
                   <div className="profile-info-name">{profile.display_name || profile.username}</div>
