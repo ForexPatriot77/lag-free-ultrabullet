@@ -16,6 +16,7 @@ export function AuthDialog({ initialMode, onClose, onLichess, externalError }: A
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -51,6 +52,30 @@ export function AuthDialog({ initialMode, onClose, onLichess, externalError }: A
       setError(cause instanceof Error ? cause.message : "Something went wrong. Please try again.");
     } finally {
       setBusy(false);
+    }
+  };
+
+  const requestPasswordReset = async () => {
+    setError("");
+    setMessage("");
+    if (!email.trim()) {
+      setError("Enter your account email first.");
+      return;
+    }
+    if (!supabase) {
+      setError("Account services are not configured.");
+      return;
+    }
+    setResetBusy(true);
+    try {
+      const redirectTo = new URL(import.meta.env.BASE_URL, window.location.origin).toString();
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
+      if (resetError) throw resetError;
+      setMessage("If an account exists for that address, a password-reset link has been sent.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not request a password reset.");
+    } finally {
+      setResetBusy(false);
     }
   };
 
@@ -117,6 +142,11 @@ export function AuthDialog({ initialMode, onClose, onLichess, externalError }: A
               required
             />
           </label>
+          {mode === "signin" && (
+            <button className="auth-switch auth-reset-link" type="button" onClick={() => void requestPasswordReset()} disabled={resetBusy}>
+              {resetBusy ? "Sending reset link…" : "Forgot password?"}
+            </button>
+          )}
           {(error || externalError) && <p className="auth-message auth-error" role="alert">{error || externalError}</p>}
           {message && <p className="auth-message auth-success" role="status">{message}</p>}
           <button className="auth-submit" type="submit" disabled={busy}>
