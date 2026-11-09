@@ -195,7 +195,16 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   }
 
   if (action === "state") {
-    if (game.status === "active" && game.last_move_at) {
+    if (game.status === "active" && game.ply === 0 && game.started_at && isParticipant) {
+      const firstMoveDeadline = new Date(game.started_at).getTime() + Number(game.initial_time_ms);
+      if (Date.now() >= firstMoveDeadline) {
+        const { error } = await admin.rpc("abort_ultrabullet_game", {
+          p_game_id: gameId,
+          p_user_id: userId,
+        });
+        if (error && !/Game is not active/.test(error.message)) return json({ error: error.message }, 409);
+      }
+    } else if (game.status === "active" && game.last_move_at) {
       const elapsed = Math.max(0, Date.now() - new Date(game.last_move_at).getTime());
       const remaining = game.turn_color === "white" ? game.white_time_ms : game.black_time_ms;
       if (elapsed >= remaining && isParticipant) {
@@ -233,6 +242,14 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     const elapsed = Math.max(0, Date.now() - new Date(game.last_move_at).getTime());
     const currentTime = game.turn_color === "white" ? game.white_time_ms : game.black_time_ms;
     if (elapsed >= currentTime) {
+      if (game.ply === 0 && game.started_at) {
+        const { error } = await admin.rpc("abort_ultrabullet_game", {
+          p_game_id: gameId,
+          p_user_id: userId,
+        });
+        if (error) return json({ error: error.message }, 409);
+        return json({ aborted: true, message: "Game aborted: no first move was made within 15 seconds. No rating change." });
+      }
       const chess = new Chess(game.fen);
       const timeoutIsDraw = chess.isInsufficientMaterial();
       const result = timeoutIsDraw ? "1/2-1/2" : isWhite ? "0-1" : "1-0";
