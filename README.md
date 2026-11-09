@@ -33,7 +33,7 @@ The five Psycho clocks share the Psycho name but have separate rating pools. Lic
 - Existing email/password sign-in, registration, and password recovery.
 - Player profiles with editable username, display name, and bio.
 - Eight no-increment challenge time controls.
-- Open challenges, shareable invite links, joining, and challenge cancellation.
+- Quick matchmaking by exact time control, plus open challenges, shareable invite links, joining, and challenge cancellation.
 - Chessground board with legal moves checked by chess.js on the server.
 - Server-maintained clocks, move history, checkmate, stalemate, draw, resignation, and timeout handling.
 - Separate Elo pools for all eight exact time controls.
@@ -95,7 +95,7 @@ The site footer links to the source and license. The public source repository is
 ## Known limitations before formal release
 
 - No WebRTC peer-to-peer move channel yet; moves still make a server round-trip.
-- No automatic matchmaking queue; players create and share open challenges.
+- No WebRTC peer-to-peer move channel yet; moves still make a server round-trip.
 - No in-game chat, draw offers, rematch flow, or moderation/reporting tools.
 - No automated two-browser integration test suite; live two-player behavior still needs manual verification.
 - Rating history starts at the deployment of the rating-history migration; older games were not backfilled.
