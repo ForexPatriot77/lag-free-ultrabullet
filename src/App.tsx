@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { AuthDialog } from "./components/AuthDialog";
 import { OnlinePlay } from "./components/OnlinePlay";
@@ -43,7 +43,10 @@ async function startLichessOAuth() {
 
 type Page = "home" | "play" | "watch" | "players" | "profile";
 function App() {
-  const [page, setPage] = useState<Page>("home");
+  const [page, setPage] = useState<Page>(() => new URLSearchParams(window.location.search).has("game") ? "play" : "home");
+  const [isInGame, setIsInGame] = useState(() => new URLSearchParams(window.location.search).has("game"));
+  const handleGameOpen = useCallback(() => { setIsInGame(true); setPage("play"); }, []);
+  const handleGameClose = useCallback(() => setIsInGame(false), []);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<{ username: string; display_name: string | null; bio?: string | null } | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -231,7 +234,7 @@ function App() {
                 <div className="tabs-horiz"><span>Lobby</span></div>
                 <div className="lobby__app__content">
                   {user ? (
-                    <OnlinePlay user={user} initialGameId={null} onOpenProfile={(username) => { setProfileUsername(username); setPage("profile"); }} />
+                    <OnlinePlay user={user} initialGameId={null} onOpenProfile={(username) => { setProfileUsername(username); setPage("profile"); }} onGameOpen={handleGameOpen} onGameClose={handleGameClose} />
                   ) : (
                     <div className="lobby-signin">
                       <div className="lobby-signin__piece">♞</div>
@@ -273,8 +276,8 @@ function App() {
 
           {page === "play" && (
             <section className="content-page">
-              <div className="content-page-heading"><div><span className="page-kicker">FIND A GAME</span><h1>Play online</h1><p>Challenge someone, join an open game, or review a recent match.</p></div><span className="time-control-label">⚡ 8 rated time controls · no increment</span></div>
-              {user ? <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} onOpenProfile={(username) => { setProfileUsername(username); setPage("profile"); }} /> : (
+              {!isInGame && <div className="content-page-heading"><div><span className="page-kicker">FIND A GAME</span><h1>Play online</h1><p>Challenge someone, join an open game, or review a recent match.</p></div><span className="time-control-label">⚡ 8 rated time controls · no increment</span></div>}
+              {user ? <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} onOpenProfile={(username) => { setProfileUsername(username); setPage("profile"); }} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : (
                 <div className="signin-gate"><div className="gate-icon">♟</div><h2>Sign in to play online</h2><p>Your games, rating, and challenges are connected to your player account.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="gate-secondary" onClick={() => setAuthMode("signup")}>Create an account</button></div>
               )}
             </section>
