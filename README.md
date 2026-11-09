@@ -56,7 +56,7 @@ Requirements: Node.js 24+ and npm.
 2. Install dependencies:
 
    ```sh
-   npm install
+   npm ci
    ```
 
 3. Copy `.env.example` to `.env`. The checked-in browser values are public publishable credentials; never add a Supabase secret or service-role key to frontend files.
