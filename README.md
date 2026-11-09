@@ -82,7 +82,7 @@ Deploy the Edge Functions from their source directories:
 - `supabase/functions/ultrabullet` — requires JWT verification.
 - `supabase/functions/lichess-auth` — public OAuth callback; performs its own PKCE/code validation and strict redirect allow-listing.
 
-Configure Supabase Auth's site URL and redirect allow-list for the production GitHub Pages URL and the local Vite URL. Lichess OAuth must be registered with the matching production redirect URI. Keep Supabase secret/service-role credentials only in Supabase's server-side function environment.
+Configure Supabase Auth's site URL and redirect allow-list for the production GitHub Pages URL and the local Vite URL. Lichess OAuth must be registered with the matching production redirect URI. Configure a production SMTP provider before public launch; Supabase's built-in email sender is rate-limited and intended for testing ([SMTP setup](https://supabase.com/docs/guides/auth/auth-smtp)). Keep Supabase secret/service-role credentials only in Supabase's server-side function environment.
 
 ## Licensing and attribution
 
