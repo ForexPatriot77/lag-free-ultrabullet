@@ -123,6 +123,8 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
   const matchmakingInFlight = useRef(false);
   const matchmakingCancelRequested = useRef(false);
   const orientedGameId = useRef<string | null>(null);
+  const moveInFlight = useRef(false);
+  const stateRequestSequence = useRef(0);
   const userId = user.id;
 
   const invoke = useCallback(async (body: Record<string, unknown>) => {
@@ -189,8 +191,16 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
   }, [userId, selectedControl.initialTimeMs]);
 
   const loadState = useCallback(async (id: string) => {
+    const requestId = ++stateRequestSequence.current;
+    const requestStartedAt = Date.now();
     const data = await invoke({ action: "state", gameId: id });
-    setServerOffset((data.serverTime ?? Date.now()) - Date.now());
+    const responseReceivedAt = Date.now();
+    // The edge function timestamps its response on the server. Use the
+    // request midpoint to avoid systematically subtracting the full response
+    // transit time from the player's clock estimate.
+    const midpoint = requestStartedAt + (responseReceivedAt - requestStartedAt) / 2;
+    if (requestId !== stateRequestSequence.current) return;
+    setServerOffset((data.serverTime ?? responseReceivedAt) - midpoint);
     setGame(data.game as GameRow);
     if (orientedGameId.current !== id) {
       orientedGameId.current = id;
@@ -198,7 +208,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
       setBoardOrientation(row.white_player === userId ? "white" : row.black_player === userId ? "black" : "white");
     }
     setMoves((data.moves ?? []) as MoveRow[]);
-  }, [invoke]);
+  }, [invoke, userId]);
 
   const openGame = useCallback(async (id: string, tryJoin = true) => {
     setLoading(true);
@@ -300,7 +310,15 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
         filter: `id=eq.${gameId}`,
       }, () => { void loadState(gameId).catch(() => undefined); })
       .subscribe();
-    return () => { void supabase.removeChannel(channel); };
+    // Realtime is the fast path. This slower reconciliation poll recovers
+    // from dropped websocket events or temporary connection interruptions.
+    const recoveryPoll = window.setInterval(() => {
+      void loadState(gameId).catch(() => undefined);
+    }, 1500);
+    return () => {
+      window.clearInterval(recoveryPoll);
+      void supabase.removeChannel(channel);
+    };
   }, [gameId, loadState]);
 
   useEffect(() => {
@@ -314,10 +332,11 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
 
   const sendMove = useCallback(async (from: string, to: string) => {
     const current = gameRef.current;
-    if (!current || current.status !== "active" || busy) return;
+    if (!current || current.status !== "active" || busy || moveInFlight.current) return;
     if (current.white_player !== userId && current.black_player !== userId) return;
     const myColor = current.white_player === userId ? "white" : "black";
     if (current.turn_color !== myColor) return;
+    moveInFlight.current = true;
     setBusy(true);
     try {
       await invoke({ action: "move", gameId: current.id, from, to, promotion });
@@ -327,6 +346,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
       setMessage(error instanceof Error ? error.message : "Move was not accepted.");
       await loadState(current.id).catch(() => undefined);
     } finally {
+      moveInFlight.current = false;
       setBusy(false);
     }
   }, [busy, invoke, loadState, promotion, userId]);
