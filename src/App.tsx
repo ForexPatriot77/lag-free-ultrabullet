@@ -219,8 +219,8 @@ function App() {
                   ) : (
                     <div className="lobby-signin">
                       <div className="lobby-signin__piece">♞</div>
-                      <h1>Play ultrabullet</h1>
-                      <p>Sign in to create a challenge, join an open game, and track your rating.</p>
+                      <h1>Play fast chess</h1>
+                      <p>Sign in to create a challenge, join an open game, and track all eight ratings.</p>
                       <div className="button-set">
                         <button className="button button-green button-no-upper" type="button" onClick={() => setAuthMode("signin")}>Log in</button>
                         <button className="button button-metal button-no-upper" type="button" onClick={() => setAuthMode("signup")}>Create account</button>
@@ -232,17 +232,17 @@ function App() {
 
               <section className="lobby__table">
                 <div className="lobby__start">
-                  <button className="button button-metal lobby__start__button lobby__start__button--hook" type="button" onClick={() => user ? setPage("play") : setAuthMode("signin")}>Play Ultrabullet</button>
+                  <button className="button button-metal lobby__start__button lobby__start__button--hook" type="button" onClick={() => user ? setPage("play") : setAuthMode("signin")}>Play now</button>
                   <button className="button button-metal lobby__start__button lobby__start__button--friend" type="button" onClick={() => user ? setPage("play") : setAuthMode("signup")}>Challenge a friend</button>
                 </div>
               </section>
 
               <section className="lobby__tv">
                 <div className="lobby__box">
-                  <div className="lobby__box__top"><h2 className="title text">Ultrabullet</h2></div>
+                  <div className="lobby__box__top"><h2 className="title text">Time controls</h2></div>
                   <div className="lobby__box__content lobby-info-card">
-                    <strong>15 seconds · no increment</strong>
-                    <p>Fast games with server-validated moves and live clocks.</p>
+                    <strong>Eight speeds · all no increment</strong>
+                    <p>30s Hyperbullet · 15s Ultrabullet · 7.5s Ultrazerk · five Psycho speeds down to 0.203125s. Every speed has its own rating.</p>
                     <button className="button button-empty button-no-upper" type="button" onClick={() => go("play")}>Open play page</button>
                   </div>
                 </div>
@@ -257,7 +257,7 @@ function App() {
 
           {page === "play" && (
             <section className="content-page">
-              <div className="content-page-heading"><div><span className="page-kicker">FIND A GAME</span><h1>Play online</h1><p>Challenge someone, join an open game, or review a recent match.</p></div><span className="time-control-label">⚡ 15 + 0 · Ultrabullet</span></div>
+              <div className="content-page-heading"><div><span className="page-kicker">FIND A GAME</span><h1>Play online</h1><p>Challenge someone, join an open game, or review a recent match.</p></div><span className="time-control-label">⚡ 8 rated time controls · no increment</span></div>
               {user ? <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} onOpenProfile={(username) => { setProfileUsername(username); setPage("profile"); }} /> : (
                 <div className="signin-gate"><div className="gate-icon">♟</div><h2>Sign in to play online</h2><p>Your games, rating, and challenges are connected to your player account.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="gate-secondary" onClick={() => setAuthMode("signup")}>Create an account</button></div>
               )}
@@ -269,7 +269,7 @@ function App() {
               {profileUsername ? (
                 <ProfilePage username={profileUsername} ownProfile={Boolean(user && profile?.username === profileUsername)} onEdit={() => setProfileOpen(true)} />
               ) : (
-                <div className="signin-gate"><div className="gate-icon">♟</div><h2>Your player profile</h2><p>Sign in to open your profile and view your ultrabullet rating.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>
+                <div className="signin-gate"><div className="gate-icon">♟</div><h2>Your player profile</h2><p>Sign in to open your player profile and view ratings across every time control.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>
               )}
             </section>
           )}
@@ -286,8 +286,13 @@ function App() {
       </div>
 
       {authMode && <AuthDialog initialMode={authMode} onClose={() => { setAuthMode(null); setAuthError(""); }} onLichess={() => { void startLichessOAuth().catch((cause) => setAuthError(cause instanceof Error ? cause.message : "Could not start Lichess sign-in.")); }} externalError={authError} />}
-      {profileOpen && user && <ProfileDialog user={user} profile={profile} onClose={() => setProfileOpen(false)} onSaved={setProfile} />}
-      <footer className="site-footer"><span>Lag-Free Ultrabullet</span><span>Independent project · Not affiliated with Lichess</span><span>AGPL-3.0-or-later</span></footer>
+      {profileOpen && user && <ProfileDialog user={user} profile={profile} onClose={() => setProfileOpen(false)} onSaved={(nextProfile) => { setProfile(nextProfile); setProfileUsername(nextProfile.username); }} />}
+      <footer className="site-footer">
+        <span>Lag-Free Ultrabullet</span>
+        <span>Independent project · Not affiliated with Lichess</span>
+        <a href="https://github.com/ForexPatriot77/lag-free-ultrabullet" target="_blank" rel="noreferrer">Source code</a>
+        <a href="https://github.com/ForexPatriot77/lag-free-ultrabullet/blob/main/LICENSE" target="_blank" rel="noreferrer">AGPL-3.0-or-later · No warranty</a>
+      </footer>
     </div>
   );
 }
