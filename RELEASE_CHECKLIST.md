@@ -28,6 +28,7 @@
 - [ ] Verify refresh/reconnect behavior during an active game.
 - [ ] Decide whether WebRTC peer-to-peer move transport is a release requirement; it is not implemented yet.
 - [ ] Audit Supabase Auth redirect settings, email templates, rate limits, and abuse controls.
+- [ ] Enable Supabase leaked-password protection if the project plan supports it; otherwise consider disabling password-based signups and relying on Lichess OAuth.
 - [ ] Review all third-party dependency and asset licenses before adding assets.
 - [ ] Run an independent security review of Edge Functions, RLS, database functions, and OAuth account linking.
 
