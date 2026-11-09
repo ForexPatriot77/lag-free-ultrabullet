@@ -26,7 +26,7 @@
 - [ ] Verify spectators, move history, profile visibility, leaderboard ordering, and rating-history charts for all eight pools.
 - [ ] Verify existing email accounts can connect their matching-email Lichess account from profile settings.
 - [ ] Verify refresh/reconnect behavior during an active game.
-- [ ] Decide whether WebRTC peer-to-peer move transport is a release requirement; it is not implemented yet.
+- [ ] Implement WebRTC peer-to-peer move transport with authenticated signaling, move sequencing, reconnect/resync, and server-side result verification. It is not implemented yet.
 - [ ] Configure production SMTP and test signup confirmation/password recovery emails.
 - [ ] Audit Supabase Auth redirect settings, email templates, rate limits, and abuse controls.
 - [ ] Enable Supabase leaked-password protection if the project plan supports it; otherwise consider disabling password-based signups and relying on Lichess OAuth.
