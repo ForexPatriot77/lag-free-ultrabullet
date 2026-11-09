@@ -214,7 +214,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
             <aside className="profile-ratings-rail">
               <h2 className="profile-ratings-heading">Ratings by time control</h2>
               <div className="profile-variant-title"><span>30s · Hyperbullet</span></div>
-              <div className="profile-rating-block"><strong>{rating?.hyperbullet_rating ?? "?"}</strong><span>{rating?.hyperbullet_rating != null ? "Imported from Lichess Bullet" : "Not rated yet"}</span></div>
+              <div className="profile-rating-block"><strong>{rating?.hyperbullet_rating ?? "?"}</strong><span>{rating?.hyperbullet_rating != null ? "Rated pool" : "Not rated yet"}</span></div>
               <div className="profile-variant-title"><span>15s · Ultrabullet</span></div>
               <div className="profile-rating-block"><strong>{rating?.ultrabullet_rating ?? "?"}</strong><span>Independent rating pool</span></div>
               <div className="profile-variant-title"><span>7.5s · Ultrazerk</span></div>
@@ -266,8 +266,8 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
                   <div className="profile-info-name">{profile.display_name || profile.username}</div>
                   {profile.bio && <p>{profile.bio}</p>}
                   {joined && <div className="profile-info-line">Member since {joined}</div>}
-                  <div className="profile-info-line">Lichess Bullet → 30s Hyperbullet</div>
-                  <div className="profile-info-line">Lichess Ultrabullet → 15s Ultrabullet</div>
+                  <div className="profile-info-line">Lichess Bullet imports as the initial 30s Hyperbullet rating</div>
+                  <div className="profile-info-line">Lichess Ultrabullet imports as the initial 15s rating</div>
                   <div className="profile-info-line">Rated games: {rating?.games_played ?? 0}</div>
                 </aside>
               </div>
