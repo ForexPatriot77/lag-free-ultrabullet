@@ -1,0 +1,65 @@
+$c-border: hsl(37 5% 13%) !default;
+
+group.radio {
+  @extend %box-neat, %flex-wrap, %metal-bg;
+
+  overflow: hidden;
+  padding: 3px;
+  gap: 3px;
+
+  div {
+    flex: 1 1 auto;
+    position: relative;
+  }
+
+  input {
+    @extend %visually-hidden;
+  }
+
+  label,
+  .label {
+    @extend %flex-center-center;
+    @include prevent-select;
+
+    padding: 10px;
+    height: 100%;
+    cursor: pointer;
+    border-radius: max(calc($box-radius-size - 2px), 0px);
+
+    &.disabled {
+      background: $c-metal-top;
+
+      @include if-light {
+        background: $c-metal-bottom;
+      }
+    }
+
+    @media (hover: hover) {
+      &:not(.disabled):hover {
+        background: linear-gradient(to bottom, $c-metal-top-hover, $c-metal-bottom-hover);
+        text-shadow: 0 1px 0 $c-font-shadow;
+
+        @include if-transp {
+          background: linear-gradient(
+            to bottom,
+            color-mix(in oklab, $c-metal-top-hover 60%, transparent),
+            color-mix(in oklab, $c-metal-bottom-hover 60%, transparent)
+          );
+        }
+      }
+    }
+  }
+
+  div:last-child label {
+    border-inline-end: 0;
+  }
+
+  input:checked + label {
+    @extend %active;
+  }
+
+  input:focus-visible + label {
+    outline: $outline;
+    outline-offset: -2px;
+  }
+}
