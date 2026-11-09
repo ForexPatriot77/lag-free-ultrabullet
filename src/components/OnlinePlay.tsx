@@ -518,6 +518,11 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
             </div>
           </div>
           {queueing && <div className="queue-status" role="status">{queueMessage}</div>}
+          {selectedControl.initialTimeMs <= 3250 && (
+            <div className="latency-warning" role="note">
+              Heads-up: these ultra-short clocks still use server-validated moves. Network latency can outweigh the clock itself; peer-to-peer move transport is not available yet.
+            </div>
+          )}
           <div className="lobby-list-head">
             <strong>Open challenges</strong>
             <button type="button" onClick={() => void loadLobby()}>↻ Refresh</button>
