@@ -110,13 +110,13 @@ Deno.serve(async (req: Request) => {
       signedInUserId = sessionUser.user.id;
     }
 
-    const { data: linked, error: lookupError } = await admin.from("lichess_accounts").select("user_id").eq("lichess_id", lichessId).maybeSingle();
+    const { data: linked, error: lookupError } = await admin.from("lichess_accounts").select("user_id, ratings_imported_at").eq("lichess_id", lichessId).maybeSingle();
     if (lookupError) return json({ error: "Could not look up the Lichess account." }, 500);
     if (linked?.user_id && signedInUserId && linked.user_id !== signedInUserId) {
       return json({ error: "This Lichess account is already connected to a different Lag-Free account." }, 409);
     }
 
-    const isFirstLichessLink = !linked?.user_id;
+    const shouldImportRatings = !linked?.ratings_imported_at;
     let userId = linked?.user_id as string | undefined;
     if (!userId && signedInUserId) {
       const { data: signedInAccount, error: signedInAccountError } = await admin.auth.admin.getUserById(signedInUserId);
@@ -150,6 +150,16 @@ Deno.serve(async (req: Request) => {
       if (emailUpdateError) return json({ error: "This email is already connected to another Lag-Free account, or could not be updated." }, 409);
     }
 
+    const { data: otherLink, error: otherLinkError } = await admin
+      .from("lichess_accounts")
+      .select("lichess_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (otherLinkError) return json({ error: "Could not verify your existing Lichess connection." }, 500);
+    if (otherLink && otherLink.lichess_id !== lichessId) {
+      return json({ error: "This Lag-Free account is already connected to another Lichess account." }, 409);
+    }
+
     let base = lichessUsername.toLowerCase().replace(/[^a-z0-9_]/g, "_").replace(/_+/g, "_").slice(0, 20);
     if (base.length < 3) base = `lichess_${lichessId.slice(0, 8)}`.slice(0, 20);
     const { data: currentProfile } = await admin.from("profiles")
@@ -163,7 +173,10 @@ Deno.serve(async (req: Request) => {
 
     const profileUpdate: Record<string, string> = { username };
     if (!currentProfile?.display_name) profileUpdate.display_name = lichessUsername;
-    const { error: profileError } = await admin.from("profiles").update(profileUpdate).eq("id", userId);
+    const { error: profileError } = await admin.from("profiles").upsert({
+      id: userId,
+      ...profileUpdate,
+    }, { onConflict: "id" });
     if (profileError) return json({ error: "Your account was created, but its profile could not be prepared." }, 500);
 
     const { error: linkError } = await admin.from("lichess_accounts").upsert({
@@ -176,12 +189,16 @@ Deno.serve(async (req: Request) => {
     }, { onConflict: "lichess_id" });
     if (linkError) return json({ error: "Could not save the Lichess account connection." }, 500);
 
-    if (isFirstLichessLink) {
+    if (shouldImportRatings) {
       const ratingUpdate: Record<string, number | string> = { user_id: userId };
       if (bullet !== null) ratingUpdate.hyperbullet_rating = bullet;
       if (ultra !== null) ratingUpdate.ultrabullet_rating = ultra;
       const { error: ratingError } = await admin.from("player_ratings").upsert(ratingUpdate, { onConflict: "user_id" });
       if (ratingError) return json({ error: "Your account was signed in, but ratings could not be imported." }, 500);
+      const { error: importMarkError } = await admin.from("lichess_accounts")
+        .update({ ratings_imported_at: new Date().toISOString() })
+        .eq("lichess_id", lichessId);
+      if (importMarkError) return json({ error: "Your account was linked, but the rating import could not be finalized. Please reconnect Lichess." }, 500);
     }
 
     if (signedInUserId) {
