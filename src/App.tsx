@@ -130,12 +130,12 @@ function App() {
   useEffect(() => {
     if (!supabase) return;
     let active = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (active) setUser(data.session?.user ?? null);
-    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (event === "PASSWORD_RECOVERY") setPasswordRecoveryOpen(true);
+    });
+    supabase.auth.getSession().then(({ data }) => {
+      if (active) setUser(data.session?.user ?? null);
     });
     return () => {
       active = false;
