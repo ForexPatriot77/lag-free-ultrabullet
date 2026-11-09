@@ -46,6 +46,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       .select("id, white_player, created_at, initial_time_ms, increment_ms")
       .eq("status", "waiting")
       .neq("white_player", userId)
+      .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order("created_at", { ascending: false })
       .limit(25);
     if (error) return json({ error: error.message }, 400);
@@ -151,6 +152,15 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     });
     if (error) return json({ error: error.message }, 409);
     return json({ game: unwrap(data) });
+  }
+
+  if (action === "cancel") {
+    const { error } = await admin.rpc("cancel_waiting_game", {
+      p_game_id: gameId,
+      p_user_id: userId,
+    });
+    if (error) return json({ error: error.message }, 409);
+    return json({ ok: true });
   }
 
   const { data: game, error: loadError } = await admin
