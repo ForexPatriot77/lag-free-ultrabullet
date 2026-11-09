@@ -5,6 +5,8 @@ import { Chessground } from "@lichess-org/chessground";
 import type { Api } from "@lichess-org/chessground/api";
 import type { Color, Key } from "@lichess-org/chessground/types";
 import { supabase } from "../lib/supabase";
+import { TIME_CONTROLS, controlLabel, ratingColumnForTime } from "../lib/timeControls";
+import type { TimeControl } from "../lib/timeControls";
 import "@lichess-org/chessground/assets/chessground.base.css";
 import "@lichess-org/chessground/assets/chessground.brown.css";
 import "@lichess-org/chessground/assets/chessground.cburnett.css";
@@ -77,40 +79,6 @@ type LeaderboardPlayer = {
   losses: number;
   profile: { username: string; display_name: string | null } | null;
 };
-
-type TimeControl = { label: string; initialTimeMs: number; incrementMs: number; category: string };
-const TIME_CONTROLS: TimeControl[] = [
-  { label: "30 seconds · Hyperbullet", initialTimeMs: 30000, incrementMs: 0, category: "Hyperbullet" },
-  { label: "15 seconds · Ultrabullet", initialTimeMs: 15000, incrementMs: 0, category: "Ultrabullet" },
-  { label: "7.5 seconds · Ultrazerk", initialTimeMs: 7500, incrementMs: 0, category: "Ultrazerk" },
-  { label: "3.25 seconds", initialTimeMs: 3250, incrementMs: 0, category: "Psycho" },
-  { label: "1.625 seconds", initialTimeMs: 1625, incrementMs: 0, category: "Psycho" },
-  { label: "0.8125 seconds", initialTimeMs: 812.5, incrementMs: 0, category: "Psycho" },
-  { label: "0.40625 seconds", initialTimeMs: 406.25, incrementMs: 0, category: "Psycho" },
-  { label: "0.203125 seconds", initialTimeMs: 203.125, incrementMs: 0, category: "Psycho" },
-];
-function controlLabel(initial: number, increment: number): string {
-  return TIME_CONTROLS.find((item) => item.initialTimeMs === initial && item.incrementMs === increment)?.label ?? "Custom";
-}
-
-type RatingColumn =
-  | "hyperbullet_rating" | "ultrabullet_rating" | "ultrazerk_rating"
-  | "psycho_3250_rating" | "psycho_1625_rating" | "psycho_812_5_rating"
-  | "psycho_406_25_rating" | "psycho_203_125_rating";
-
-function ratingColumnForTime(initialTimeMs: number): RatingColumn {
-  const columns: Record<number, RatingColumn> = {
-    30000: "hyperbullet_rating",
-    15000: "ultrabullet_rating",
-    7500: "ultrazerk_rating",
-    3250: "psycho_3250_rating",
-    1625: "psycho_1625_rating",
-    812.5: "psycho_812_5_rating",
-    406.25: "psycho_406_25_rating",
-    203.125: "psycho_203_125_rating",
-  };
-  return columns[initialTimeMs] ?? "ultrabullet_rating";
-}
 
 function destinations(chess: Chess): Map<Key, Key[]> {
   const result = new Map<Key, Key[]>();
