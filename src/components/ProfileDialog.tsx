@@ -19,7 +19,7 @@ export function ProfileDialog({
   profile: EditableProfile | null;
   onClose: () => void;
   onSaved: (profile: EditableProfile) => void;
-  onLichess: () => void;
+  onLichess: () => Promise<void>;
 }) {
   const [username, setUsername] = useState(profile?.username ?? "");
   const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
@@ -31,6 +31,8 @@ export function ProfileDialog({
   const [emailMessage, setEmailMessage] = useState("");
   const [emailError, setEmailError] = useState("");
   const [lichessUsername, setLichessUsername] = useState<string | null>(null);
+  const [lichessError, setLichessError] = useState("");
+  const [lichessStarting, setLichessStarting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -68,6 +70,17 @@ export function ProfileDialog({
       setError(err instanceof Error ? err.message : "Could not save your profile.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const connectLichess = async () => {
+    setLichessError("");
+    setLichessStarting(true);
+    try {
+      await onLichess();
+    } catch (cause) {
+      setLichessError(cause instanceof Error ? cause.message : "Could not start the Lichess connection.");
+      setLichessStarting(false);
     }
   };
 
@@ -127,9 +140,10 @@ export function ProfileDialog({
           <p className="auth-eyebrow">CHESS ACCOUNT</p>
           <h3>Lichess connection</h3>
           <p className="auth-subtitle">{lichessUsername ? `Connected as ${lichessUsername}` : "Connect your Lichess account to sign in with it and import your Bullet and Ultrabullet starting ratings."}</p>
-          <button className="auth-lichess-button" type="button" onClick={onLichess}>
+          {lichessError && <p className="auth-message auth-error" role="alert">{lichessError}</p>}
+          <button className="auth-lichess-button" type="button" onClick={() => void connectLichess()} disabled={lichessStarting}>
             <span className="auth-lichess-mark">♞</span>
-            {lichessUsername ? "Reconnect Lichess" : "Connect Lichess"}
+            {lichessStarting ? "Opening Lichess…" : lichessUsername ? "Reconnect Lichess" : "Connect Lichess"}
           </button>
         </div>
         <div className="profile-email-section">
