@@ -190,15 +190,16 @@ Deno.serve(async (req: Request) => {
     if (linkError) return json({ error: "Could not save the Lichess account connection." }, 500);
 
     if (shouldImportRatings) {
-      const ratingUpdate: Record<string, number | string> = { user_id: userId };
-      if (bullet !== null) ratingUpdate.hyperbullet_rating = bullet;
-      if (ultra !== null) ratingUpdate.ultrabullet_rating = ultra;
-      const { error: ratingError } = await admin.from("player_ratings").upsert(ratingUpdate, { onConflict: "user_id" });
-      if (ratingError) return json({ error: "Your account was signed in, but ratings could not be imported." }, 500);
-      const { error: importMarkError } = await admin.from("lichess_accounts")
-        .update({ ratings_imported_at: new Date().toISOString() })
-        .eq("lichess_id", lichessId);
-      if (importMarkError) return json({ error: "Your account was linked, but the rating import could not be finalized. Please reconnect Lichess." }, 500);
+      const { error: ratingError } = await admin.rpc("import_lichess_ratings", {
+        p_user_id: userId,
+        p_lichess_id: lichessId,
+        p_bullet_rating: bullet,
+        p_ultrabullet_rating: ultra,
+      });
+      if (ratingError) {
+        console.error("lichess rating import failed", ratingError);
+        return json({ error: "Your account was linked, but the initial rating import could not be completed. Please reconnect Lichess." }, 500);
+      }
     }
 
     if (signedInUserId) {
