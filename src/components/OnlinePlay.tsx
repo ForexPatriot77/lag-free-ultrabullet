@@ -72,7 +72,7 @@ type LiveGame = {
 
 type LeaderboardPlayer = {
   user_id: string;
-  rating: number;
+  rating: number | null;
   games_played: number;
   wins: number;
   draws: number;
@@ -495,7 +495,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
                 <strong>{player.profile?.username && onOpenProfile ? <button className="player-name-link" onClick={() => onOpenProfile(player.profile!.username)}>{player.profile.display_name || player.profile.username}</button> : (player.profile?.display_name || player.profile?.username || "Player")}</strong>
                 <span>{player.games_played} games · {player.wins} wins · {player.draws} draws</span>
               </div>
-              <strong className="leaderboard-rating">{player.rating}</strong>
+              <strong className="leaderboard-rating">{player.rating ?? "Unrated"}</strong>
             </div>
           ))}
           <div className="history-head" id="watch"><strong>Live games</strong><button type="button" onClick={() => void loadLiveGames()}>↻ Refresh</button></div>
