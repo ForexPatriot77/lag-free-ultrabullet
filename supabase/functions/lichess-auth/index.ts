@@ -20,6 +20,7 @@ type LichessAccount = {
     ultraBullet?: { rating?: number };
   };
 };
+type LichessEmail = { email?: string };
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -73,6 +74,19 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Lichess returned an incomplete account profile." }, 502);
     }
 
+    // Email is only available through the separate endpoint and requires email:read.
+    const emailResponse = await fetch("https://lichess.org/api/account/email", {
+      headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
+    });
+    if (!emailResponse.ok) {
+      return json({ error: "Lichess did not provide permission to read your account email. Please try signing in again and approve email access." }, 403);
+    }
+    const emailData = await emailResponse.json() as LichessEmail;
+    const accountEmail = typeof emailData.email === "string" ? emailData.email.trim().toLowerCase() : "";
+    if (!accountEmail || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(accountEmail)) {
+      return json({ error: "Lichess did not return a usable email address for this account." }, 422);
+    }
+
     const bullet = Number.isFinite(account.perfs?.bullet?.rating)
       ? Math.round(account.perfs!.bullet!.rating!) : null;
     const ultra = Number.isFinite(account.perfs?.ultraBullet?.rating)
@@ -95,10 +109,9 @@ Deno.serve(async (req: Request) => {
     if (lookupError) return json({ error: "Could not look up the Lichess account." }, 500);
 
     let userId = linked?.user_id as string | undefined;
-    const email = `lichess-${lichessId}@users.lag-free-ultrabullet.invalid`;
     if (!userId) {
       const { data: created, error: createError } = await admin.auth.admin.createUser({
-        email,
+        email: accountEmail,
         password: `${crypto.randomUUID()}-Aa9!`,
         email_confirm: true,
         user_metadata: { display_name: lichessUsername },
@@ -107,6 +120,22 @@ Deno.serve(async (req: Request) => {
         return json({ error: "We couldn't create your Lag-Free account. Please try again." }, 500);
       }
       userId = created.user.id;
+    }
+
+    // Existing Lichess-linked users are upgraded from the old synthetic address
+    // to the verified address returned by Lichess. Never request or reuse the Lichess password.
+    const { data: authUserResult, error: authUserError } = await admin.auth.admin.getUserById(userId);
+    if (authUserError || !authUserResult.user) {
+      return json({ error: "Could not load your Lag-Free account." }, 500);
+    }
+    if ((authUserResult.user.email ?? "").toLowerCase() !== accountEmail) {
+      const { error: emailUpdateError } = await admin.auth.admin.updateUserById(userId, {
+        email: accountEmail,
+        email_confirm: true,
+      });
+      if (emailUpdateError) {
+        return json({ error: "This email is already connected to another Lag-Free account, or could not be updated. Sign in to that account first and contact support to link Lichess." }, 409);
+      }
     }
 
     let base = lichessUsername.toLowerCase().replace(/[^a-z0-9_]/g, "_").replace(/_+/g, "_").slice(0, 20);
@@ -142,7 +171,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: magic, error: magicError } = await admin.auth.admin.generateLink({
       type: "magiclink",
-      email,
+      email: accountEmail,
     });
     const tokenHash = magic?.properties?.hashed_token;
     if (magicError || !tokenHash) {
