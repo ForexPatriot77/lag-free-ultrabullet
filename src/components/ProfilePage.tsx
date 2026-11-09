@@ -216,19 +216,19 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
               <div className="profile-variant-title"><span>30s · Hyperbullet</span></div>
               <div className="profile-rating-block"><strong>{rating?.hyperbullet_rating ?? "?"}</strong><span>{rating?.hyperbullet_rating != null ? "Imported from Lichess Bullet" : "Not rated yet"}</span></div>
               <div className="profile-variant-title"><span>15s · Ultrabullet</span></div>
-              <div className="profile-rating-block"><strong>{rating?.ultrabullet_rating ?? "?" }</strong><span>Rated pool</span></div>
-              <div className="profile-variant-title muted"><span>7.5s · Ultrazerk</span></div>
-              <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
-              <div className="profile-variant-title muted"><span>3.25s · Psycho</span></div>
-              <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
-              <div className="profile-variant-title muted"><span>1.625s · Psycho</span></div>
-              <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
-              <div className="profile-variant-title muted"><span>0.8125s · Psycho</span></div>
-              <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
-              <div className="profile-variant-title muted"><span>0.40625s · Psycho</span></div>
-              <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
-              <div className="profile-variant-title muted"><span>0.203125s · Psycho</span></div>
-              <div className="profile-rating-block muted"><strong>{"—" }</strong><span>Not rated yet</span></div>
+              <div className="profile-rating-block"><strong>{rating?.ultrabullet_rating ?? "?"}</strong><span>Independent rating pool</span></div>
+              <div className="profile-variant-title"><span>7.5s · Ultrazerk</span></div>
+              <div className="profile-rating-block"><strong>{rating?.ultrazerk_rating ?? "?"}</strong><span>Independent rating pool</span></div>
+              <div className="profile-variant-title"><span>3.25s · Psycho</span></div>
+              <div className="profile-rating-block"><strong>{rating?.psycho_3250_rating ?? "?"}</strong><span>Independent rating pool</span></div>
+              <div className="profile-variant-title"><span>1.625s · Psycho</span></div>
+              <div className="profile-rating-block"><strong>{rating?.psycho_1625_rating ?? "?"}</strong><span>Independent rating pool</span></div>
+              <div className="profile-variant-title"><span>0.8125s · Psycho</span></div>
+              <div className="profile-rating-block"><strong>{rating?.psycho_812_5_rating ?? "?"}</strong><span>Independent rating pool</span></div>
+              <div className="profile-variant-title"><span>0.40625s · Psycho</span></div>
+              <div className="profile-rating-block"><strong>{rating?.psycho_406_25_rating ?? "?"}</strong><span>Independent rating pool</span></div>
+              <div className="profile-variant-title"><span>0.203125s · Psycho</span></div>
+              <div className="profile-rating-block"><strong>{rating?.psycho_203_125_rating ?? "?"}</strong><span>Independent rating pool</span></div>
             </aside>
 
             <div className="profile-main-column">
@@ -306,6 +306,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
                 )}
               </div>
             </div>
+          </>
         )}
     </section>
   );
