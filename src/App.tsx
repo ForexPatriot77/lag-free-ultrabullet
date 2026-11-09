@@ -83,6 +83,9 @@ function App() {
           throw new Error("The Lichess sign-in could not be verified. Please try again.");
         }
         const redirectUri = new URL(import.meta.env.BASE_URL, window.location.origin).toString();
+        // Restore a signed-in Supabase session before the function call so an
+        // existing account can be securely linked instead of creating a duplicate.
+        await supabase.auth.getSession();
         const { data, error } = await supabase.functions.invoke("lichess-auth", {
           body: { code, codeVerifier: pending.verifier, redirectUri },
         });
