@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Chart from "chart.js/auto";
 import { supabase } from "../lib/supabase";
-import { TIME_CONTROLS, ratingColumnForTime } from "../lib/timeControls";
+import { TIME_CONTROLS, controlLabel, ratingColumnForTime } from "../lib/timeControls";
 
 type ProfileData = {
   id: string;
@@ -101,6 +101,15 @@ function RatingChart({ rating, history, label }: { rating: number | null; histor
 
 type RatingHistoryPoint = { rating: number; rating_pool: string; recorded_at: string };
 
+type ProfileGame = {
+  id: string;
+  opponent: string;
+  outcome: "Win" | "Loss" | "Draw";
+  control: string;
+  finishedAt: string;
+  ratingChange: number | null;
+};
+
 export function ProfilePage({ username, ownProfile, onEdit }: {
   username: string;
   ownProfile: boolean;
@@ -109,6 +118,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [rating, setRating] = useState<RatingData | null>(null);
   const [ratingHistory, setRatingHistory] = useState<RatingHistoryPoint[]>([]);
+  const [recentGames, setRecentGames] = useState<ProfileGame[]>([]);
   const [selectedTimeMs, setSelectedTimeMs] = useState(15000);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -120,6 +130,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
     setProfile(null);
     setRating(null);
     setRatingHistory([]);
+    setRecentGames([]);
     void (async () => {
       const { data: person, error: profileError } = await supabase
         .from("profiles")
@@ -133,21 +144,53 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
         return;
       }
       setProfile(person as ProfileData);
-      const { data: stats } = await supabase
-        .from("player_ratings")
-        .select("hyperbullet_rating, ultrabullet_rating, ultrazerk_rating, psycho_3250_rating, psycho_1625_rating, psycho_812_5_rating, psycho_406_25_rating, psycho_203_125_rating, games_played, wins, draws, losses")
-        .eq("user_id", person.id)
-        .maybeSingle();
+      const [statsResult, historyResult, gamesResult] = await Promise.all([
+        supabase.from("player_ratings")
+          .select("hyperbullet_rating, ultrabullet_rating, ultrazerk_rating, psycho_3250_rating, psycho_1625_rating, psycho_812_5_rating, psycho_406_25_rating, psycho_203_125_rating, games_played, wins, draws, losses")
+          .eq("user_id", person.id)
+          .maybeSingle(),
+        supabase.from("player_rating_history")
+          .select("rating, rating_pool, recorded_at")
+          .eq("user_id", person.id)
+          .order("recorded_at", { ascending: false })
+          .limit(800),
+        supabase.from("games")
+          .select("id, white_player, black_player, initial_time_ms, increment_ms, result, white_rating_change, black_rating_change, finished_at")
+          .eq("status", "finished")
+          .or(`white_player.eq.${person.id},black_player.eq.${person.id}`)
+          .order("finished_at", { ascending: false })
+          .limit(20),
+      ]);
       if (!active) return;
-      setRating(stats as RatingData | null);
-      const { data: historyRows } = await supabase
-        .from("player_rating_history")
-        .select("rating, rating_pool, recorded_at")
-        .eq("user_id", person.id)
-         .order("recorded_at", { ascending: false })
-        .limit(800);
+      setRating(statsResult.data as RatingData | null);
+      setRatingHistory(((historyResult.data ?? []) as RatingHistoryPoint[]).reverse());
+
+      const gameRows = gamesResult.data ?? [];
+      const opponentIds = [...new Set(gameRows
+        .map((game) => game.white_player === person.id ? game.black_player : game.white_player)
+        .filter((id): id is string => Boolean(id)))];
+      const { data: opponentProfiles } = opponentIds.length
+        ? await supabase.from("profiles").select("id, username, display_name").in("id", opponentIds)
+        : { data: [] };
       if (!active) return;
-      setRatingHistory(((historyRows ?? []) as RatingHistoryPoint[]).reverse());
+      const opponentById = new Map((opponentProfiles ?? []).map((opponent) => [
+        opponent.id,
+        opponent.display_name || opponent.username,
+      ]));
+      setRecentGames(gameRows.map((game) => {
+        const isWhite = game.white_player === person.id;
+        const opponentId = isWhite ? game.black_player : game.white_player;
+        const won = (isWhite && game.result === "1-0") || (!isWhite && game.result === "0-1");
+        const outcome = game.result === "1/2-1/2" ? "Draw" : won ? "Win" : "Loss";
+        return {
+          id: game.id,
+          opponent: opponentId ? opponentById.get(opponentId) ?? "Former player" : "Opponent unavailable",
+          outcome,
+          control: controlLabel(game.initial_time_ms, game.increment_ms),
+          finishedAt: game.finished_at,
+          ratingChange: isWhite ? game.white_rating_change : game.black_rating_change,
+        };
+      }));
       setLoading(false);
     })();
     return () => { active = false; };
@@ -238,15 +281,30 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
               </div>
 
               <div className="profile-activity-panel">
-                <div className="profile-activity-tabs"><span className="active">Activity</span><span>Games</span></div>
-                <div className="profile-activity-empty">
-                  <span>♞</span>
-                  <strong>No public activity yet</strong>
-                  <p>Completed games and rating history will be shown here as the profile system grows.</p>
-                </div>
+                <div className="profile-activity-tabs"><span className="active">Recent games</span></div>
+                {recentGames.length === 0 ? (
+                  <div className="profile-activity-empty">
+                    <span>♞</span>
+                    <strong>No completed games yet</strong>
+                    <p>Finished rated games will appear here.</p>
+                  </div>
+                ) : (
+                  <div className="profile-game-list">
+                    {recentGames.map((game) => (
+                      <div className="profile-game-row" key={game.id}>
+                        <div className={`profile-game-outcome ${game.outcome.toLowerCase()}`}>{game.outcome}</div>
+                        <div className="profile-game-details">
+                          <strong>vs {game.opponent}</strong>
+                          <span>{game.control} · {new Date(game.finishedAt).toLocaleDateString()}</span>
+                        </div>
+                        <span className={`profile-game-rating ${game.ratingChange == null ? "" : game.ratingChange >= 0 ? "positive" : "negative"}`}>
+                          {game.ratingChange == null ? "—" : `${game.ratingChange > 0 ? "+" : ""}${game.ratingChange}`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-          </>
         )}
     </section>
   );
