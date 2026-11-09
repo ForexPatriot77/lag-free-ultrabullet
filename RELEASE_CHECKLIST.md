@@ -18,6 +18,7 @@
 
 - [ ] Complete a real Lichess OAuth sign-in using an account with email-read permission.
 - [ ] Test two independent accounts in two browsers/devices.
+- [ ] Verify quick matchmaking for each time control, queue cancellation, and abandoned queue expiry.
 - [ ] Verify create, join, cancel, and 24-hour challenge expiry.
 - [ ] Play complete games at every time control and verify both clocks and exact rating pool updates.
 - [ ] Verify promotion choices, checkmate, stalemate, insufficient-material draw, resignation, and timeout.
