@@ -12,7 +12,7 @@ type ProfileData = {
 };
 
 type RatingData = {
-  hyperbullet_rating: number;
+  hyperbullet_rating: number | null;
   ultrabullet_rating: number;
   games_played: number;
   wins: number;
@@ -148,7 +148,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
             <aside className="profile-ratings-rail">
               <h2 className="profile-ratings-heading">Ratings by time control</h2>
               <div className="profile-variant-title"><span>30s · Hyperbullet</span></div>
-              <div className="profile-rating-block"><strong>{rating?.hyperbullet_rating ?? "?"}</strong><span>{rating?.hyperbullet_rating ? "Imported from Lichess Bullet" : "Not rated yet"}</span></div>
+              <div className="profile-rating-block"><strong>{rating?.hyperbullet_rating ?? "?"}</strong><span>{rating?.hyperbullet_rating != null ? "Imported from Lichess Bullet" : "Not rated yet"}</span></div>
               <div className="profile-variant-title"><span>15s · Ultrabullet</span></div>
               <div className="profile-rating-block"><strong>{rating?.ultrabullet_rating ?? "?" }</strong><span>Rated pool</span></div>
               <div className="profile-variant-title muted"><span>7.5s · Ultrazerk</span></div>
