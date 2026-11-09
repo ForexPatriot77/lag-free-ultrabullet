@@ -57,7 +57,7 @@ function App() {
     // Supabase email confirmation/recovery also uses ?code=. Only handle this
     // callback when this tab has an outstanding Lichess PKCE transaction.
     const stored = sessionStorage.getItem(OAUTH_STORAGE_KEY);
-    if (!stored) return;
+    if (!stored || !url.searchParams.has("state")) return;
     const code = url.searchParams.get("code");
     const oauthError = url.searchParams.get("error");
     if (!code && !oauthError) return;
