@@ -14,6 +14,12 @@ type ProfileData = {
 type RatingData = {
   hyperbullet_rating: number | null;
   ultrabullet_rating: number;
+  ultrazerk_rating: number;
+  psycho_3250_rating: number;
+  psycho_1625_rating: number;
+  psycho_812_5_rating: number;
+  psycho_406_25_rating: number;
+  psycho_203_125_rating: number;
   games_played: number;
   wins: number;
   draws: number;
@@ -92,6 +98,8 @@ function RatingChart({ rating }: { rating: number | null }) {
   );
 }
 
+type RatingHistoryPoint = { rating: number; recorded_at: string };
+
 export function ProfilePage({ username, ownProfile, onEdit }: {
   username: string;
   ownProfile: boolean;
@@ -99,6 +107,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
 }) {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [rating, setRating] = useState<RatingData | null>(null);
+  const [ratingHistory, setRatingHistory] = useState<RatingHistoryPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -108,6 +117,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
     setError("");
     setProfile(null);
     setRating(null);
+    setRatingHistory([]);
     void (async () => {
       const { data: person, error: profileError } = await supabase
         .from("profiles")
@@ -123,11 +133,20 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
       setProfile(person as ProfileData);
       const { data: stats } = await supabase
         .from("player_ratings")
-        .select("hyperbullet_rating, ultrabullet_rating, games_played, wins, draws, losses")
+        .select("hyperbullet_rating, ultrabullet_rating, ultrazerk_rating, psycho_3250_rating, psycho_1625_rating, psycho_812_5_rating, psycho_406_25_rating, psycho_203_125_rating, games_played, wins, draws, losses")
         .eq("user_id", person.id)
         .maybeSingle();
       if (!active) return;
       setRating(stats as RatingData | null);
+      const { data: historyRows } = await supabase
+        .from("player_rating_history")
+        .select("rating, recorded_at")
+        .eq("user_id", person.id)
+        .eq("rating_pool", "ultrabullet")
+        .order("recorded_at", { ascending: true })
+        .limit(100);
+      if (!active) return;
+      setRatingHistory((historyRows ?? []) as RatingHistoryPoint[]);
       setLoading(false);
     })();
     return () => { active = false; };
@@ -195,7 +214,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
                   {joined && <div className="profile-info-line">Member since {joined}</div>}
                   <div className="profile-info-line">Lichess Bullet → 30s Hyperbullet</div>
                   <div className="profile-info-line">Lichess Ultrabullet → 15s Ultrabullet</div>
-                  <div className="profile-info-line">Games played: {rating?.games_played ?? 0}</div>
+                  <div className="profile-info-line">Rated games: {rating?.games_played ?? 0}</div>
                 </aside>
               </div>
 
