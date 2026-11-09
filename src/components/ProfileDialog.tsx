@@ -24,6 +24,10 @@ export function ProfileDialog({
   const [bio, setBio] = useState(profile?.bio ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [email, setEmail] = useState(user.email ?? "");
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailMessage, setEmailMessage] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -57,6 +61,31 @@ export function ProfileDialog({
     }
   };
 
+  const updateEmail = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const nextEmail = email.trim().toLowerCase();
+    if (!nextEmail || nextEmail === (user.email ?? "").toLowerCase()) {
+      setEmailError("Enter a different email address.");
+      setEmailMessage("");
+      return;
+    }
+    setEmailSaving(true);
+    setEmailError("");
+    setEmailMessage("");
+    try {
+      const { error: updateError } = await supabase.auth.updateUser(
+        { email: nextEmail },
+        { emailRedirectTo: window.location.origin + import.meta.env.BASE_URL }
+      );
+      if (updateError) throw updateError;
+      setEmailMessage("Confirmation requested. Check your new email inbox and follow the confirmation link to finish changing your address.");
+    } catch (err) {
+      setEmailError(err instanceof Error ? err.message : "Could not request the email change.");
+    } finally {
+      setEmailSaving(false);
+    }
+  };
+
   return (
     <div className="auth-overlay" role="presentation" onMouseDown={(event) => {
       if (event.target === event.currentTarget) onClose();
@@ -84,6 +113,20 @@ export function ProfileDialog({
           {error && <p className="auth-message auth-error" role="alert">{error}</p>}
           <button className="auth-submit" type="submit" disabled={saving}>{saving ? "Saving…" : "Save profile"}</button>
         </form>
+        <div className="profile-email-section">
+          <p className="auth-eyebrow">ACCOUNT SECURITY</p>
+          <h3>Change email address</h3>
+          <p className="auth-subtitle">Current email: {user.email ?? "Unavailable"}</p>
+          <form onSubmit={updateEmail}>
+            <label className="auth-field">
+              <span>New email address</span>
+              <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="you@example.com" required />
+            </label>
+            {emailError && <p className="auth-message auth-error" role="alert">{emailError}</p>}
+            {emailMessage && <p className="auth-message auth-success" role="status">{emailMessage}</p>}
+            <button className="auth-submit" type="submit" disabled={emailSaving}>{emailSaving ? "Requesting…" : "Change email"}</button>
+          </form>
+        </div>
       </section>
     </div>
   );
