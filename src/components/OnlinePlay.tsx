@@ -616,65 +616,103 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
       )}
 
       {game && (
-        <div className="online-game round">
-          <div className="online-board-column round__app">
-            <div className="online-player-bar">
-              <span className="online-player-piece">♟</span>
-              <div><strong>{isParticipant ? (isWhite ? "Opponent" : "You") : "Black"}</strong><small>Black</small></div>
-              <strong className={game.turn_color === "black" && game.status === "active" ? "clock active-clock" : "clock"}>
-                {clockText(blackClock)}
-              </strong>
-            </div>
-            <div className="online-board-frame"><div className="online-board" ref={boardElement} /></div>
-            <div className="online-board-tools">
-              <button type="button" onClick={() => setBoardOrientation((value) => value === "white" ? "black" : "white")}>⇅ Flip board</button>
-              <label>Promotion
-                <select value={promotion} onChange={(event) => setPromotion(event.target.value as "q" | "r" | "b" | "n")}>
-                  <option value="q">Queen</option><option value="r">Rook</option><option value="b">Bishop</option><option value="n">Knight</option>
-                </select>
-              </label>
-              <span className="draw-help">Right-drag to draw arrows · right-click to erase</span>
-            </div>
-            <div className="online-player-bar">
-              <span className="online-player-piece">♙</span>
-              <div><strong>{isParticipant ? (isWhite ? "You" : "Opponent") : "White"}</strong><small>White</small></div>
-              <strong className={game.turn_color === "white" && game.status === "active" ? "clock active-clock" : "clock"}>
-                {clockText(whiteClock)}
-              </strong>
-            </div>
-          </div>
-          <aside className="online-game-panel round__side">
-            <div className="online-game-status"><i className={game.status === "active" ? "live-dot" : "idle-dot"} />{status}</div>
-            {game.status === "active" && game.ply === 0 && (
-              <div className="first-move-deadline" role="note">
-                <strong>Make your first move within 15 seconds.</strong>
-                <span>If nobody moves before the clock expires, the game aborts with no rating change.</span>
+        <div className="round online-game">
+          <aside className="round__side">
+            <section className="game__meta">
+              <div className="game__meta__infos">
+                <div>
+                  <strong>{status}</strong>
+                  <p>{controlLabel(game.initial_time_ms, game.increment_ms)} · {TIME_CONTROLS.find((item) => item.initialTimeMs === game.initial_time_ms && item.incrementMs === game.increment_ms)?.category ?? "Chess"}</p>
+                  <p>{isParticipant ? "You are playing" : "You are watching"} · {game.ply} half-moves</p>
+                </div>
               </div>
-            )}
-            {game.status === "waiting" && (
-              <div className="invite-box">
-                <strong>Your challenge is ready</strong>
-                <p>Share this link. Your clock starts when someone joins.</p>
-                <div className="invite-actions"><button className="online-primary" type="button" onClick={shareInvite}>Copy invite link</button><button className="online-secondary" type="button" onClick={cancelChallenge} disabled={busy}>Cancel challenge</button></div>
+              <div className="game__meta__players">
+                <div className="player"><span>Black</span><strong>{game.black_player === userId ? "You" : "Opponent"}</strong></div>
+                <div className="player"><span>White</span><strong>{game.white_player === userId ? "You" : "Opponent"}</strong></div>
               </div>
-            )}
-            <div className="online-moves">
-              {moves.length === 0 ? <span className="moves-placeholder">Moves will appear here.</span> :
-                moves.map((move) => (
-                  <div className="online-move" key={move.ply}>
-                    <span>{Math.ceil(move.ply / 2)}{move.ply % 2 ? "." : "…"}</span>
+              {game.status === "active" && game.ply === 0 && (
+                <div className="first-move-deadline" role="note">
+                  <strong>15-second first-move window</strong>
+                  <span>Make the first move before it expires. Otherwise, the game is aborted and neither rating changes.</span>
+                </div>
+              )}
+              {game.status === "waiting" && (
+                <div className="invite-box">
+                  <strong>Challenge link</strong>
+                  <p>Share this link with the person you want to play.</p>
+                  <div className="invite-actions">
+                    <button className="online-primary" type="button" onClick={shareInvite}>Copy invite link</button>
+                    <button className="online-secondary" type="button" onClick={cancelChallenge} disabled={busy}>Cancel</button>
+                  </div>
+                </div>
+              )}
+              <div className="round-side-actions">
+                {game.status === "active" && isParticipant && <button type="button" className="fbt" onClick={resign} disabled={busy}>Resign</button>}
+                {game.status === "finished" && <button type="button" className="fbt" onClick={backToLobby}>Find another game</button>}
+                <button type="button" className="fbt" onClick={backToLobby}>Back to lobby</button>
+              </div>
+            </section>
+          </aside>
+
+          <div className="round__app">
+            <div className="ruser ruser-top user-link online">
+              <i className="line" />
+              <span>{boardOrientation === "white" ? "Opponent" : "You"}</span>
+              <rating>{boardOrientation === "white" ? "Black" : "White"}</rating>
+            </div>
+            <div className={`rclock rclock-top ${game.status === "active" && game.turn_color === "black" ? "running" : ""}`}>
+              <div className="time">{clockText(blackClock)}</div>
+            </div>
+
+            <div className="round__app__board main-board">
+              <div className="online-board" ref={boardElement} />
+            </div>
+
+            <div className="ruser ruser-bottom user-link online">
+              <i className="line" />
+              <span>{boardOrientation === "white" ? "You" : "Opponent"}</span>
+              <rating>{boardOrientation === "white" ? "White" : "Black"}</rating>
+            </div>
+            <div className={`rclock rclock-bottom ${game.status === "active" && game.turn_color === "white" ? "running" : ""}`}>
+              <div className="time">{clockText(whiteClock)}</div>
+            </div>
+
+            <div className="round__app__table" />
+            <div className="rmoves">
+              <div className="moves" role="log" aria-label="Moves">
+                {moves.length === 0 ? (
+                  <div className="message moves-placeholder">Moves will appear here.</div>
+                ) : moves.map((move) => (
+                  <div className="lila-move-row" key={move.ply}>
+                    <span className="lila-move-number">{Math.ceil(move.ply / 2)}{move.ply % 2 ? "." : "…"}</span>
                     <strong>{move.san}</strong>
                   </div>
                 ))}
+              </div>
             </div>
-            <div className="online-game-actions">
-              <span>{controlLabel(game.initial_time_ms, game.increment_ms)} · {TIME_CONTROLS.find((item) => item.initialTimeMs === game.initial_time_ms && item.incrementMs === game.increment_ms)?.category ?? "Chess"}</span>
-              {game.status === "active" && isParticipant && <button type="button" onClick={resign} disabled={busy}>Resign</button>}
-              {game.status === "finished" && <button type="button" onClick={backToLobby}>Find another game</button>}
+
+            <div className="rcontrols">
+              <div className="ricons">
+                <button type="button" className="fbt" onClick={() => setBoardOrientation((value) => value === "white" ? "black" : "white")}>Flip board</button>
+                <label className="lila-promotion-control">Promotion
+                  <select value={promotion} onChange={(event) => setPromotion(event.target.value as "q" | "r" | "b" | "n")}>
+                    <option value="q">Queen</option><option value="r">Rook</option><option value="b">Bishop</option><option value="n">Knight</option>
+                  </select>
+                </label>
+              </div>
+              <div className="lila-round-caption">{controlLabel(game.initial_time_ms, game.increment_ms)} · {status}</div>
             </div>
-          </aside>
+          </div>
+
+          <div className="round__underboard">
+            <div className="round__underboard-info">
+              <strong>Lag-Free Ultrabullet</strong>
+              <span>Independent game · server-validated moves</span>
+              <span className="draw-help">Right-drag to draw arrows · right-click to erase</span>
+            </div>
+          </div>
         </div>
-      )}
+      )})}
       {loading && <div className="online-loading">Connecting to game…</div>}
     </section>
   );
