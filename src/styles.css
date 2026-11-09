@@ -215,7 +215,9 @@ a { color: var(--c-link, #7ba7d8); }
 .profile-loading, .profile-error { padding: 2rem; color: var(--c-font, #ccc); }
 .site-footer { display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; padding: .8rem; color: var(--c-font-dim, #999); background: var(--c-bg, #262522); font-size: .72rem; }
 @media (max-width: 900px) {
-  #topnav { display: none; }
+  #top { display: flex; flex-wrap: wrap; }
+  #topnav { display: flex; order: 3; width: 100%; justify-content: center; padding: .45rem .5rem; border-top: 1px solid var(--c-border, #414141); }
+  #topnav section > a { display: block; padding: .35rem .75rem; }
   .site-status { display: none; }
   .lichess-profile-page { grid-template-columns: 1fr; }
   .profile-overview-grid { grid-template-columns: 1fr; }
