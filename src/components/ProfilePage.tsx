@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Chart from "chart.js/auto";
 import { supabase } from "../lib/supabase";
+import { TIME_CONTROLS, ratingColumnForTime } from "../lib/timeControls";
 
 type ProfileData = {
   id: string;
@@ -26,7 +27,7 @@ type RatingData = {
   losses: number;
 };
 
-function RatingChart({ rating, history }: { rating: number | null; history: RatingHistoryPoint[] }) {
+function RatingChart({ rating, history, label }: { rating: number | null; history: RatingHistoryPoint[]; label: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -38,7 +39,7 @@ function RatingChart({ rating, history }: { rating: number | null; history: Rati
       data: {
         labels: history.length ? history.map((point) => new Date(point.recorded_at).toLocaleDateString()) : ["Current"],
         datasets: [{
-          label: "Ultrabullet rating",
+          label,
           data: history.length ? history.map((point) => point.rating) : [rating],
           borderColor: "#91b85b",
           backgroundColor: "rgba(145, 184, 91, .14)",
@@ -82,7 +83,7 @@ function RatingChart({ rating, history }: { rating: number | null; history: Rati
     });
 
     return () => chart.destroy();
-  }, [rating, history]);
+  }, [rating, history, label]);
 
   return (
     <div className="rating-chart-visual">
@@ -90,15 +91,15 @@ function RatingChart({ rating, history }: { rating: number | null; history: Rati
         <div className="rating-chart-message">No rated games yet. Your rating chart will appear after your first rated game.</div>
       ) : (
         <>
-          <canvas ref={canvasRef} aria-label={`Current Ultrabullet rating: ${rating}`} role="img" />
-          <div className="rating-chart-note">Current rating only · historical rating snapshots are not yet recorded.</div>
+          <canvas ref={canvasRef} aria-label={`Current ${label} rating: ${rating}`} role="img" />
+          <div className="rating-chart-note">{history.length ? `Rating history · ${history.length} recorded games` : "History begins with your first rated game after this release."}</div>
         </>
       )}
     </div>
   );
 }
 
-type RatingHistoryPoint = { rating: number; recorded_at: string };
+type RatingHistoryPoint = { rating: number; rating_pool: string; recorded_at: string };
 
 export function ProfilePage({ username, ownProfile, onEdit }: {
   username: string;
@@ -108,6 +109,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [rating, setRating] = useState<RatingData | null>(null);
   const [ratingHistory, setRatingHistory] = useState<RatingHistoryPoint[]>([]);
+  const [selectedTimeMs, setSelectedTimeMs] = useState(15000);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -140,9 +142,8 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
       setRating(stats as RatingData | null);
       const { data: historyRows } = await supabase
         .from("player_rating_history")
-        .select("rating, recorded_at")
+        .select("rating, rating_pool, recorded_at")
         .eq("user_id", person.id)
-        .eq("rating_pool", "ultrabullet")
         .order("recorded_at", { ascending: true })
         .limit(100);
       if (!active) return;
@@ -158,6 +159,9 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
   const winRate = rating && rating.games_played
     ? Math.round((rating.wins / rating.games_played) * 100)
     : 0;
+  const selectedControl = TIME_CONTROLS.find((control) => control.initialTimeMs === selectedTimeMs) ?? TIME_CONTROLS[1];
+  const selectedRating = rating?.[ratingColumnForTime(selectedTimeMs)] ?? null;
+  const selectedHistory = ratingHistory.filter((point) => point.rating_pool === selectedControl.ratingPool);
 
   return (
     <section className="lichess-profile-page">
@@ -201,12 +205,19 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
 
               <div className="profile-overview-grid">
                 <section className="profile-chart-card">
-                  <div className="profile-card-tabs"><span className="active">15-second Ultrabullet rating</span></div>
-                  <div className="profile-rating-summary">
-                    <strong>{rating?.ultrabullet_rating ?? "Unrated"}</strong>
-                    <span>15 seconds · no increment</span>
+                  <div className="profile-chart-controls">
+                    <strong>Rating history</strong>
+                    <label>Time control
+                      <select value={selectedTimeMs} onChange={(event) => setSelectedTimeMs(Number(event.target.value))}>
+                        {TIME_CONTROLS.map((control) => <option key={control.initialTimeMs} value={control.initialTimeMs}>{control.label}</option>)}
+                      </select>
+                    </label>
                   </div>
-                  <RatingChart rating={rating?.ultrabullet_rating ?? null} history={ratingHistory} />
+                  <div className="profile-rating-summary">
+                    <strong>{selectedRating ?? "Unrated"}</strong>
+                    <span>{selectedControl.label} · no increment</span>
+                  </div>
+                  <RatingChart rating={selectedRating} history={selectedHistory} label={selectedControl.label} />
                 </section>
                 <aside className="profile-info-card">
                   <div className="profile-info-name">{profile.display_name || profile.username}</div>
