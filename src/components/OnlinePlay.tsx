@@ -98,7 +98,7 @@ function clockText(ms: number): string {
   return seconds < 1 ? seconds.toFixed(3) + "s" : seconds.toFixed(2).replace(/0+$/, "").replace(/\.$/, "") + "s";
 }
 
-export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User; initialGameId?: string | null; onOpenProfile?: (username: string) => void }) {
+export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onGameClose }: { user: User; initialGameId?: string | null; onOpenProfile?: (username: string) => void; onGameOpen?: () => void; onGameClose?: () => void }) {
   const [gameId, setGameId] = useState<string | null>(initialGameId ?? null);
   const [game, setGame] = useState<GameRow | null>(null);
   const [moves, setMoves] = useState<MoveRow[]>([]);
@@ -223,6 +223,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
         await loadState(id);
       }
       setGameId(id);
+      onGameOpen?.();
       await loadMyRating();
       const url = new URL(window.location.href);
       url.searchParams.set("game", id);
@@ -232,7 +233,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
     } finally {
       setLoading(false);
     }
-  }, [invoke, loadState, loadMyRating]);
+  }, [invoke, loadState, loadMyRating, onGameOpen]);
 
   const runMatchmaking = useCallback(async () => {
     if (matchmakingInFlight.current) return;
@@ -437,6 +438,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
     setGame(null);
     setMoves([]);
     setGameId(null);
+    onGameClose?.();
     orientedGameId.current = null;
     const url = new URL(window.location.href);
     url.searchParams.delete("game");
@@ -506,15 +508,14 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
 
   return (
     <section className="online-section" id="online-play">
-      <div className="online-heading">
+      {!game && <div className="online-heading">
         <div>
           <span className="online-kicker">LIVE CHESS</span>
           <h2>Online chess</h2>
           <p>Server-validated moves · live clocks · eight no-increment time controls</p>
           <span className="my-rating">Your {selectedControl.label} rating: <strong>{myRating ?? "Unrated"}</strong></span>
         </div>
-        {game && <button className="online-secondary" type="button" onClick={backToLobby}>Back to lobby</button>}
-      </div>
+      </div>}
 
       {message && <div className="online-message" role="status">{message}</div>}
 
