@@ -13,7 +13,8 @@
     "preview": "vite preview",
     "sass:build": "sass --no-source-map --quiet-deps --silence-deprecation=import,global-builtin src/lila.scss src/lila.css",
     "predev": "npm run sass:build",
-    "prebuild": "npm run sass:build"
+    "prebuild": "npm run sass:build",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
     "@lichess-org/chessground": "10.5.0",
