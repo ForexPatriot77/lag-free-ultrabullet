@@ -1,22 +1,56 @@
 # Lag-Free Ultrabullet
 
-An independent chess platform built from scratch. The interface takes inspiration from the usability of online chess sites, while the application, backend, and product identity are our own.
+An independent, fast-chess web application with eight no-increment time controls, player profiles, separate rating pools, open challenges, and live game viewing.
 
-**This project does not modify, fork, or depend on the Lichess application.** It uses the separately published Chessground board library.
+**Live site:** https://forexpatriot77.github.io/lag-free-ultrabullet/
+
+## Current release status
+
+This is a **release candidate**, not yet a fully verified public release. The frontend build and automated tests run in GitHub Actions. The Supabase game and Lichess authentication functions are deployed. The database now supports all eight rating pools.
+
+A true release still requires two-account end-to-end tests (Lichess sign-in, challenge creation/joining, move legality, clocks, terminal results, rating changes, spectators, and reconnects). Online moves are currently submitted to the Supabase Edge Function for validation and persistence; peer-to-peer WebRTC move transport is **not implemented**. The ultra-short controls are therefore particularly sensitive to network latency.
+
+## Time controls and rating pools
+
+All controls use zero increment and have independent Elo ratings:
+
+| Initial time | Name / pool |
+|---:|---|
+| 30 seconds | Hyperbullet |
+| 15 seconds | Ultrabullet |
+| 7.5 seconds | Ultrazerk |
+| 3.25 seconds | Psycho |
+| 1.625 seconds | Psycho |
+| 0.8125 seconds | Psycho |
+| 0.40625 seconds | Psycho |
+| 0.203125 seconds | Psycho |
+
+The five Psycho clocks share the Psycho name but have separate rating pools. Lichess Bullet is imported once as the initial Hyperbullet rating; Lichess Ultrabullet is imported once as the initial 15-second rating. Re-authenticating with Lichess refreshes the linked account metadata without resetting locally earned ratings.
+
+## Features currently implemented
+
+- Lichess OAuth 2.0 authorization-code flow with PKCE and email-read permission.
+- Existing email/password sign-in, registration, and password recovery.
+- Player profiles with editable username, display name, and bio.
+- Eight no-increment challenge time controls.
+- Open challenges, shareable invite links, joining, and challenge cancellation.
+- Chessground board with legal moves checked by chess.js on the server.
+- Server-maintained clocks, move history, checkmate, stalemate, draw, resignation, and timeout handling.
+- Separate Elo pools for all eight exact time controls.
+- Rating history snapshots for games completed after the rating-history migration.
+- Time-control leaderboard, recent games, and live-game viewing.
 
 ## Stack
 
-- React + TypeScript + Vite
-- [Chessground](https://github.com/lichess-org/chessground) for board rendering and interaction
-- [chess.js](https://github.com/jhlywa/chess.js) for legal chess moves and game state
+- React 19, TypeScript, Vite 8
+- Chessground for board rendering
+- chess.js for chess rules
 - Supabase Auth, Postgres, Realtime, and Edge Functions
-
-## Requirements
-
-- Node.js 24+
-- npm
+- GitHub Pages for the static frontend
 
 ## Local development
+
+Requirements: Node.js 24+ and npm.
 
 1. Clone this repository.
 2. Install dependencies:
@@ -25,55 +59,44 @@ An independent chess platform built from scratch. The interface takes inspiratio
    npm install
    ```
 
-3. Copy `.env.example` to `.env` and set the Supabase project URL and publishable key.
-4. Start the dev server:
+3. Copy `.env.example` to `.env`. The checked-in browser values are public publishable credentials; never add a Supabase secret or service-role key to frontend files.
+4. Start the development server:
 
    ```sh
    npm run dev
    ```
 
-5. Create a production build:
+5. Run automated tests and a production build:
 
    ```sh
+   npm test
    npm run build
    ```
 
-## Supabase configuration
+## Supabase setup
 
-The browser application uses the project's publishable key. The deployed Edge Function uses Supabase's `@supabase/server` authentication context and server-side credentials supplied by the Supabase runtime.
+The timestamped SQL migrations in `supabase/migrations` evolve the database. For a brand-new Supabase project, first run `supabase/bootstrap.sql` in the SQL editor, then apply every migration in ascending timestamp order. **Do not run the bootstrap file against the existing populated project.**
 
-Never put a Supabase secret key or service-role key in frontend code, GitHub Pages build variables, or any public repository file.
+Deploy the Edge Functions from their source directories:
 
-The connected Supabase project currently contains these tables:
+- `supabase/functions/ultrabullet` — requires JWT verification.
+- `supabase/functions/lichess-auth` — public OAuth callback; performs its own PKCE/code validation and strict redirect allow-listing.
 
-- `profiles` — player usernames, display names, and bios
-- `games` — authoritative 15-second ultrabullet game state and clocks
-- `game_moves` — server-accepted move history
-- `player_ratings` — server-maintained ultrabullet Elo ratings and records
+Configure Supabase Auth's site URL and redirect allow-list for the production GitHub Pages URL and the local Vite URL. Lichess OAuth must be registered with the matching production redirect URI. Keep Supabase secret/service-role credentials only in Supabase's server-side function environment.
 
-All exposed tables use Row Level Security. Game creation, joining, move commits, game completion, and rating changes are performed through server-controlled database functions called by the authenticated Edge Function. Clients cannot write game state or rating values directly.
+## Licensing and attribution
 
-The `ultrabullet` Edge Function validates the user's session, checks legal moves with `chess.js`, maintains the authoritative clock state, and returns game snapshots. Supabase Realtime publishes game updates to participants and signed-in spectators.
+This repository includes Lila frontend stylesheet source under `ui/lib/css`, `ui/lobby/css`, and `ui/round/css`. Those files are from Lichess Lila and are distributed under AGPL-3.0-or-later; see `LILA-COPYING.md`. The Chessground dependency is GPL-3.0-or-later. This combined application is distributed under AGPL-3.0-or-later; see `LICENSE`.
 
-## Current implementation
+The current repository does not include the non-free Lila assets listed in the upstream copying notice. Third-party asset and dependency notices must be checked again before adding any upstream Lila images, fonts, sounds, or piece sets. The interface is independent and is not affiliated with or endorsed by Lichess.
 
-- Email/password registration and sign-in
-- Editable player username, display name, and bio
-- Local Chessground practice board
-- 15-second online ultrabullet challenges and invite links
-- Open challenge lobby and live-game spectator list
-- Server-validated legal moves and promotion-to-queen
-- Server-authoritative clocks, timeout, resignation, checkmate, and draw handling
-- Realtime game updates
-- Completed-game history and move review
-- Initial Elo rating system and ultrabullet leaderboard
+The site footer links to the source and license. The public source repository is the Corresponding Source for the deployed frontend.
 
-## Still in development
+## Known limitations before formal release
 
-This is an early playable foundation, not a finished Lichess-scale platform. Matchmaking queues, puzzles, deeper analysis tools, chat, teams, moderation, account recovery polish, and broader testing remain to be built. Online play also needs end-to-end testing with real signed-in players.
-
-## Chessground license
-
-Chessground is distributed under **GPL-3.0-or-later**. Because it is part of this web application, this project is also distributed under GPL-3.0-or-later. Source code for the combined application must be made available to users. See the [GNU GPL v3 text](https://www.gnu.org/licenses/gpl-3.0.html).
-
-This project is independent and is not affiliated with or endorsed by Lichess.
+- No WebRTC peer-to-peer move channel yet; moves still make a server round-trip.
+- No automatic matchmaking queue; players create and share open challenges.
+- No in-game chat, draw offers, rematch flow, or moderation/reporting tools.
+- No automated two-browser integration test suite; live two-player behavior still needs manual verification.
+- Rating history starts at the deployment of the rating-history migration; older games were not backfilled.
+- The frontend is hosted on GitHub Pages; the Scala Lila backend is not part of this deployment.
