@@ -40,6 +40,24 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     return json({ game: unwrap(data) });
   }
 
+  if (action === "matchmake") {
+    const initialTimeMs = Number(body.initialTimeMs ?? 15000);
+    const { data, error } = await admin.rpc("find_ultrabullet_match", {
+      p_user_id: userId,
+      p_initial_time_ms: initialTimeMs,
+    });
+    if (error) return json({ error: error.message }, 409);
+    return json(data);
+  }
+
+  if (action === "cancel_matchmaking") {
+    const { error } = await admin.rpc("cancel_ultrabullet_matchmaking", {
+      p_user_id: userId,
+    });
+    if (error) return json({ error: error.message }, 409);
+    return json({ ok: true });
+  }
+
   if (action === "list") {
     const { data, error } = await admin
       .from("games")
