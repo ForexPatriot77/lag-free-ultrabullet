@@ -29,8 +29,8 @@ The five Psycho clocks share the Psycho name but have separate rating pools. Lic
 
 ## Features currently implemented
 
-- Lichess OAuth 2.0 authorization-code flow with PKCE and email-read permission.
-- Existing email/password sign-in, registration, and password recovery.
+- Lichess OAuth 2.0 authorization-code flow with PKCE and email-read permission, including safe linking to an existing matching-email Lag-Free account.
+- Existing email/password sign-in, registration, password recovery, and Lichess connection management from profile settings.
 - Player profiles with editable username, display name, and bio.
 - Eight no-increment challenge time controls.
 - Quick matchmaking by exact time control (abandoned queue entries expire after two minutes), plus open challenges, shareable invite links, joining, cancellation, and 24-hour challenge expiry.
