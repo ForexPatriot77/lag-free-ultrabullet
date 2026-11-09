@@ -1,5 +1,5 @@
 alter table public.player_ratings
-  add column if not exists hyperbullet_rating integer not null default 1500
+  add column if not exists hyperbullet_rating integer
   check (hyperbullet_rating >= 100);
 
 create table if not exists public.lichess_accounts (
