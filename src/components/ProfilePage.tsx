@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Chart from "chart.js/auto";
 import { supabase } from "../lib/supabase";
 
 type ProfileData = {
@@ -17,6 +18,78 @@ type RatingData = {
   draws: number;
   losses: number;
 };
+
+function RatingChart({ rating }: { rating: number | null }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || rating === null) return;
+
+    const chart = new Chart(canvas, {
+      type: "line",
+      data: {
+        labels: ["Current"],
+        datasets: [{
+          label: "Ultrabullet rating",
+          data: [rating],
+          borderColor: "#91b85b",
+          backgroundColor: "rgba(145, 184, 91, .14)",
+          pointBackgroundColor: "#a8cf70",
+          pointBorderColor: "#262522",
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          borderWidth: 2,
+          tension: 0.25,
+          fill: true,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 250 },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            displayColors: false,
+            callbacks: {
+              label: (context) => `Rating: ${context.parsed.y}`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: "#999", font: { size: 11 } },
+            border: { color: "#484640" },
+          },
+          y: {
+            suggestedMin: Math.max(0, rating - 200),
+            suggestedMax: rating + 200,
+            grid: { color: "rgba(160, 160, 160, .12)" },
+            ticks: { color: "#999", precision: 0 },
+            border: { display: false },
+          },
+        },
+      },
+    });
+
+    return () => chart.destroy();
+  }, [rating]);
+
+  return (
+    <div className="rating-chart-visual">
+      {rating === null ? (
+        <div className="rating-chart-message">No rated games yet. Your rating chart will appear after your first rated game.</div>
+      ) : (
+        <>
+          <canvas ref={canvasRef} aria-label={`Current Ultrabullet rating: ${rating}`} role="img" />
+          <div className="rating-chart-note">Current rating only · historical rating snapshots are not yet recorded.</div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export function ProfilePage({ username, ownProfile, onEdit }: {
   username: string;
@@ -113,11 +186,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
                     <strong>{rating?.ultrabullet_rating ?? "Unrated"}</strong>
                     <span>15 seconds · no increment</span>
                   </div>
-                  <div className="rating-chart-empty">
-                    <div className="rating-chart-grid"><span>2200</span><span>2000</span><span>1800</span><span>1600</span><span>1400</span></div>
-                    <div className="rating-chart-message">Your rating history will appear here as you play more games.</div>
-                  </div>
-                  <div className="rating-range-labels"><span>1M</span><span>3M</span><span>6M</span><span>YTD</span><span>1Y</span><span>ALL</span></div>
+                  <RatingChart rating={rating?.ultrabullet_rating ?? null} />
                 </section>
                 <aside className="profile-info-card">
                   <div className="profile-info-name">{profile.display_name || profile.username}</div>
