@@ -121,6 +121,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
   const gameRef = useRef<GameRow | null>(null);
   const timeoutRequested = useRef<string | null>(null);
   const matchmakingInFlight = useRef(false);
+  const matchmakingCancelRequested = useRef(false);
   const orientedGameId = useRef<string | null>(null);
   const userId = user.id;
 
@@ -240,19 +241,31 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
       setMessage(error instanceof Error ? error.message : "Matchmaking could not be completed.");
     } finally {
       matchmakingInFlight.current = false;
+      if (matchmakingCancelRequested.current) {
+        matchmakingCancelRequested.current = false;
+        await invoke({ action: "cancel_matchmaking" }).catch(() => undefined);
+        setQueueing(false);
+        setQueueMessage("");
+      }
     }
   }, [invoke, openGame, selectedControl.initialTimeMs, selectedControl.label]);
 
   const startMatchmaking = () => {
+    matchmakingCancelRequested.current = false;
     setQueueing(true);
     setQueueMessage("Finding an opponent…");
     void runMatchmaking();
   };
 
   const cancelMatchmaking = async () => {
+    setQueueing(false);
+    setQueueMessage("Leaving matchmaking queue…");
+    if (matchmakingInFlight.current) {
+      matchmakingCancelRequested.current = true;
+      return;
+    }
     try {
       await invoke({ action: "cancel_matchmaking" });
-      setQueueing(false);
       setQueueMessage("");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not leave the matchmaking queue.");
@@ -486,7 +499,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
               <span>Choose your speed. Each time control has its own rating pool.</span>
             </div>
             <label className="time-control-picker">Time control
-              <select value={String(selectedControl.initialTimeMs) + "-" + String(selectedControl.incrementMs)} onChange={(event) => {
+              <select disabled={busy || loading || queueing} value={String(selectedControl.initialTimeMs) + "-" + String(selectedControl.incrementMs)} onChange={(event) => {
                 const parts = event.target.value.split("-").map(Number);
                 const found = TIME_CONTROLS.find((item) => item.initialTimeMs === parts[0] && item.incrementMs === parts[1]);
                 if (found) setSelectedControl(found);
