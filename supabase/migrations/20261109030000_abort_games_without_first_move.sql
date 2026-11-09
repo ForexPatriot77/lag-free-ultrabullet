@@ -28,7 +28,7 @@ begin
     raise exception 'Only games with no moves can be aborted';
   end if;
   if target.started_at is null
-     or clock_timestamp() < target.started_at + (target.initial_time_ms / 1000.0) * interval '1 second' then
+     or clock_timestamp() < target.started_at + interval '15 seconds' then
     raise exception 'The first-move deadline has not expired';
   end if;
 
