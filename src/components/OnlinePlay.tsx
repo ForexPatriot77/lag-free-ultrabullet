@@ -493,7 +493,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
 
   const status = !game ? "Choose an online game" :
     game.status === "waiting" ? "Waiting for an opponent" :
-    game.status === "finished" ? `Game finished · ${game.result ?? ""} · ${game.termination ?? ""}` :
+    game.status === "finished" ? (game.termination === "aborted" ? "Game aborted · no first move within 15 seconds · no rating change" : `Game finished · ${game.result ?? ""} · ${game.termination ?? ""}`) :
     !isParticipant ? "Watching live game" :
     game.turn_color === myColor ? "Your turn" : "Opponent's turn";
 
@@ -638,6 +638,12 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile }: { user: User;
           </div>
           <aside className="online-game-panel round__side">
             <div className="online-game-status"><i className={game.status === "active" ? "live-dot" : "idle-dot"} />{status}</div>
+            {game.status === "active" && game.ply === 0 && (
+              <div className="first-move-deadline" role="note">
+                <strong>Make your first move within 15 seconds.</strong>
+                <span>If nobody moves before the clock expires, the game aborts with no rating change.</span>
+              </div>
+            )}
             {game.status === "waiting" && (
               <div className="invite-box">
                 <strong>Your challenge is ready</strong>
