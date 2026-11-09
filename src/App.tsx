@@ -181,7 +181,7 @@ function App() {
           <section className={page === "players" ? "active" : ""}><a href="#players" onClick={(event) => { event.preventDefault(); go("players"); }}>Players</a></section>
         </nav>
         <div className="site-buttons">
-          <span className="site-status"><i />{isSupabaseConfigured ? "Online" : "Local mode"}</span>
+          <span className="site-status"><i />{isSupabaseConfigured ? "Cloud" : "Local mode"}</span>
           {user ? (
             <>
               <button id="user_tag" className="link" type="button" onClick={() => { setProfileUsername(profile?.username ?? null); setPage("profile"); }}>{displayName}</button>
