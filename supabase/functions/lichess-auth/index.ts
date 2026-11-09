@@ -83,7 +83,7 @@ Deno.serve(async (req: Request) => {
     }
     const emailData = await emailResponse.json() as LichessEmail;
     const accountEmail = typeof emailData.email === "string" ? emailData.email.trim().toLowerCase() : "";
-    if (!accountEmail || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(accountEmail)) {
+    if (!accountEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountEmail)) {
       return json({ error: "Lichess did not return a usable email address for this account." }, 422);
     }
 
@@ -108,6 +108,7 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
     if (lookupError) return json({ error: "Could not look up the Lichess account." }, 500);
 
+    const isFirstLichessLink = !linked?.user_id;
     let userId = linked?.user_id as string | undefined;
     if (!userId) {
       const { data: created, error: createError } = await admin.auth.admin.createUser({
@@ -117,7 +118,10 @@ Deno.serve(async (req: Request) => {
         user_metadata: { display_name: lichessUsername },
       });
       if (createError || !created.user) {
-        return json({ error: "We couldn't create your Lag-Free account. Please try again." }, 500);
+        const duplicateEmail = /already|registered|exists/i.test(createError?.message ?? "");
+        return json({ error: duplicateEmail
+          ? "This email already has a Lag-Free account. Sign in to that account first; we cannot safely merge accounts automatically."
+          : "We couldn't create your Lag-Free account. Please try again." }, duplicateEmail ? 409 : 500);
       }
       userId = created.user.id;
     }
@@ -140,9 +144,10 @@ Deno.serve(async (req: Request) => {
 
     let base = lichessUsername.toLowerCase().replace(/[^a-z0-9_]/g, "_").replace(/_+/g, "_").slice(0, 20);
     if (base.length < 3) base = `lichess_${lichessId.slice(0, 8)}`.slice(0, 20);
-    let username = base;
     const { data: currentProfile } = await admin.from("profiles")
       .select("username, display_name").eq("id", userId).maybeSingle();
+    const generatedUsername = !currentProfile?.username || /^player_[a-f0-9]{8}$/.test(currentProfile.username);
+    let username = generatedUsername ? base : currentProfile.username;
     const suffix = lichessId.slice(0, 6);
     const { data: collision } = await admin.from("profiles")
       .select("id").eq("username", username).maybeSingle();
@@ -163,11 +168,13 @@ Deno.serve(async (req: Request) => {
     }, { onConflict: "lichess_id" });
     if (linkError) return json({ error: "Could not save the Lichess account connection." }, 500);
 
-    const ratingUpdate: Record<string, number | string> = { user_id: userId };
-    if (bullet !== null) ratingUpdate.hyperbullet_rating = bullet;
-    if (ultra !== null) ratingUpdate.ultrabullet_rating = ultra;
-    const { error: ratingError } = await admin.from("player_ratings").upsert(ratingUpdate, { onConflict: "user_id" });
-    if (ratingError) return json({ error: "Your account was signed in, but ratings could not be imported." }, 500);
+    if (isFirstLichessLink) {
+      const ratingUpdate: Record<string, number | string> = { user_id: userId };
+      if (bullet !== null) ratingUpdate.hyperbullet_rating = bullet;
+      if (ultra !== null) ratingUpdate.ultrabullet_rating = ultra;
+      const { error: ratingError } = await admin.from("player_ratings").upsert(ratingUpdate, { onConflict: "user_id" });
+      if (ratingError) return json({ error: "Your account was signed in, but ratings could not be imported." }, 500);
+    }
 
     const { data: magic, error: magicError } = await admin.auth.admin.generateLink({
       type: "magiclink",
@@ -184,7 +191,8 @@ Deno.serve(async (req: Request) => {
       username: lichessUsername,
       imported: { hyperbullet: bullet, ultrabullet: ultra },
     });
-  } catch {
+  } catch (error) {
+    console.error("lichess-auth unexpected error", error);
     return json({ error: "Lichess sign-in failed unexpectedly. Please try again." }, 500);
   }
 });
