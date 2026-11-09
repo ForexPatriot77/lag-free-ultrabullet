@@ -52,6 +52,10 @@ function App() {
 
   useEffect(() => {
     const url = new URL(window.location.href);
+    // Supabase email confirmation/recovery also uses ?code=. Only handle this
+    // callback when this tab has an outstanding Lichess PKCE transaction.
+    const stored = sessionStorage.getItem(OAUTH_STORAGE_KEY);
+    if (!stored) return;
     const code = url.searchParams.get("code");
     const oauthError = url.searchParams.get("error");
     if (!code && !oauthError) return;
@@ -63,8 +67,7 @@ function App() {
       cleanUrl();
       return;
     }
-    const stored = sessionStorage.getItem(OAUTH_STORAGE_KEY);
-    if (!stored || !supabase) {
+    if (!supabase) {
       sessionStorage.removeItem(OAUTH_STORAGE_KEY);
       setAuthError("Your sign-in session expired. Please try again.");
       setAuthMode("signin");
