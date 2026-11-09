@@ -99,7 +99,7 @@ Deno.serve(async (req: Request) => {
     if (!userId) {
       const { data: created, error: createError } = await admin.auth.admin.createUser({
         email,
-        password: `${crypto.randomUUID()}-${crypto.randomUUID()}-Aa9!`,
+        password: `${crypto.randomUUID()}-Aa9!`,
         email_confirm: true,
         user_metadata: { display_name: lichessUsername },
       });
