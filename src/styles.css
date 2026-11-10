@@ -385,3 +385,19 @@ html[data-theme="light"] .player-menu-subitems { background: rgba(0,0,0,.04); }
   .player-dropdown { right: 0; width: min(14.5rem, calc(100vw - 1rem)); }
   .player-menu-trigger > span:first-child { max-width: 7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
+
+
+/* Board and piece preferences selected from the account menu. */
+.online-game .board-theme-green cg-board {
+  background-color: #eeeed2 !important;
+  background-image: conic-gradient(#769656 25%, #eeeed2 0 50%, #769656 0 75%, #eeeed2 0) !important;
+  background-size: 25% 25% !important;
+}
+.online-game .board-theme-blue cg-board {
+  background-color: #dee3e6 !important;
+  background-image: conic-gradient(#6f8fae 25%, #dee3e6 0 50%, #6f8fae 0 75%, #dee3e6 0) !important;
+  background-size: 25% 25% !important;
+}
+.online-game .piece-style-high-contrast cg-board piece {
+  filter: contrast(1.35) saturate(1.2) drop-shadow(0 1px 1px rgba(0,0,0,.4));
+}
