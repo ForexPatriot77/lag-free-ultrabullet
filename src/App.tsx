@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { AuthDialog } from "./components/AuthDialog";
 import { OnlinePlay } from "./components/OnlinePlay";
+import { CursorMark } from "./components/CursorMark";
 import { ProfileDialog } from "./components/ProfileDialog";
 import { ProfilePage } from "./components/ProfilePage";
 import { PasswordRecoveryDialog } from "./components/PasswordRecoveryDialog";
@@ -175,7 +176,7 @@ function App() {
     <div className="site-shell">
       <header id="top">
         <button className="site-title" type="button" onClick={() => go("home")} aria-label="Lag-Free Ultrabullet home">
-          <span className="site-icon">♞</span>
+          <CursorMark className="site-icon" />
           <span className="site-name">Lag-Free <span>Ultrabullet</span></span>
         </button>
         <nav id="topnav" className="hover" aria-label="Main navigation">
@@ -237,7 +238,7 @@ function App() {
                     <OnlinePlay user={user} initialGameId={null} onOpenProfile={(username) => { setProfileUsername(username); setPage("profile"); }} onGameOpen={handleGameOpen} onGameClose={handleGameClose} />
                   ) : (
                     <div className="lobby-signin">
-                      <div className="lobby-signin__piece">♞</div>
+                      <CursorMark className="lobby-signin__piece" />
                       <h1>Play fast chess</h1>
                       <p>Sign in to create a challenge, join an open game, and track all eight ratings.</p>
                       <div className="button-set">
@@ -276,9 +277,9 @@ function App() {
 
           {page === "play" && (
             <section className="content-page">
-              {!isInGame && <div className="content-page-heading"><div><span className="page-kicker">FIND A GAME</span><h1>Play online</h1><p>Challenge someone, join an open game, or review a recent match.</p></div><span className="time-control-label">⚡ 8 rated time controls · no increment</span></div>}
+              {!isInGame && <div className="content-page-heading"><div><span className="page-kicker">FIND A GAME</span><h1>Play online</h1><p>Challenge someone, join an open game, or review a recent match.</p></div><span className="time-control-label"><CursorMark className="inline-cursor-mark" /> 8 rated time controls · no increment</span></div>}
               {user ? <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} onOpenProfile={(username) => { setProfileUsername(username); setPage("profile"); }} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : (
-                <div className="signin-gate"><div className="gate-icon">♟</div><h2>Sign in to play online</h2><p>Your games, rating, and challenges are connected to your player account.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="gate-secondary" onClick={() => setAuthMode("signup")}>Create an account</button></div>
+                <div className="signin-gate"><CursorMark className="gate-icon" /><h2>Sign in to play online</h2><p>Your games, rating, and challenges are connected to your player account.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="gate-secondary" onClick={() => setAuthMode("signup")}>Create an account</button></div>
               )}
             </section>
           )}
@@ -296,7 +297,7 @@ function App() {
           {(page === "watch" || page === "players") && (
             <section className="content-page">
               <div className="content-page-heading"><div><span className="page-kicker">COMMUNITY</span><h1>{page === "watch" ? "Watch games" : "Players"}</h1><p>{page === "watch" ? "See live games and follow the action." : "Find the players climbing the ultrabullet ladder."}</p></div></div>
-              {user ? <OnlinePlay user={user} initialGameId={null} /> : <div className="signin-gate compact-gate"><div className="gate-icon">{page === "watch" ? "◉" : "♙"}</div><h2>Join the community</h2><p>Sign in to view live games, recent results, and the player leaderboard.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>}
+              {user ? <OnlinePlay user={user} initialGameId={null} /> : <div className="signin-gate compact-gate"><CursorMark className="gate-icon" /><h2>Join the community</h2><p>Sign in to view live games, recent results, and the player leaderboard.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>}
             </section>
           )}
 
