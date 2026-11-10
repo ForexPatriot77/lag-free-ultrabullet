@@ -705,3 +705,17 @@ html[data-theme="light"] .player-menu-subitems { background: rgba(0,0,0,.04); }
  .arcade-side .arcade-info-card:last-child { grid-column:auto; }
  .arcade-controls label { margin-left:0; }
 }
+
+
+.arcade-save-status { margin:.55rem 0 0; color:var(--c-font-dim,#999); font-size:.75rem; }
+.arcade-player-link { padding:0; border:0; background:transparent; color:var(--c-link,#4b9fe8); font:inherit; cursor:pointer; text-align:left; }
+.arcade-player-link:hover { text-decoration:underline; }
+.profile-arcade-card { margin:1rem 0; padding:1rem; background:var(--c-bg-box,#262522); }
+.profile-arcade-heading { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:.8rem; }
+.profile-arcade-heading strong { color:var(--c-font-clearer,#eee); }
+.profile-arcade-heading span,.profile-arcade-scores small { color:var(--c-font-dim,#999); font-size:.72rem; }
+.profile-arcade-scores { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.6rem; }
+.profile-arcade-scores > div { display:flex; flex-direction:column; gap:.25rem; padding:.7rem; background:var(--c-bg-zebra,#302e2b); }
+.profile-arcade-scores span { color:var(--c-font-dim,#999); font-size:.75rem; text-transform:capitalize; }
+.profile-arcade-scores strong { color:var(--c-font-clearer,#eee); font-size:1.35rem; font-variant-numeric:tabular-nums; }
+@media(max-width:480px) { .profile-arcade-scores { grid-template-columns:1fr; } }
