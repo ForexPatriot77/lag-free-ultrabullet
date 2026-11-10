@@ -78,6 +78,18 @@ export function ArcadePage() {
     if (running && timeLeft <= 0) finish("timeout");
   }, [timeLeft, running]);
 
+  useEffect(() => {
+    const handleSpace = (event: KeyboardEvent) => {
+      if (event.code !== "Space" || running) return;
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === "BUTTON" || target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
+      event.preventDefault();
+      start();
+    };
+    window.addEventListener("keydown", handleSpace);
+    return () => window.removeEventListener("keydown", handleSpace);
+  }, [running, mode]);
+
   const start = () => {
     setScore(0);
     setBonus(0);
