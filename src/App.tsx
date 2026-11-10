@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { AuthDialog } from "./components/AuthDialog";
 import { OnlinePlay } from "./components/OnlinePlay";
+import { ArcadePage } from "./components/ArcadePage";
 import { CursorMark } from "./components/CursorMark";
 import { ProfileDialog } from "./components/ProfileDialog";
 import { ProfilePage } from "./components/ProfilePage";
@@ -42,7 +43,7 @@ async function startLichessOAuth() {
 }
 
 
-type Page = "home" | "play" | "watch" | "players" | "profile" | "inbox";
+type Page = "home" | "play" | "watch" | "players" | "profile" | "inbox" | "arcade";
 
 function readRoute(): { page: Page; username: string | null } {
   const url = new URL(window.location.href);
@@ -55,6 +56,7 @@ function readRoute(): { page: Page; username: string | null } {
   if (normalized === "play") return { page: "play", username: null };
   if (normalized === "watch") return { page: "watch", username: null };
   if (normalized === "players") return { page: "players", username: null };
+  if (normalized === "arcade") return { page: "arcade", username: null };
   return { page: url.searchParams.has("game") ? "play" : "home", username: null };
 }
 function App() {
@@ -247,6 +249,7 @@ function App() {
           <section className={page === "play" ? "active" : ""}><a href="#play" onClick={(event) => { event.preventDefault(); openPlay(); }}>Play</a></section>
           <section className={page === "watch" ? "active" : ""}><a href="#watch" onClick={(event) => { event.preventDefault(); go("watch"); }}>Watch</a></section>
           <section className={page === "players" ? "active" : ""}><a href="#players" onClick={(event) => { event.preventDefault(); go("players"); }}>Players</a></section>
+          <section className={page === "arcade" ? "active" : ""}><a href="#arcade" onClick={(event) => { event.preventDefault(); go("arcade"); }}>Arcade</a></section>
         </nav>
         <div className="site-buttons">
           <span className="site-status"><i />{isSupabaseConfigured ? "Cloud" : "Local mode"}</span>
@@ -368,6 +371,10 @@ function App() {
                 <div className="signin-gate"><CursorMark className="gate-icon" /><h2>Sign in to play online</h2><p>Your games, rating, and challenges are connected to your player account.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="gate-secondary" onClick={() => setAuthMode("signup")}>Create an account</button></div>
               )}
             </section>
+          )}
+
+          {page === "arcade" && (
+            <section className="content-page arcade-content-page"><ArcadePage /></section>
           )}
 
           {page === "profile" && (
