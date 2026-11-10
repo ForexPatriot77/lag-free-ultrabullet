@@ -289,7 +289,7 @@ function App() {
               {profileUsername ? (
                 <ProfilePage username={profileUsername} ownProfile={Boolean(user && profile?.username === profileUsername)} onEdit={() => setProfileOpen(true)} />
               ) : (
-                <div className="signin-gate"><div className="gate-icon">♟</div><h2>Your player profile</h2><p>Sign in to open your player profile and view ratings across every time control.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>
+                <div className="signin-gate"><CursorMark className="gate-icon" /><h2>Your player profile</h2><p>Sign in to open your player profile and view ratings across every time control.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>
               )}
             </section>
           )}
