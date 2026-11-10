@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { supabase } from "../lib/supabase";
+import { CursorMark } from "./CursorMark";
 
 type AuthDialogProps = {
   initialMode: "signin" | "signup";
@@ -95,14 +96,14 @@ export function AuthDialog({ initialMode, onClose, onLichess, externalError }: A
         onClick={(event) => event.stopPropagation()}
       >
         <button className="auth-close" type="button" onClick={onClose} aria-label="Close">×</button>
-        <div className="auth-brand-mark">♞</div>
+        <CursorMark className="auth-brand-mark" />
         <p className="auth-eyebrow">LAG-FREE ULTRABULLET</p>
         <h2 id="auth-title">{mode === "signup" ? "Create your account" : "Welcome back"}</h2>
         <p className="auth-subtitle">
           {mode === "signup" ? "Join the board. Your player profile will be created automatically." : "Sign in to continue to your player profile."}
         </p>
         <button className="auth-lichess-button" type="button" onClick={onLichess} disabled={busy}>
-          <span className="auth-lichess-mark">♞</span> Continue with Lichess
+          <CursorMark className="auth-lichess-mark" /> Continue with Lichess
         </button>
         <div className="auth-provider-divider"><span>or use email</span></div>
         <form onSubmit={submit}>
