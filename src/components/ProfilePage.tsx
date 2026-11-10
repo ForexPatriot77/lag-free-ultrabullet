@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Chart from "chart.js/auto";
 import { supabase } from "../lib/supabase";
 import { TIME_CONTROLS, controlLabel, ratingColumnForTime } from "../lib/timeControls";
+import { CursorMark } from "./CursorMark";
 
 type ProfileData = {
   id: string;
@@ -104,16 +105,18 @@ type RatingHistoryPoint = { rating: number; rating_pool: string; recorded_at: st
 type ProfileGame = {
   id: string;
   opponent: string;
+  opponentUsername: string | null;
   outcome: "Win" | "Loss" | "Draw";
   control: string;
   finishedAt: string;
   ratingChange: number | null;
 };
 
-export function ProfilePage({ username, ownProfile, onEdit }: {
+export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
   username: string;
   ownProfile: boolean;
   onEdit: () => void;
+  onOpenProfile: (username: string) => void;
 }) {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [rating, setRating] = useState<RatingData | null>(null);
@@ -175,7 +178,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
       if (!active) return;
       const opponentById = new Map((opponentProfiles ?? []).map((opponent) => [
         opponent.id,
-        opponent.display_name || opponent.username,
+        { displayName: opponent.display_name || opponent.username, username: opponent.username },
       ]));
       setRecentGames(gameRows.map((game) => {
         const isWhite = game.white_player === person.id;
@@ -184,7 +187,8 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
         const outcome = game.result === "1/2-1/2" ? "Draw" : won ? "Win" : "Loss";
         return {
           id: game.id,
-          opponent: opponentId ? opponentById.get(opponentId) ?? "Former player" : "Opponent unavailable",
+          opponent: opponentId ? opponentById.get(opponentId)?.displayName ?? "Former player" : "Opponent unavailable",
+          opponentUsername: opponentId ? opponentById.get(opponentId)?.username ?? null : null,
           outcome,
           control: controlLabel(game.initial_time_ms, game.increment_ms),
           finishedAt: game.finished_at,
@@ -235,14 +239,14 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
               <header className="profile-hero">
                 <div className="profile-identity">
                   <div className="profile-large-avatar">
-                    {profile.avatar_url ? <img src={profile.avatar_url} alt="" /> : "♟"}
+                    {profile.avatar_url ? <img src={profile.avatar_url} alt="" /> : <CursorMark />}
                   </div>
                   <div>
                     <h1>{profile.display_name || profile.username}</h1>
                     <span className="profile-handle">@{profile.username}</span>
                   </div>
                 </div>
-                {ownProfile && <button className="profile-edit-action" onClick={onEdit}>⚙ Edit profile</button>}
+                {ownProfile && <div className="profile-hero-actions"><button className="profile-edit-action" type="button" onClick={onEdit}>Preferences</button><button className="profile-edit-action" type="button" onClick={() => void navigator.clipboard?.writeText(window.location.href)}>Copy profile URL</button></div>}
               </header>
 
               <div className="profile-overview-grid">
@@ -283,7 +287,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
                 <div className="profile-activity-tabs"><span className="active">Recent games</span></div>
                 {recentGames.length === 0 ? (
                   <div className="profile-activity-empty">
-                    <span>♞</span>
+                    <CursorMark className="profile-empty-mark" />
                     <strong>No completed games yet</strong>
                     <p>Finished rated games will appear here.</p>
                   </div>
@@ -293,7 +297,7 @@ export function ProfilePage({ username, ownProfile, onEdit }: {
                       <div className="profile-game-row" key={game.id}>
                         <div className={`profile-game-outcome ${game.outcome.toLowerCase()}`}>{game.outcome}</div>
                         <div className="profile-game-details">
-                          <strong>vs {game.opponent}</strong>
+                          <strong>vs {game.opponentUsername ? <button type="button" className="profile-player-link" onClick={() => onOpenProfile(game.opponentUsername!)}>{game.opponent}</button> : game.opponent}</strong>
                           <span>{game.control} · {new Date(game.finishedAt).toLocaleDateString()}</span>
                         </div>
                         <span className={`profile-game-rating ${game.ratingChange == null ? "" : game.ratingChange >= 0 ? "positive" : "negative"}`}>
