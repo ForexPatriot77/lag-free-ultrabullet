@@ -109,6 +109,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
   const [myRating, setMyRating] = useState<number | null>(null);
   const [selectedControl, setSelectedControl] = useState<TimeControl>(TIME_CONTROLS[1]);
   const [promotion, setPromotion] = useState<"q" | "r" | "b" | "n">("q");
+  const [blindfold, setBlindfold] = useState(() => window.localStorage.getItem("lagfree.blindfold") === "true");
   const [boardOrientation, setBoardOrientation] = useState<Color>("white");
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -369,7 +370,8 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
       } },
       draggable: { showGhost: true },
       premovable: { enabled: false },
-      drawable: { enabled: true, visible: true },
+      drawable: { enabled: true, visible: true, defaultSnapToValidMove: true },
+      disableContextMenu: true,
     });
     return () => {
       ground.current?.destroy();
@@ -526,18 +528,31 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
               <strong>Challenge someone</strong>
               <span>Choose your speed. Each time control has its own rating pool.</span>
             </div>
-            <label className="time-control-picker">Time control
-              <select disabled={busy || loading || queueing} value={String(selectedControl.initialTimeMs) + "-" + String(selectedControl.incrementMs)} onChange={(event) => {
-                const parts = event.target.value.split("-").map(Number);
-                const found = TIME_CONTROLS.find((item) => item.initialTimeMs === parts[0] && item.incrementMs === parts[1]);
-                if (found) setSelectedControl(found);
-              }}>
-                {TIME_CONTROLS.map((item) => <option key={item.initialTimeMs + "-" + item.incrementMs} value={item.initialTimeMs + "-" + item.incrementMs}>{item.label}</option>)}
-              </select>
-            </label>
+            <div className="quick-pair-picker" role="group" aria-label="Quick pairing time control">
+              <div className="quick-pair-picker__heading">
+                <strong>Quick pairing</strong>
+                <span>Choose a speed, then find an opponent.</span>
+              </div>
+              <div className="quick-pair-grid">
+                {TIME_CONTROLS.map((item) => (
+                  <button
+                    key={item.initialTimeMs + "-" + item.incrementMs}
+                    type="button"
+                    className={`quick-pair-option ${selectedControl.initialTimeMs === item.initialTimeMs ? "selected" : ""}`}
+                    aria-pressed={selectedControl.initialTimeMs === item.initialTimeMs}
+                    disabled={busy || loading || queueing}
+                    onClick={() => setSelectedControl(item)}
+                  >
+                    <strong>{item.label}</strong>
+                    <span>{item.category}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="quick-pair-rating">Your {selectedControl.label} rating: <strong>{myRating ?? "Unrated"}</strong></div>
+            </div>
             <div className="lobby-create-actions">
               <button className="online-primary" type="button" disabled={busy || loading || queueing} onClick={startMatchmaking}>
-                ⚡ Play now
+                ⚡ Find opponent
               </button>
               <button className="online-secondary" type="button" disabled={busy || loading || queueing} onClick={createGame}>
                 ＋ Create challenge
@@ -665,7 +680,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
               <div className="time">{clockText(blackClock)}</div>
             </div>
 
-            <div className="round__app__board main-board">
+            <div className={`round__app__board main-board ${blindfold ? "blindfold" : ""}`}>
               <div className="online-board" ref={boardElement} />
             </div>
 
@@ -695,6 +710,8 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
             <div className="rcontrols">
               <div className="ricons">
                 <button type="button" className="fbt" onClick={() => setBoardOrientation((value) => value === "white" ? "black" : "white")}>Flip board</button>
+                <button type="button" className={`fbt ${blindfold ? "active" : ""}`} aria-pressed={blindfold} onClick={() => setBlindfold((value) => { const next = !value; window.localStorage.setItem("lagfree.blindfold", String(next)); return next; })}>{blindfold ? "Show pieces" : "Blindfold"}</button>
+                <button type="button" className="fbt" onClick={() => ground.current?.setShapes([])}>Clear arrows</button>
                 <label className="lila-promotion-control">Promotion
                   <select value={promotion} onChange={(event) => setPromotion(event.target.value as "q" | "r" | "b" | "n")}>
                     <option value="q">Queen</option><option value="r">Rook</option><option value="b">Bishop</option><option value="n">Knight</option>
@@ -709,7 +726,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
             <div className="round__underboard-info">
               <strong>Lag-Free Ultrabullet</strong>
               <span>Independent game · server-validated moves</span>
-              <span className="draw-help">Right-drag to draw arrows · right-click to erase</span>
+              <span className="draw-help">Right-drag from a square to draw an arrow · right-click a square to clear drawings. Blindfold hides the pieces but keeps the board and legal move input.</span>
             </div>
           </div>
         </div>
