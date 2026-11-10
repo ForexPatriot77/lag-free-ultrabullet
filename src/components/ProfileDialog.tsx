@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+import { CursorMark } from "./CursorMark";
 
 export type EditableProfile = {
   username: string;
@@ -115,7 +116,7 @@ export function ProfileDialog({
     }}>
       <section className="auth-dialog profile-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-title">
         <button className="auth-close" type="button" onClick={onClose} aria-label="Close">×</button>
-        <div className="auth-brand-mark">♞</div>
+        <CursorMark className="auth-brand-mark" />
         <p className="auth-eyebrow">PLAYER SETTINGS</p>
         <h2 id="profile-title">Your profile</h2>
         <p className="auth-subtitle">Choose how other players see you.</p>
@@ -142,7 +143,7 @@ export function ProfileDialog({
           <p className="auth-subtitle">{lichessUsername ? `Connected as ${lichessUsername}` : "Connect your Lichess account to sign in with it and import your Bullet and Ultrabullet starting ratings."}</p>
           {lichessError && <p className="auth-message auth-error" role="alert">{lichessError}</p>}
           <button className="auth-lichess-button" type="button" onClick={() => void connectLichess()} disabled={lichessStarting}>
-            <span className="auth-lichess-mark">♞</span>
+            <CursorMark className="auth-lichess-mark" />
             {lichessStarting ? "Opening Lichess…" : lichessUsername ? "Reconnect Lichess" : "Connect Lichess"}
           </button>
         </div>
