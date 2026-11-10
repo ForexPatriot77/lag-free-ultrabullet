@@ -320,3 +320,68 @@ a { color: var(--c-link, #7ba7d8); }
 .button-plus-mark { display: inline-grid; width: 1rem; height: 1rem; place-items: center; margin-right: .3rem; border: 1px solid currentColor; border-radius: 50%; line-height: 1; }
 .lobby-avatar svg { width: 1rem; height: 1.2rem; }
 .time-control-label { display: inline-flex; align-items: center; gap: .2rem; }
+
+
+/* Lichess-inspired player account dropdown and profile navigation. */
+.player-menu-wrap { position: relative; display: flex; align-items: center; }
+.player-menu-trigger {
+  display: inline-flex; align-items: center; gap: .55rem; min-height: 2.75rem;
+  padding: 0 .5rem .0 .75rem; border: 0; background: transparent;
+  color: var(--c-font, #bbb); cursor: pointer; font-size: .92rem;
+}
+.player-menu-trigger:hover, .player-menu-trigger[aria-expanded="true"] { background: rgba(255,255,255,.07); }
+.player-menu-avatar {
+  display: inline-grid; width: 1.7rem; height: 1.7rem; place-items: center;
+  border: 1px solid var(--c-border, #555); border-radius: 50%;
+  background: var(--c-bg-zebra, #333); color: var(--c-font-clearer, #eee);
+  font-size: .85rem; font-weight: 700;
+}
+.player-dropdown {
+  position: absolute; z-index: 1000; top: calc(100% + .1rem); right: 0;
+  width: 14.5rem; padding: .35rem 0; border: 1px solid rgba(255,255,255,.06);
+  background: #383632; color: #bbb; box-shadow: 0 5px 18px rgba(0,0,0,.42);
+}
+.player-dropdown > button, .player-menu-sub > button {
+  display: flex; width: 100%; min-height: 2.05rem; align-items: center; gap: .55rem;
+  padding: .35rem .75rem; border: 0; background: transparent; color: inherit;
+  text-align: left; cursor: pointer; font-size: .9rem;
+}
+.player-dropdown > button:hover, .player-menu-sub > button:hover,
+.player-menu-subitems button:hover { background: rgba(255,255,255,.08); color: #fff; }
+.menu-dot { width: .55rem; height: .55rem; margin: 0 .18rem; border-radius: 50%; background: #81b64c; }
+.menu-icon { display: inline-flex; width: .95rem; justify-content: center; color: #bbb; font-size: 1rem; }
+.player-dropdown-separator { height: 1px; margin: .35rem 0; background: rgba(255,255,255,.1); }
+.player-menu-sub > button { justify-content: space-between; }
+.menu-chevron { color: #81b64c; font-size: 1.45rem; line-height: .8; }
+.player-menu-subitems { padding: .1rem .35rem .25rem 1.2rem; background: rgba(0,0,0,.13); }
+.player-menu-subitems button {
+  width: 100%; min-height: 1.9rem; padding: .3rem .5rem; border: 0;
+  background: transparent; color: #c9c6c0; text-align: left; cursor: pointer; font-size: .82rem;
+}
+.profile-hero-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
+.profile-player-link {
+  padding: 0; border: 0; background: transparent; color: var(--c-link, #7ba7d8);
+  cursor: pointer; font: inherit; text-align: left;
+}
+.profile-player-link:hover { text-decoration: underline; }
+.profile-empty-mark { width: 1.4rem; height: 1.6rem; }
+.inbox-empty {
+  display: flex; flex-direction: column; align-items: flex-start; gap: .65rem;
+  max-width: 38rem; margin: 1.5rem auto; padding: 1.5rem;
+  border: 1px solid var(--c-border, #414141); background: var(--c-bg-box, #262522);
+  color: var(--c-font-dim, #999);
+}
+.inbox-empty strong { color: var(--c-font-clearer, #eee); font-size: 1.1rem; }
+.inbox-empty p { margin: 0; line-height: 1.5; }
+html[data-theme="light"] body { background: #e9e7e2; color: #292824; }
+html[data-theme="light"] .player-menu-trigger { color: #333; }
+html[data-theme="light"] .player-dropdown { background: #f7f6f2; color: #45433f; border-color: #d2d0ca; box-shadow: 0 5px 18px rgba(0,0,0,.18); }
+html[data-theme="light"] .player-menu-avatar { background: #e4e2dc; color: #333; }
+html[data-theme="light"] .player-dropdown > button:hover,
+html[data-theme="light"] .player-menu-sub > button:hover,
+html[data-theme="light"] .player-menu-subitems button:hover { background: rgba(0,0,0,.07); color: #111; }
+html[data-theme="light"] .player-menu-subitems { background: rgba(0,0,0,.04); }
+@media (max-width: 620px) {
+  .player-dropdown { right: 0; width: min(14.5rem, calc(100vw - 1rem)); }
+  .player-menu-trigger > span:first-child { max-width: 7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
