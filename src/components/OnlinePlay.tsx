@@ -5,6 +5,7 @@ import { Chessground } from "@lichess-org/chessground";
 import type { Api } from "@lichess-org/chessground/api";
 import type { Color, Key } from "@lichess-org/chessground/types";
 import { supabase } from "../lib/supabase";
+import { CursorMark } from "./CursorMark";
 import { TIME_CONTROLS, controlLabel, ratingColumnForTime } from "../lib/timeControls";
 import type { TimeControl } from "../lib/timeControls";
 import "@lichess-org/chessground/assets/chessground.base.css";
@@ -552,10 +553,10 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
             </div>
             <div className="lobby-create-actions">
               <button className="online-primary" type="button" disabled={busy || loading || queueing} onClick={startMatchmaking}>
-                ⚡ Find opponent
+                <CursorMark className="button-cursor-mark" /> Find opponent
               </button>
               <button className="online-secondary" type="button" disabled={busy || loading || queueing} onClick={createGame}>
-                ＋ Create challenge
+                <span className="button-plus-mark" aria-hidden="true">+</span> Create challenge
               </button>
               {queueing && <button className="online-secondary" type="button" onClick={cancelMatchmaking}>Cancel search</button>}
             </div>
@@ -568,13 +569,13 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
           )}
           <div className="lobby-list-head">
             <strong>Open challenges</strong>
-            <button type="button" onClick={() => void loadLobby()}>↻ Refresh</button>
+            <button type="button" onClick={() => void loadLobby()}>Refresh</button>
           </div>
           {lobby.length === 0 ? (
             <div className="lobby-empty">No open challenges right now. Create one and invite a friend.</div>
           ) : lobby.map((item) => (
             <div className="lobby-row" key={item.id}>
-              <div className="lobby-avatar">♟</div>
+              <div className="lobby-avatar"><CursorMark /></div>
               <div className="lobby-player">
                 <strong>{item.opponent?.username && onOpenProfile ? <button className="player-name-link" onClick={() => onOpenProfile(item.opponent!.username)}>{item.opponent.display_name || item.opponent.username}</button> : (item.opponent?.display_name || item.opponent?.username || "Player")}</strong>
                 <span>{controlLabel(item.initial_time_ms, item.increment_ms)} · waiting for opponent</span>
@@ -589,7 +590,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
             <div className="lobby-empty history-empty">Completed games will appear here.</div>
           ) : history.map((item) => (
             <div className="lobby-row" key={item.id}>
-              <div className="lobby-avatar">♜</div>
+              <div className="lobby-avatar"><CursorMark /></div>
               <div className="lobby-player">
                 <strong>{item.opponent?.display_name || item.opponent?.username || "Former opponent"}</strong>
                 <span>{item.result} · {item.termination} · {((item.white_player === userId ? item.white_rating_change : item.black_rating_change) ?? 0) >= 0 ? "+" : ""}{(item.white_player === userId ? item.white_rating_change : item.black_rating_change) ?? 0}</span>
@@ -617,7 +618,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
             <div className="lobby-empty history-empty">No live games to watch right now.</div>
           ) : liveGames.map((item) => (
             <div className="lobby-row" key={item.id}>
-              <div className="lobby-avatar">◉</div>
+              <div className="lobby-avatar"><CursorMark /></div>
               <div className="lobby-player">
                 <strong>{item.white?.display_name || item.white?.username || "White"} vs {item.black?.display_name || item.black?.username || "Black"}</strong>
                 <span>{item.ply} half-moves · {item.turn_color} to move</span>
