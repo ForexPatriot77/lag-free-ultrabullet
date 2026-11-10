@@ -63,8 +63,10 @@ function App() {
   const [menuSection, setMenuSection] = useState<"language" | "sound" | "theme" | "board" | "pieces" | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem("lagfree.sound") !== "false");
   const [theme, setTheme] = useState<"dark" | "light">(() => localStorage.getItem("lagfree.theme") === "light" ? "light" : "dark");
+  const [boardTheme, setBoardTheme] = useState<"brown" | "green" | "blue">(() => (localStorage.getItem("lagfree.board") as "brown" | "green" | "blue") || "brown");
+  const [pieceStyle, setPieceStyle] = useState<"classic" | "high-contrast">(() => (localStorage.getItem("lagfree.pieces") as "classic" | "high-contrast") || "classic");
   const [isInGame, setIsInGame] = useState(() => new URLSearchParams(window.location.search).has("game"));
-  const handleGameOpen = useCallback(() => { setIsInGame(true); navigate("play"); }, []);
+  const handleGameOpen = useCallback(() => { setIsInGame(true); setPage("play"); }, []);
   const handleGameClose = useCallback(() => setIsInGame(false), []);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<{ username: string; display_name: string | null; bio?: string | null } | null>(null);
@@ -201,6 +203,8 @@ function App() {
     setMenuOpen(false);
     setMenuSection(null);
   };
+  useEffect(() => { localStorage.setItem("lagfree.board", boardTheme); }, [boardTheme]);
+  useEffect(() => { localStorage.setItem("lagfree.pieces", pieceStyle); }, [pieceStyle]);
   const go = navigate;
   const toggleMenu = () => { setMenuOpen((open) => !open); setMenuSection(null); };
   useEffect(() => {
@@ -267,8 +271,8 @@ function App() {
                       {section === "language" && <button type="button" onClick={() => setMenuSection(null)}>✓ English</button>}
                       {section === "sound" && <button type="button" onClick={() => { const next=!soundEnabled; setSoundEnabled(next); localStorage.setItem("lagfree.sound",String(next)); }}> {soundEnabled ? "✓ Sound on" : "Sound off"} </button>}
                       {section === "theme" && <button type="button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>✓ {theme === "dark" ? "Dark" : "Light"} · switch theme</button>}
-                      {section === "board" && <button type="button" onClick={() => { navigate("play"); setMenuOpen(false); }}>Board settings in a game</button>}
-                      {section === "pieces" && <button type="button" onClick={() => { navigate("play"); setMenuOpen(false); }}>Piece settings in a game</button>}
+                      {section === "board" && (["brown","green","blue"] as const).map((value) => <button type="button" key={value} onClick={() => setBoardTheme(value)}>{boardTheme === value ? "✓ " : ""}{value[0].toUpperCase()+value.slice(1)}</button>)}
+                      {section === "pieces" && (["classic","high-contrast"] as const).map((value) => <button type="button" key={value} onClick={() => setPieceStyle(value)}>{pieceStyle === value ? "✓ " : ""}{value === "classic" ? "CBurnett" : "High contrast"}</button>)}
                     </div>}
                   </div>
                 ))}
@@ -296,7 +300,7 @@ function App() {
                       <>
                         <strong>{displayName}</strong>
                         <span>@{profile?.username ?? "player"}</span>
-                        <button className="button button-empty button-no-upper" type="button" onClick={() => { navigateProfile(profile?.username ?? ""); }}>View profile</button>
+                        <button className="button button-empty button-no-upper" type="button" onClick={() => { profile?.username ? navigateProfile(profile.username) : navigate("profile"); }}>View profile</button>
                       </>
                     ) : (
                       <>
@@ -318,7 +322,7 @@ function App() {
                 <div className="tabs-horiz"><span>Lobby</span></div>
                 <div className="lobby__app__content">
                   {user ? (
-                    <OnlinePlay user={user} initialGameId={null} onOpenProfile={(username) => { navigateProfile(username); }} onGameOpen={handleGameOpen} onGameClose={handleGameClose} />
+                    <OnlinePlay user={user} initialGameId={null} boardTheme={boardTheme} pieceStyle={pieceStyle} onOpenProfile={(username) => { navigateProfile(username); }} onGameOpen={handleGameOpen} onGameClose={handleGameClose} />
                   ) : (
                     <div className="lobby-signin">
                       <CursorMark className="lobby-signin__piece" />
@@ -361,7 +365,7 @@ function App() {
           {page === "play" && (
             <section className="content-page">
               {!isInGame && <div className="content-page-heading"><div><span className="page-kicker">FIND A GAME</span><h1>Play online</h1><p>Challenge someone, join an open game, or review a recent match.</p></div><span className="time-control-label"><CursorMark className="inline-cursor-mark" /> 8 rated time controls · no increment</span></div>}
-              {user ? <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} onOpenProfile={navigateProfile} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : (
+              {user ? <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} boardTheme={boardTheme} pieceStyle={pieceStyle} onOpenProfile={navigateProfile} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : (
                 <div className="signin-gate"><CursorMark className="gate-icon" /><h2>Sign in to play online</h2><p>Your games, rating, and challenges are connected to your player account.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="gate-secondary" onClick={() => setAuthMode("signup")}>Create an account</button></div>
               )}
             </section>
@@ -387,7 +391,7 @@ function App() {
           {(page === "watch" || page === "players") && (
             <section className="content-page">
               <div className="content-page-heading"><div><span className="page-kicker">COMMUNITY</span><h1>{page === "watch" ? "Watch games" : "Players"}</h1><p>{page === "watch" ? "See live games and follow the action." : "Find the players climbing the ultrabullet ladder."}</p></div></div>
-              {user ? <OnlinePlay user={user} initialGameId={null} onOpenProfile={navigateProfile} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : <div className="signin-gate compact-gate"><CursorMark className="gate-icon" /><h2>Join the community</h2><p>Sign in to view live games, recent results, and the player leaderboard.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>}
+              {user ? <OnlinePlay user={user} initialGameId={null} boardTheme={boardTheme} pieceStyle={pieceStyle} onOpenProfile={navigateProfile} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : <div className="signin-gate compact-gate"><CursorMark className="gate-icon" /><h2>Join the community</h2><p>Sign in to view live games, recent results, and the player leaderboard.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>}
             </section>
           )}
 
