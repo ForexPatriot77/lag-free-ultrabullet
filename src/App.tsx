@@ -374,7 +374,7 @@ function App() {
           )}
 
           {page === "arcade" && (
-            <section className="content-page arcade-content-page"><ArcadePage /></section>
+            <section className="content-page arcade-content-page"><ArcadePage user={user} onOpenProfile={navigateProfile} /></section>
           )}
 
           {page === "profile" && (
