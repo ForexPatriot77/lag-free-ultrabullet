@@ -94,6 +94,8 @@ function destinations(chess: Chess): Map<Key, Key[]> {
   return result;
 }
 
+function profileHref(username: string) { return new URL(import.meta.env.BASE_URL + "@/" + encodeURIComponent(username.toLowerCase()), window.location.origin).toString(); }
+
 function clockText(ms: number): string {
   const seconds = Math.max(0, ms / 1000);
   return seconds < 1 ? seconds.toFixed(3) + "s" : seconds.toFixed(2).replace(/0+$/, "").replace(/\.$/, "") + "s";
@@ -577,7 +579,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
             <div className="lobby-row" key={item.id}>
               <div className="lobby-avatar"><CursorMark /></div>
               <div className="lobby-player">
-                <strong>{item.opponent?.username && onOpenProfile ? <button className="player-name-link" onClick={() => onOpenProfile(item.opponent!.username)}>{item.opponent.display_name || item.opponent.username}</button> : (item.opponent?.display_name || item.opponent?.username || "Player")}</strong>
+                <strong>{item.opponent?.username && onOpenProfile ? <a className="player-name-link" href={profileHref(item.opponent.username)} onClick={(event) => { event.preventDefault(); onOpenProfile(item.opponent!.username); }}>{item.opponent.display_name || item.opponent.username}</a> : (item.opponent?.display_name || item.opponent?.username || "Player")}</strong>
                 <span>{controlLabel(item.initial_time_ms, item.increment_ms)} · waiting for opponent</span>
               </div>
               <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id)}>
@@ -592,7 +594,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
             <div className="lobby-row" key={item.id}>
               <div className="lobby-avatar"><CursorMark /></div>
               <div className="lobby-player">
-                <strong>{item.opponent?.username && onOpenProfile ? <button type="button" className="player-name-link" onClick={() => onOpenProfile(item.opponent!.username)}>{item.opponent.display_name || item.opponent.username}</button> : item.opponent?.display_name || item.opponent?.username || "Former opponent"}</strong>
+                <strong>{item.opponent?.username && onOpenProfile ? <a className="player-name-link" href={profileHref(item.opponent.username)} onClick={(event) => { event.preventDefault(); onOpenProfile(item.opponent!.username); }}>{item.opponent.display_name || item.opponent.username}</a> : item.opponent?.display_name || item.opponent?.username || "Former opponent"}</strong>
                 <span>{item.result} · {item.termination} · {((item.white_player === userId ? item.white_rating_change : item.black_rating_change) ?? 0) >= 0 ? "+" : ""}{(item.white_player === userId ? item.white_rating_change : item.black_rating_change) ?? 0}</span>
               </div>
               <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id, false)}>
@@ -607,7 +609,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
             <div className="lobby-row leaderboard-row" key={player.user_id}>
               <span className="leaderboard-rank">{index + 1}</span>
               <div className="lobby-player">
-                <strong>{player.profile?.username && onOpenProfile ? <button className="player-name-link" onClick={() => onOpenProfile(player.profile!.username)}>{player.profile.display_name || player.profile.username}</button> : (player.profile?.display_name || player.profile?.username || "Player")}</strong>
+                <strong>{player.profile?.username && onOpenProfile ? <a className="player-name-link" href={profileHref(player.profile.username)} onClick={(event) => { event.preventDefault(); onOpenProfile(player.profile!.username); }}>{player.profile.display_name || player.profile.username}</a> : (player.profile?.display_name || player.profile?.username || "Player")}</strong>
                 <span>{player.games_played} games · {player.wins} wins · {player.draws} draws</span>
               </div>
               <strong className="leaderboard-rating">{player.rating ?? "Unrated"}</strong>
@@ -620,7 +622,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
             <div className="lobby-row" key={item.id}>
               <div className="lobby-avatar"><CursorMark /></div>
               <div className="lobby-player">
-                <strong>{item.white?.username && onOpenProfile ? <button type="button" className="player-name-link" onClick={() => onOpenProfile(item.white!.username)}>{item.white.display_name || item.white.username}</button> : item.white?.display_name || item.white?.username || "White"} vs {item.black?.username && onOpenProfile ? <button type="button" className="player-name-link" onClick={() => onOpenProfile(item.black!.username)}>{item.black.display_name || item.black.username}</button> : item.black?.display_name || item.black?.username || "Black"}</strong>
+                <strong>{item.white?.username && onOpenProfile ? <a className="player-name-link" href={profileHref(item.white.username)} onClick={(event) => { event.preventDefault(); onOpenProfile(item.white!.username); }}>{item.white.display_name || item.white.username}</a> : item.white?.display_name || item.white?.username || "White"} vs {item.black?.username && onOpenProfile ? <a className="player-name-link" href={profileHref(item.black.username)} onClick={(event) => { event.preventDefault(); onOpenProfile(item.black!.username); }}>{item.black.display_name || item.black.username}</a> : item.black?.display_name || item.black?.username || "Black"}</strong>
                 <span>{item.ply} half-moves · {item.turn_color} to move</span>
               </div>
               <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id, false)}>
