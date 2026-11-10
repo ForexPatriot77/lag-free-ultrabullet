@@ -592,7 +592,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
             <div className="lobby-row" key={item.id}>
               <div className="lobby-avatar"><CursorMark /></div>
               <div className="lobby-player">
-                <strong>{item.opponent?.display_name || item.opponent?.username || "Former opponent"}</strong>
+                <strong>{item.opponent?.username && onOpenProfile ? <button type="button" className="player-name-link" onClick={() => onOpenProfile(item.opponent!.username)}>{item.opponent.display_name || item.opponent.username}</button> : item.opponent?.display_name || item.opponent?.username || "Former opponent"}</strong>
                 <span>{item.result} · {item.termination} · {((item.white_player === userId ? item.white_rating_change : item.black_rating_change) ?? 0) >= 0 ? "+" : ""}{(item.white_player === userId ? item.white_rating_change : item.black_rating_change) ?? 0}</span>
               </div>
               <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id, false)}>
@@ -620,7 +620,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
             <div className="lobby-row" key={item.id}>
               <div className="lobby-avatar"><CursorMark /></div>
               <div className="lobby-player">
-                <strong>{item.white?.display_name || item.white?.username || "White"} vs {item.black?.display_name || item.black?.username || "Black"}</strong>
+                <strong>{item.white?.username && onOpenProfile ? <button type="button" className="player-name-link" onClick={() => onOpenProfile(item.white!.username)}>{item.white.display_name || item.white.username}</button> : item.white?.display_name || item.white?.username || "White"} vs {item.black?.username && onOpenProfile ? <button type="button" className="player-name-link" onClick={() => onOpenProfile(item.black!.username)}>{item.black.display_name || item.black.username}</button> : item.black?.display_name || item.black?.username || "Black"}</strong>
                 <span>{item.ply} half-moves · {item.turn_color} to move</span>
               </div>
               <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id, false)}>
