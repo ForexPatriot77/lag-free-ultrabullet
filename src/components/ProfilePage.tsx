@@ -125,6 +125,8 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
   const [ratingHistory, setRatingHistory] = useState<RatingHistoryPoint[]>([]);
   const [recentGames, setRecentGames] = useState<ProfileGame[]>([]);
   const [selectedTimeMs, setSelectedTimeMs] = useState(15000);
+  const [range, setRange] = useState<"1M" | "3M" | "6M" | "YTD" | "1Y" | "ALL">("ALL");
+  const [tab, setTab] = useState<"activity" | "games">("activity");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -164,12 +166,11 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
           .eq("status", "finished")
           .or(`white_player.eq.${person.id},black_player.eq.${person.id}`)
           .order("finished_at", { ascending: false })
-          .limit(20),
+          .limit(50),
       ]);
       if (!active) return;
       setRating(statsResult.data as RatingData | null);
       setRatingHistory(((historyResult.data ?? []) as RatingHistoryPoint[]).reverse());
-
       const gameRows = gamesResult.data ?? [];
       const opponentIds = [...new Set(gameRows
         .map((game) => game.white_player === person.id ? game.black_player : game.white_player)
@@ -203,14 +204,25 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
   }, [username]);
 
   const joined = profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })
+    ? new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
     : null;
-  const winRate = rating && rating.games_played
-    ? Math.round((rating.wins / rating.games_played) * 100)
-    : 0;
+  const gamesPlayed = rating?.games_played ?? 0;
+  const wins = rating?.wins ?? 0;
+  const draws = rating?.draws ?? 0;
+  const losses = rating?.losses ?? 0;
+  const winRate = gamesPlayed ? Math.round((wins / gamesPlayed) * 100) : 0;
   const selectedControl = TIME_CONTROLS.find((control) => control.initialTimeMs === selectedTimeMs) ?? TIME_CONTROLS[1];
   const selectedRating = rating?.[ratingColumnForTime(selectedTimeMs)] ?? null;
-  const selectedHistory = ratingHistory.filter((point) => point.rating_pool === selectedControl.ratingPool);
+  const selectedHistory = ratingHistory.filter((point) => {
+    if (point.rating_pool !== selectedControl.ratingPool) return false;
+    if (range === "ALL") return true;
+    const now = new Date();
+    const cutoff = new Date(now);
+    if (range === "YTD") cutoff.setMonth(0, 1);
+    else cutoff.setMonth(cutoff.getMonth() - (range === "1M" ? 1 : range === "3M" ? 3 : range === "6M" ? 6 : 12));
+    return new Date(point.recorded_at) >= cutoff;
+  });
+  const ratingIcon = (index: number) => ["➤", "➤", "♟", "⚡", "⚡", "⚡", "⚡", "⚡"][index];
 
   return (
     <section className="lichess-profile-page">
@@ -218,23 +230,26 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
         error ? <div className="profile-error">{error}</div> : profile && (
           <>
             <aside className="profile-ratings-rail">
-              <h2 className="profile-ratings-heading">Ratings by time control</h2>
-              <div className="profile-variant-title"><span>30s · Hyperbullet</span></div>
-              <div className="profile-rating-block"><strong>{rating?.hyperbullet_rating ?? "?"}</strong><span>{rating?.hyperbullet_rating != null ? "Rated pool" : "Not rated yet"}</span></div>
-              <div className="profile-variant-title"><span>15s · Ultrabullet</span></div>
-              <div className="profile-rating-block"><strong>{rating?.ultrabullet_rating ?? "?"}</strong><span>Independent rating pool</span></div>
-              <div className="profile-variant-title"><span>7.5s · Ultrazerk</span></div>
-              <div className="profile-rating-block"><strong>{rating?.ultrazerk_rating ?? "?"}</strong><span>Independent rating pool</span></div>
-              <div className="profile-variant-title"><span>3.25s · Psycho</span></div>
-              <div className="profile-rating-block"><strong>{rating?.psycho_3250_rating ?? "?"}</strong><span>Independent rating pool</span></div>
-              <div className="profile-variant-title"><span>1.625s · Psycho</span></div>
-              <div className="profile-rating-block"><strong>{rating?.psycho_1625_rating ?? "?"}</strong><span>Independent rating pool</span></div>
-              <div className="profile-variant-title"><span>0.8125s · Psycho</span></div>
-              <div className="profile-rating-block"><strong>{rating?.psycho_812_5_rating ?? "?"}</strong><span>Independent rating pool</span></div>
-              <div className="profile-variant-title"><span>0.40625s · Psycho</span></div>
-              <div className="profile-rating-block"><strong>{rating?.psycho_406_25_rating ?? "?"}</strong><span>Independent rating pool</span></div>
-              <div className="profile-variant-title"><span>0.203125s · Psycho</span></div>
-              <div className="profile-rating-block"><strong>{rating?.psycho_203_125_rating ?? "?"}</strong><span>Independent rating pool</span></div>
+              <div className="profile-rail-heading">RATINGS</div>
+              {TIME_CONTROLS.map((control, index) => {
+                const value = rating?.[control.ratingColumn] ?? null;
+                const active = selectedTimeMs === control.initialTimeMs;
+                return (
+                  <button type="button" key={control.initialTimeMs}
+                    className={`profile-rating-entry ${active ? "active" : ""}`}
+                    onClick={() => setSelectedTimeMs(control.initialTimeMs)}
+                    aria-pressed={active}>
+                    <span className={`profile-rating-symbol symbol-${index}`}>{ratingIcon(index)}</span>
+                    <span className="profile-rating-copy">
+                      <span className="profile-rating-name">{control.category.toUpperCase()}</span>
+                      <strong>{value ?? "?"}</strong>
+                      <small>{control.label.split(" · ")[0]} · no increment</small>
+                    </span>
+                    <span className="profile-rating-chevron">›</span>
+                  </button>
+                );
+              })}
+              <div className="profile-rail-total">{gamesPlayed.toLocaleString()} rated games</div>
             </aside>
 
             <div className="profile-main-column">
@@ -248,51 +263,68 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
                     <span className="profile-handle">@{profile.username}</span>
                   </div>
                 </div>
-                {ownProfile && <div className="profile-hero-actions"><button className="profile-edit-action" type="button" onClick={onEdit}>Preferences</button><button className="profile-edit-action" type="button" onClick={() => void navigator.clipboard?.writeText(window.location.href)}>Copy profile URL</button></div>}
+                <div className="profile-hero-actions">
+                  {ownProfile && <button className="profile-action-button" type="button" onClick={onEdit}>⚙ Edit profile</button>}
+                  <button className="profile-action-button" type="button" onClick={() => void navigator.clipboard?.writeText(window.location.href)}>↗ Copy profile URL</button>
+                </div>
               </header>
 
               <div className="profile-overview-grid">
                 <section className="profile-chart-card">
-                  <div className="profile-chart-controls">
-                    <strong>Rating history</strong>
-                    <label>Time control
-                      <select value={selectedTimeMs} onChange={(event) => setSelectedTimeMs(Number(event.target.value))}>
-                        {TIME_CONTROLS.map((control) => <option key={control.initialTimeMs} value={control.initialTimeMs}>{control.label}</option>)}
-                      </select>
-                    </label>
-                  </div>
-                  <div className="profile-rating-summary">
-                    <strong>{selectedRating ?? "Unrated"}</strong>
-                    <span>{selectedControl.label} · no increment</span>
+                  <div className="profile-chart-topline">
+                    <div className="profile-chart-current">
+                      <span>{selectedControl.category.toUpperCase()}</span>
+                      <strong>{selectedRating ?? "—"}</strong>
+                      <small>{selectedControl.label} rating</small>
+                    </div>
+                    <div className="profile-range-controls" aria-label="Rating chart date range">
+                      {(["1M", "3M", "6M", "YTD", "1Y", "ALL"] as const).map((item) =>
+                        <button type="button" key={item} className={range === item ? "active" : ""}
+                          aria-pressed={range === item} onClick={() => setRange(item)}>{item}</button>
+                      )}
+                    </div>
                   </div>
                   <RatingChart rating={selectedRating} history={selectedHistory} label={selectedControl.label} />
+                  <div className="profile-chart-footer"><span>{selectedHistory.length ? `${selectedHistory.length} recorded rating updates` : "Rating history"}</span><span>Independent rating pool</span></div>
                 </section>
                 <aside className="profile-info-card">
-                  <div className="profile-info-name">{profile.display_name || profile.username}</div>
-                  {profile.bio && <p>{profile.bio}</p>}
-                  {joined && <div className="profile-info-line">Member since {joined}</div>}
-                  <div className="profile-info-line">Lichess Bullet imports as the initial 30s Hyperbullet rating</div>
-                  <div className="profile-info-line">Lichess Ultrabullet imports as the initial 15s rating</div>
-                  <div className="profile-info-line">Rated games: {rating?.games_played ?? 0}</div>
+                  <strong className="profile-info-name">{profile.display_name || profile.username}</strong>
+                  {profile.bio && <p className="profile-bio">{profile.bio}</p>}
+                  <div className="profile-info-line">Member since {joined ?? "—"}</div>
+                  <div className="profile-info-line">Active rating: {selectedRating ?? "Unrated"} · {selectedControl.category}</div>
+                  <div className="profile-info-line">Games played: {gamesPlayed.toLocaleString()}</div>
+                  <div className="profile-info-line">Win rate: {winRate}%</div>
+                  <div className="profile-info-links">
+                    <button type="button" onClick={() => setTab("games")}>View games <span>→</span></button>
+                    {ownProfile && <button type="button" onClick={onEdit}>Edit profile <span>→</span></button>}
+                  </div>
                 </aside>
               </div>
 
               <div className="profile-stats-strip">
-                <div><strong>{rating?.games_played ?? 0}</strong><span>Games</span></div>
-                <div><strong>{rating?.wins ?? 0}</strong><span>Wins</span></div>
-                <div><strong>{rating?.draws ?? 0}</strong><span>Draws</span></div>
-                <div><strong>{rating?.losses ?? 0}</strong><span>Losses</span></div>
+                <div><strong>{gamesPlayed.toLocaleString()}</strong><span>Games</span></div>
+                <div><strong>{wins.toLocaleString()}</strong><span>Wins</span></div>
+                <div><strong>{draws.toLocaleString()}</strong><span>Draws</span></div>
+                <div><strong>{losses.toLocaleString()}</strong><span>Losses</span></div>
                 <div><strong>{winRate}%</strong><span>Win rate</span></div>
               </div>
 
               <div className="profile-activity-panel">
-                <div className="profile-activity-tabs"><span className="active">Recent games</span></div>
-                {recentGames.length === 0 ? (
-                  <div className="profile-activity-empty">
-                    <CursorMark className="profile-empty-mark" />
-                    <strong>No completed games yet</strong>
-                    <p>Finished rated games will appear here.</p>
+                <div className="profile-activity-tabs">
+                  <button type="button" className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>Activity</button>
+                  <button type="button" className={tab === "games" ? "active" : ""} onClick={() => setTab("games")}>Games <span>{gamesPlayed.toLocaleString()}</span></button>
+                </div>
+                {tab === "activity" && (
+                  <div className="profile-activity-summary">
+                    <div className="profile-activity-date">{recentGames[0] ? new Date(recentGames[0].finishedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }).toUpperCase() : "ACTIVITY"}</div>
+                    <div className="profile-activity-callout">
+                      <span className="profile-activity-medallion"><CursorMark /></span>
+                      <div><strong>{recentGames.length ? `Played ${recentGames.length} recent games` : "No activity yet"}</strong><small>{recentGames.length ? "Recent completed games are listed in the Games tab." : "Completed rated games will appear here."}</small></div>
+                    </div>
                   </div>
+                )}
+                {tab === "games" && (recentGames.length === 0 ? (
+                  <div className="profile-activity-empty"><CursorMark className="profile-empty-mark" /><strong>No completed games yet</strong><p>Finished games will appear here.</p></div>
                 ) : (
                   <div className="profile-game-list">
                     {recentGames.map((game) => (
@@ -308,7 +340,7 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
                       </div>
                     ))}
                   </div>
-                )}
+                ))}
               </div>
             </div>
           </>
