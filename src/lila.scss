@@ -180,3 +180,86 @@
 }
 
 .online-game.round .ruser-rating { flex: 0 0 auto; margin-inline-start: .3em; color: $c-font-dim; font-size: .75em; }
+
+
+// Quick pairing controls modelled on Lila's lobby presets.
+.quick-pair-picker {
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+  min-width: 0;
+  flex: 1 1 100%;
+}
+.quick-pair-picker__heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+.quick-pair-picker__heading strong {
+  color: $c-font-clear;
+  font-size: .95rem;
+}
+.quick-pair-picker__heading span,
+.quick-pair-rating {
+  color: $c-font-dim;
+  font-size: .75rem;
+}
+.quick-pair-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .35rem;
+}
+.quick-pair-option {
+  display: flex;
+  min-width: 0;
+  min-height: 3.1rem;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: .15rem;
+  padding: .45rem .6rem;
+  border: 1px solid $c-border;
+  border-radius: $box-radius;
+  background: $c-bg-box;
+  color: $c-font;
+  text-align: left;
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease;
+}
+.quick-pair-option strong {
+  color: $c-font-clear;
+  font-size: .82rem;
+}
+.quick-pair-option span {
+  color: $c-font-dim;
+  font-size: .67rem;
+}
+.quick-pair-option:hover:not(:disabled) {
+  background: $c-bg-zebra;
+  border-color: $c-link;
+}
+.quick-pair-option.selected {
+  border-color: $c-primary;
+  background: color-mix(in srgb, $c-primary 16%, $c-bg-box);
+  box-shadow: inset 0 0 0 1px $c-primary;
+}
+.quick-pair-option:disabled { opacity: .55; cursor: not-allowed; }
+.quick-pair-rating strong { color: $c-font-clear; }
+.online-game.round .round__app__board.blindfold piece {
+  opacity: 0 !important;
+}
+.online-game.round .round__app__board.blindfold .check {
+  background-image: none !important;
+}
+.online-game.round .ricons .fbt.active {
+  color: $c-over;
+  background: $c-primary;
+}
+.online-game.round .ricons .fbt {
+  min-height: 2.2rem;
+  padding: .35rem .65rem;
+}
+@media (max-width: 520px) {
+  .quick-pair-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
