@@ -61,7 +61,6 @@ function App() {
   const [page, setPage] = useState<Page>(() => readRoute().page);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuSection, setMenuSection] = useState<"language" | "sound" | "theme" | "board" | "pieces" | null>(null);
-  const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem("lagfree.sound") !== "false");
   const [theme, setTheme] = useState<"dark" | "light">(() => localStorage.getItem("lagfree.theme") === "light" ? "light" : "dark");
   const [boardTheme, setBoardTheme] = useState<"brown" | "green" | "blue">(() => (localStorage.getItem("lagfree.board") as "brown" | "green" | "blue") || "brown");
   const [pieceStyle, setPieceStyle] = useState<"classic" | "high-contrast">(() => (localStorage.getItem("lagfree.pieces") as "classic" | "high-contrast") || "classic");
@@ -269,7 +268,7 @@ function App() {
                     </button>
                     {menuSection === section && <div className="player-menu-subitems">
                       {section === "language" && <button type="button" onClick={() => setMenuSection(null)}>✓ English</button>}
-                      {section === "sound" && <button type="button" onClick={() => { const next=!soundEnabled; setSoundEnabled(next); localStorage.setItem("lagfree.sound",String(next)); }}> {soundEnabled ? "✓ Sound on" : "Sound off"} </button>}
+                      {section === "sound" && <span className="menu-unavailable">Game sounds are not implemented yet.</span>}
                       {section === "theme" && <button type="button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>✓ {theme === "dark" ? "Dark" : "Light"} · switch theme</button>}
                       {section === "board" && (["brown","green","blue"] as const).map((value) => <button type="button" key={value} onClick={() => setBoardTheme(value)}>{boardTheme === value ? "✓ " : ""}{value[0].toUpperCase()+value.slice(1)}</button>)}
                       {section === "pieces" && (["classic","high-contrast"] as const).map((value) => <button type="button" key={value} onClick={() => setPieceStyle(value)}>{pieceStyle === value ? "✓ " : ""}{value === "classic" ? "CBurnett" : "High contrast"}</button>)}
@@ -339,8 +338,8 @@ function App() {
 
               <section className="lobby__table">
                 <div className="lobby__start">
-                  <button className="button button-metal lobby__start__button lobby__start__button--hook" type="button" onClick={() => user ? setPage("play") : setAuthMode("signin")}>Play now</button>
-                  <button className="button button-metal lobby__start__button lobby__start__button--friend" type="button" onClick={() => user ? setPage("play") : setAuthMode("signup")}>Challenge a friend</button>
+                  <button className="button button-metal lobby__start__button lobby__start__button--hook" type="button" onClick={() => user ? navigate("play") : setAuthMode("signin")}>Play now</button>
+                  <button className="button button-metal lobby__start__button lobby__start__button--friend" type="button" onClick={() => user ? navigate("play") : setAuthMode("signup")}>Challenge a friend</button>
                 </div>
               </section>
 
