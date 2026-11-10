@@ -307,3 +307,16 @@ a { color: var(--c-link, #7ba7d8); }
   .profile-game-row { grid-template-columns: 3.2rem minmax(0,1fr) 2.5rem; gap: .45rem; padding-inline: .55rem; }
 }
 
+
+
+/* Consistent Lichess-green Windows cursor brand mark. */
+.site-icon { width: 1.45rem; height: 1.65rem; flex: 0 0 auto; display: block; }
+.lobby-signin__piece { width: 3.5rem; height: 3.5rem; }
+.gate-icon { width: 2.6rem; height: 2.6rem; }
+.auth-brand-mark { display: block; width: 2rem; height: 2rem; }
+.auth-lichess-mark { display: inline-block; width: 1.25rem; height: 1.25rem; vertical-align: middle; }
+.inline-cursor-mark { display: inline-block; width: .9rem; height: 1.05rem; vertical-align: -0.2rem; margin-right: .25rem; }
+.button-cursor-mark { width: .9rem; height: 1rem; vertical-align: -0.2rem; margin-right: .35rem; }
+.button-plus-mark { display: inline-grid; width: 1rem; height: 1rem; place-items: center; margin-right: .3rem; border: 1px solid currentColor; border-radius: 50%; line-height: 1; }
+.lobby-avatar svg { width: 1rem; height: 1.2rem; }
+.time-control-label { display: inline-flex; align-items: center; gap: .2rem; }
