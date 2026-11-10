@@ -222,7 +222,7 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
     else cutoff.setMonth(cutoff.getMonth() - (range === "1M" ? 1 : range === "3M" ? 3 : range === "6M" ? 6 : 12));
     return new Date(point.recorded_at) >= cutoff;
   });
-  const ratingIcon = (index: number) => ["➤", "➤", "♟", "⚡", "⚡", "⚡", "⚡", "⚡"][index];
+  const ratingIcon = (index: number) => ["30", "15", "7.5", "3.25", "1.6", "0.8", "0.4", "0.2"][index];
 
   return (
     <section className="lichess-profile-page">
