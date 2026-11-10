@@ -116,17 +116,13 @@ export function ArcadePage() {
       return;
     }
     if (mode === "endurance") {
-      setScore((current) => {
-        const next = current + 1;
-        if (next % 40 === 0) setTimeLeft((time) => time + 10);
-        return next;
-      });
+      const nextScore = score + 1;
+      setScore(nextScore);
+      if (nextScore % 40 === 0) setTimeLeft((time) => time + 10);
     } else {
-      setBonus((current) => {
-        const nextBonus = Math.min(100, current + 8);
-        setScore((currentScore) => currentScore + Math.ceil(nextBonus / 20));
-        return nextBonus;
-      });
+      const nextBonus = Math.min(100, bonus + 8);
+      setBonus(nextBonus);
+      setScore((currentScore) => currentScore + Math.ceil(nextBonus / 20));
     }
     if (mode !== "cheat") {
       setBlackTiles((current) => {
