@@ -124,6 +124,7 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
   const [rating, setRating] = useState<RatingData | null>(null);
   const [ratingHistory, setRatingHistory] = useState<RatingHistoryPoint[]>([]);
   const [recentGames, setRecentGames] = useState<ProfileGame[]>([]);
+  const [arcadeScores, setArcadeScores] = useState<{ mode: string; score: number; played_at: string }[]>([]);
   const [selectedTimeMs, setSelectedTimeMs] = useState(15000);
   const [range, setRange] = useState<"1M" | "3M" | "6M" | "YTD" | "1Y" | "ALL">("ALL");
   const [tab, setTab] = useState<"activity" | "games">("activity");
@@ -138,6 +139,7 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
     setRating(null);
     setRatingHistory([]);
     setRecentGames([]);
+    setArcadeScores([]);
     void (async () => {
       const { data: person, error: profileError } = await supabase
         .from("profiles")
@@ -151,7 +153,7 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
         return;
       }
       setProfile(person as ProfileData);
-      const [statsResult, historyResult, gamesResult] = await Promise.all([
+      const [statsResult, historyResult, gamesResult, arcadeResult] = await Promise.all([
         supabase.from("player_ratings")
           .select("hyperbullet_rating, ultrabullet_rating, ultrazerk_rating, psycho_3250_rating, psycho_1625_rating, psycho_812_5_rating, psycho_406_25_rating, psycho_203_125_rating, games_played, wins, draws, losses")
           .eq("user_id", person.id)
@@ -169,7 +171,7 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
           .limit(50),
       ]);
       if (!active) return;
-      setRating(statsResult.data as RatingData | null);
+      setRating(statsResult.data as RatingData | null);\n      const bestArcadeScores = new Map<string, { mode: string; score: number; played_at: string }>();\n      for (const entry of arcadeResult.data ?? []) {\n        const previous = bestArcadeScores.get(entry.mode);\n        if (!previous || entry.score > previous.score) bestArcadeScores.set(entry.mode, entry);\n      }\n      setArcadeScores([...bestArcadeScores.values()]);
       setRatingHistory(((historyResult.data ?? []) as RatingHistoryPoint[]).reverse());
       const gameRows = gamesResult.data ?? [];
       const opponentIds = [...new Set(gameRows
@@ -309,7 +311,7 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
                 <div><strong>{winRate}%</strong><span>Win rate</span></div>
               </div>
 
-              <div className="profile-activity-panel">
+              <section className="profile-arcade-card">\n                <div className="profile-arcade-heading"><strong>Arcade records</strong><span>Personal bests</span></div>\n                <div className="profile-arcade-scores">\n                  {(["frenzy", "endurance", "cheat"] as const).map((mode) => {\n                    const entry = arcadeScores.find((item) => item.mode === mode);\n                    return <div key={mode}><span>{mode[0].toUpperCase()+mode.slice(1)}</span><strong>{entry ? entry.score.toLocaleString() : "—"}</strong><small>{entry ? new Date(entry.played_at).toLocaleDateString() : "No score yet"}</small></div>;\n                  })}\n                </div>\n              </section>\n\n              <div className="profile-activity-panel">
                 <div className="profile-activity-tabs">
                   <button type="button" className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>Activity</button>
                   <button type="button" className={tab === "games" ? "active" : ""} onClick={() => setTab("games")}>Games <span>{gamesPlayed.toLocaleString()}</span></button>
