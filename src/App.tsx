@@ -42,16 +42,34 @@ async function startLichessOAuth() {
 }
 
 
-type Page = "home" | "play" | "watch" | "players" | "profile";
+type Page = "home" | "play" | "watch" | "players" | "profile" | "inbox";
+
+function readRoute(): { page: Page; username: string | null } {
+  const url = new URL(window.location.href);
+  const recovered = url.searchParams.get("route");
+  const path = recovered || url.pathname;
+  const profileMatch = path.match(/\/@\/([a-zA-Z0-9_]{3,20})\/?$/);
+  if (profileMatch) return { page: "profile", username: profileMatch[1].toLowerCase() };
+  const normalized = path.replace(new URL(import.meta.env.BASE_URL, window.location.origin).pathname, "").replace(/^\/+|\/+$/g, "");
+  if (normalized === "inbox") return { page: "inbox", username: null };
+  if (normalized === "play") return { page: "play", username: null };
+  if (normalized === "watch") return { page: "watch", username: null };
+  if (normalized === "players") return { page: "players", username: null };
+  return { page: url.searchParams.has("game") ? "play" : "home", username: null };
+}
 function App() {
-  const [page, setPage] = useState<Page>(() => new URLSearchParams(window.location.search).has("game") ? "play" : "home");
+  const [page, setPage] = useState<Page>(() => readRoute().page);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuSection, setMenuSection] = useState<"language" | "sound" | "theme" | "board" | "pieces" | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem("lagfree.sound") !== "false");
+  const [theme, setTheme] = useState<"dark" | "light">(() => localStorage.getItem("lagfree.theme") === "light" ? "light" : "dark");
   const [isInGame, setIsInGame] = useState(() => new URLSearchParams(window.location.search).has("game"));
-  const handleGameOpen = useCallback(() => { setIsInGame(true); setPage("play"); }, []);
+  const handleGameOpen = useCallback(() => { setIsInGame(true); navigate("play"); }, []);
   const handleGameClose = useCallback(() => setIsInGame(false), []);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<{ username: string; display_name: string | null; bio?: string | null } | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [profileUsername, setProfileUsername] = useState<string | null>(null);
+  const [profileUsername, setProfileUsername] = useState<string | null>(() => readRoute().username);
   const [authMode, setAuthMode] = useState<"signin" | "signup" | null>(null);
   const [authError, setAuthError] = useState("");
   const [passwordRecoveryOpen, setPasswordRecoveryOpen] = useState(false);
@@ -110,7 +128,7 @@ function App() {
           setAuthError("");
           setAuthMode(null);
           setProfileOpen(false);
-          setPage("profile");
+          navigate("profile");
           return;
         }
         if (!data?.token_hash) throw new Error(data?.error || "Lichess sign-in could not be completed.");
@@ -162,11 +180,46 @@ function App() {
     if (!supabase) return;
     await supabase.auth.signOut();
     setProfile(null);
-    setPage("home");
+    navigate("home");
   };
 
   const displayName = profile?.display_name || profile?.username || "Player";
-  const go = (next: Page) => setPage(next);
+  const basePath = new URL(import.meta.env.BASE_URL, window.location.origin).pathname;
+  const navigate = (next: Page) => {
+    const suffix = next === "home" ? "" : next;
+    window.history.pushState({}, "", basePath + suffix);
+    setPage(next);
+    setProfileUsername(null);
+    setMenuOpen(false);
+    setMenuSection(null);
+  };
+  const navigateProfile = (username: string) => {
+    const clean = username.toLowerCase();
+    window.history.pushState({}, "", basePath + "@/" + encodeURIComponent(clean));
+    setProfileUsername(clean);
+    setPage("profile");
+    setMenuOpen(false);
+    setMenuSection(null);
+  };
+  const go = navigate;
+  const toggleMenu = () => { setMenuOpen((open) => !open); setMenuSection(null); };
+  useEffect(() => {
+    const handlePop = () => {
+      const route = readRoute();
+      setPage(route.page);
+      setProfileUsername(route.username);
+    };
+    const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") { setMenuOpen(false); setMenuSection(null); } };
+    window.addEventListener("popstate", handlePop);
+    window.addEventListener("keydown", handleKey);
+    const recovered = new URL(window.location.href).searchParams.get("route");
+    if (recovered) window.history.replaceState({}, "", recovered);
+    return () => { window.removeEventListener("popstate", handlePop); window.removeEventListener("keydown", handleKey); };
+  }, []);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("lagfree.theme", theme);
+  }, [theme]);
   const openPlay = () => {
     setPage("play");
     if (!user) setAuthMode("signin");
@@ -187,10 +240,32 @@ function App() {
         <div className="site-buttons">
           <span className="site-status"><i />{isSupabaseConfigured ? "Cloud" : "Local mode"}</span>
           {user ? (
-            <>
-              <button id="user_tag" className="link" type="button" onClick={() => { setProfileUsername(profile?.username ?? null); setPage("profile"); }}>{displayName}</button>
-              <button className="link" type="button" onClick={signOut}>Log out</button>
-            </>
+            <div className="player-menu-wrap">
+              <button id="user_tag" className="player-menu-trigger" type="button" aria-haspopup="menu" aria-expanded={menuOpen} onClick={toggleMenu}>
+                <span>{displayName}</span><span className="player-menu-avatar" aria-hidden="true">{displayName.slice(0,1).toUpperCase()}</span>
+              </button>
+              {menuOpen && <div className="player-dropdown" role="menu" aria-label="Player menu">
+                <button role="menuitem" type="button" onClick={() => navigateProfile(profile?.username ?? "")}><span className="menu-dot" />Profile</button>
+                <button role="menuitem" type="button" onClick={() => navigate("inbox")}><span className="menu-icon">✉</span>Inbox</button>
+                <button role="menuitem" type="button" onClick={() => { setProfileOpen(true); setMenuOpen(false); }}><span className="menu-icon">⚙</span>Preferences</button>
+                <button role="menuitem" type="button" onClick={() => { void signOut(); setMenuOpen(false); }}><span className="menu-icon">⏻</span>Sign out</button>
+                <div className="player-dropdown-separator" />
+                {(["language","sound","theme","board","pieces"] as const).map((section) => (
+                  <div className="player-menu-sub" key={section}>
+                    <button type="button" role="menuitem" aria-expanded={menuSection === section} onClick={() => setMenuSection(menuSection === section ? null : section)}>
+                      <span>{section === "pieces" ? "Piece set" : section[0].toUpperCase()+section.slice(1)}</span><span className="menu-chevron">›</span>
+                    </button>
+                    {menuSection === section && <div className="player-menu-subitems">
+                      {section === "language" && <button type="button" onClick={() => setMenuSection(null)}>✓ English</button>}
+                      {section === "sound" && <button type="button" onClick={() => { const next=!soundEnabled; setSoundEnabled(next); localStorage.setItem("lagfree.sound",String(next)); }}> {soundEnabled ? "✓ Sound on" : "Sound off"} </button>}
+                      {section === "theme" && <button type="button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>✓ {theme === "dark" ? "Dark" : "Light"} · switch theme</button>}
+                      {section === "board" && <button type="button" onClick={() => { navigate("play"); setMenuOpen(false); }}>Board settings in a game</button>}
+                      {section === "pieces" && <button type="button" onClick={() => { navigate("play"); setMenuOpen(false); }}>Piece settings in a game</button>}
+                    </div>}
+                  </div>
+                ))}
+              </div>}
+            </div>
           ) : (
             <div className="signin-or-signup">
               <button className="link" type="button" onClick={() => setAuthMode("signin")}>Log in</button>
@@ -213,7 +288,7 @@ function App() {
                       <>
                         <strong>{displayName}</strong>
                         <span>@{profile?.username ?? "player"}</span>
-                        <button className="button button-empty button-no-upper" type="button" onClick={() => { setProfileUsername(profile?.username ?? null); setPage("profile"); }}>View profile</button>
+                        <button className="button button-empty button-no-upper" type="button" onClick={() => { navigateProfile(profile?.username ?? ""); }}>View profile</button>
                       </>
                     ) : (
                       <>
@@ -235,7 +310,7 @@ function App() {
                 <div className="tabs-horiz"><span>Lobby</span></div>
                 <div className="lobby__app__content">
                   {user ? (
-                    <OnlinePlay user={user} initialGameId={null} onOpenProfile={(username) => { setProfileUsername(username); setPage("profile"); }} onGameOpen={handleGameOpen} onGameClose={handleGameClose} />
+                    <OnlinePlay user={user} initialGameId={null} onOpenProfile={(username) => { navigateProfile(username); }} onGameOpen={handleGameOpen} onGameClose={handleGameClose} />
                   ) : (
                     <div className="lobby-signin">
                       <CursorMark className="lobby-signin__piece" />
@@ -278,7 +353,7 @@ function App() {
           {page === "play" && (
             <section className="content-page">
               {!isInGame && <div className="content-page-heading"><div><span className="page-kicker">FIND A GAME</span><h1>Play online</h1><p>Challenge someone, join an open game, or review a recent match.</p></div><span className="time-control-label"><CursorMark className="inline-cursor-mark" /> 8 rated time controls · no increment</span></div>}
-              {user ? <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} onOpenProfile={(username) => { setProfileUsername(username); setPage("profile"); }} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : (
+              {user ? <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} onOpenProfile={navigateProfile} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : (
                 <div className="signin-gate"><CursorMark className="gate-icon" /><h2>Sign in to play online</h2><p>Your games, rating, and challenges are connected to your player account.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="gate-secondary" onClick={() => setAuthMode("signup")}>Create an account</button></div>
               )}
             </section>
@@ -287,10 +362,17 @@ function App() {
           {page === "profile" && (
             <section className="content-page profile-content-page">
               {profileUsername ? (
-                <ProfilePage username={profileUsername} ownProfile={Boolean(user && profile?.username === profileUsername)} onEdit={() => setProfileOpen(true)} />
+                <ProfilePage username={profileUsername} ownProfile={Boolean(user && profile?.username === profileUsername)} onEdit={() => setProfileOpen(true)} onOpenProfile={navigateProfile} />
               ) : (
                 <div className="signin-gate"><CursorMark className="gate-icon" /><h2>Your player profile</h2><p>Sign in to open your player profile and view ratings across every time control.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>
               )}
+            </section>
+          )}
+
+          {page === "inbox" && (
+            <section className="content-page">
+              <div className="content-page-heading"><div><span className="page-kicker">PLAYER MESSAGES</span><h1>Inbox</h1><p>Your challenges and account notifications.</p></div></div>
+              <div className="inbox-empty"><strong>Your inbox is quiet</strong><p>Direct messages and challenge notifications aren't available yet. Open challenges are listed in the Play page.</p><button className="small-green-button" type="button" onClick={() => navigate("play")}>View open challenges</button></div>
             </section>
           )}
 
@@ -307,7 +389,7 @@ function App() {
 
       {authMode && <AuthDialog initialMode={authMode} onClose={() => { setAuthMode(null); setAuthError(""); }} onLichess={() => { void startLichessOAuth().catch((cause) => setAuthError(cause instanceof Error ? cause.message : "Could not start Lichess sign-in.")); }} externalError={authError} />}
       {passwordRecoveryOpen && <PasswordRecoveryDialog onClose={() => setPasswordRecoveryOpen(false)} />}
-      {profileOpen && user && <ProfileDialog user={user} profile={profile} onClose={() => setProfileOpen(false)} onSaved={(nextProfile) => { setProfile(nextProfile); setProfileUsername(nextProfile.username); }} onLichess={startLichessOAuth} />}
+      {profileOpen && user && <ProfileDialog user={user} profile={profile} onClose={() => setProfileOpen(false)} onSaved={(nextProfile) => { setProfile(nextProfile); navigateProfile(nextProfile.username); }} onLichess={startLichessOAuth} />}
       <footer className="site-footer">
         <span>Lag-Free Ultrabullet</span>
         <span>Independent project · Not affiliated with Lichess</span>
