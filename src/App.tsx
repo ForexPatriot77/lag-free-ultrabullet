@@ -217,6 +217,14 @@ function App() {
     return () => { window.removeEventListener("popstate", handlePop); window.removeEventListener("keydown", handleKey); };
   }, []);
   useEffect(() => {
+    const closeOutside = (event: PointerEvent) => {
+      const menu = document.querySelector(".player-menu-wrap");
+      if (menu && !menu.contains(event.target as Node)) { setMenuOpen(false); setMenuSection(null); }
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    return () => document.removeEventListener("pointerdown", closeOutside);
+  }, []);
+  useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem("lagfree.theme", theme);
   }, [theme]);
@@ -245,7 +253,7 @@ function App() {
                 <span>{displayName}</span><span className="player-menu-avatar" aria-hidden="true">{displayName.slice(0,1).toUpperCase()}</span>
               </button>
               {menuOpen && <div className="player-dropdown" role="menu" aria-label="Player menu">
-                <button role="menuitem" type="button" onClick={() => navigateProfile(profile?.username ?? "")}><span className="menu-dot" />Profile</button>
+                <button role="menuitem" type="button" onClick={() => profile?.username ? navigateProfile(profile.username) : navigate("profile")}><span className="menu-dot" />Profile</button>
                 <button role="menuitem" type="button" onClick={() => navigate("inbox")}><span className="menu-icon">✉</span>Inbox</button>
                 <button role="menuitem" type="button" onClick={() => { setProfileOpen(true); setMenuOpen(false); }}><span className="menu-icon">⚙</span>Preferences</button>
                 <button role="menuitem" type="button" onClick={() => { void signOut(); setMenuOpen(false); }}><span className="menu-icon">⏻</span>Sign out</button>
@@ -379,7 +387,7 @@ function App() {
           {(page === "watch" || page === "players") && (
             <section className="content-page">
               <div className="content-page-heading"><div><span className="page-kicker">COMMUNITY</span><h1>{page === "watch" ? "Watch games" : "Players"}</h1><p>{page === "watch" ? "See live games and follow the action." : "Find the players climbing the ultrabullet ladder."}</p></div></div>
-              {user ? <OnlinePlay user={user} initialGameId={null} /> : <div className="signin-gate compact-gate"><CursorMark className="gate-icon" /><h2>Join the community</h2><p>Sign in to view live games, recent results, and the player leaderboard.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>}
+              {user ? <OnlinePlay user={user} initialGameId={null} onOpenProfile={navigateProfile} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : <div className="signin-gate compact-gate"><CursorMark className="gate-icon" /><h2>Join the community</h2><p>Sign in to view live games, recent results, and the player leaderboard.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>}
             </section>
           )}
 
