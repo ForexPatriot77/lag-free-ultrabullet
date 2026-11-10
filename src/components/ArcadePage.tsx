@@ -15,10 +15,6 @@ const MODES: { id: ArcadeMode; label: string; description: string }[] = [
   { id: "cheat", label: "Cheat", description: "Frenzy scoring with no black tiles. Every square is a valid target." },
 ];
 
-function randomEmptyTile(occupied: number[]): number[] {
-  return createBlackTiles().filter((tile) => !occupied.includes(tile));
-}
-
 export function ArcadePage({ user, onOpenProfile }: {
   user: User | null;
   onOpenProfile: (username: string) => void;
