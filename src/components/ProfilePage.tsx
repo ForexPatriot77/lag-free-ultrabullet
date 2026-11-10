@@ -102,6 +102,8 @@ function RatingChart({ rating, history, label }: { rating: number | null; histor
 
 type RatingHistoryPoint = { rating: number; rating_pool: string; recorded_at: string };
 
+function profileHref(username: string) { return new URL(import.meta.env.BASE_URL + "@/" + encodeURIComponent(username.toLowerCase()), window.location.origin).toString(); }
+
 type ProfileGame = {
   id: string;
   opponent: string;
@@ -297,7 +299,7 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
                       <div className="profile-game-row" key={game.id}>
                         <div className={`profile-game-outcome ${game.outcome.toLowerCase()}`}>{game.outcome}</div>
                         <div className="profile-game-details">
-                          <strong>vs {game.opponentUsername ? <button type="button" className="profile-player-link" onClick={() => onOpenProfile(game.opponentUsername!)}>{game.opponent}</button> : game.opponent}</strong>
+                          <strong>vs {game.opponentUsername ? <a className="profile-player-link" href={profileHref(game.opponentUsername)} onClick={(event) => { event.preventDefault(); onOpenProfile(game.opponentUsername!); }}>{game.opponent}</a> : game.opponent}</strong>
                           <span>{game.control} · {new Date(game.finishedAt).toLocaleDateString()}</span>
                         </div>
                         <span className={`profile-game-rating ${game.ratingChange == null ? "" : game.ratingChange >= 0 ? "positive" : "negative"}`}>
