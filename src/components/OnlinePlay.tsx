@@ -99,7 +99,7 @@ function clockText(ms: number): string {
   return seconds < 1 ? seconds.toFixed(3) + "s" : seconds.toFixed(2).replace(/0+$/, "").replace(/\.$/, "") + "s";
 }
 
-export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onGameClose }: { user: User; initialGameId?: string | null; onOpenProfile?: (username: string) => void; onGameOpen?: () => void; onGameClose?: () => void }) {
+export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onGameClose, boardTheme = "brown", pieceStyle = "classic" }: { user: User; initialGameId?: string | null; onOpenProfile?: (username: string) => void; onGameOpen?: () => void; onGameClose?: () => void; boardTheme?: "brown" | "green" | "blue"; pieceStyle?: "classic" | "high-contrast" }) {
   const [gameId, setGameId] = useState<string | null>(initialGameId ?? null);
   const [game, setGame] = useState<GameRow | null>(null);
   const [moves, setMoves] = useState<MoveRow[]>([]);
@@ -681,7 +681,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
               <div className="time">{clockText(blackClock)}</div>
             </div>
 
-            <div className={`round__app__board main-board ${blindfold ? "blindfold" : ""}`}>
+            <div className={`round__app__board main-board board-theme-${boardTheme} piece-style-${pieceStyle} ${blindfold ? "blindfold" : ""}`}>
               <div className="online-board" ref={boardElement} />
             </div>
 
