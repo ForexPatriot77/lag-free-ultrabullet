@@ -401,3 +401,7 @@ html[data-theme="light"] .player-menu-subitems { background: rgba(0,0,0,.04); }
 .online-game .piece-style-high-contrast cg-board piece {
   filter: contrast(1.35) saturate(1.2) drop-shadow(0 1px 1px rgba(0,0,0,.4));
 }
+
+.player-dropdown .menu-unavailable { display: block; padding: .45rem .75rem .45rem 1.2rem; color: #a7a39b; font-size: .78rem; line-height: 1.4; }
+.player-name-link { display: inline; padding: 0; border: 0; background: transparent; color: var(--c-link, #7ba7d8); cursor: pointer; font: inherit; text-decoration: none; }
+.player-name-link:hover { text-decoration: underline; }
