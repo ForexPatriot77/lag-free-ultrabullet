@@ -169,9 +169,20 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
           .or(`white_player.eq.${person.id},black_player.eq.${person.id}`)
           .order("finished_at", { ascending: false })
           .limit(50),
+        supabase.from("arcade_scores")
+          .select("mode,score,played_at")
+          .eq("user_id", person.id)
+          .order("score", { ascending: false })
+          .limit(100),
       ]);
       if (!active) return;
-      setRating(statsResult.data as RatingData | null);\n      const bestArcadeScores = new Map<string, { mode: string; score: number; played_at: string }>();\n      for (const entry of arcadeResult.data ?? []) {\n        const previous = bestArcadeScores.get(entry.mode);\n        if (!previous || entry.score > previous.score) bestArcadeScores.set(entry.mode, entry);\n      }\n      setArcadeScores([...bestArcadeScores.values()]);
+      setRating(statsResult.data as RatingData | null);
+      const bestArcadeScores = new Map<string, { mode: string; score: number; played_at: string }>();
+      for (const entry of arcadeResult.data ?? []) {
+        const previous = bestArcadeScores.get(entry.mode);
+        if (!previous || entry.score > previous.score) bestArcadeScores.set(entry.mode, entry);
+      }
+      setArcadeScores([...bestArcadeScores.values()]);
       setRatingHistory(((historyResult.data ?? []) as RatingHistoryPoint[]).reverse());
       const gameRows = gamesResult.data ?? [];
       const opponentIds = [...new Set(gameRows
@@ -311,7 +322,17 @@ export function ProfilePage({ username, ownProfile, onEdit, onOpenProfile }: {
                 <div><strong>{winRate}%</strong><span>Win rate</span></div>
               </div>
 
-              <section className="profile-arcade-card">\n                <div className="profile-arcade-heading"><strong>Arcade records</strong><span>Personal bests</span></div>\n                <div className="profile-arcade-scores">\n                  {(["frenzy", "endurance", "cheat"] as const).map((mode) => {\n                    const entry = arcadeScores.find((item) => item.mode === mode);\n                    return <div key={mode}><span>{mode[0].toUpperCase()+mode.slice(1)}</span><strong>{entry ? entry.score.toLocaleString() : "—"}</strong><small>{entry ? new Date(entry.played_at).toLocaleDateString() : "No score yet"}</small></div>;\n                  })}\n                </div>\n              </section>\n\n              <div className="profile-activity-panel">
+              <section className="profile-arcade-card">
+                <div className="profile-arcade-heading"><strong>Arcade records</strong><span>Personal bests</span></div>
+                <div className="profile-arcade-scores">
+                  {(["frenzy", "endurance", "cheat"] as const).map((mode) => {
+                    const entry = arcadeScores.find((item) => item.mode === mode);
+                    return <div key={mode}><span>{mode[0].toUpperCase()+mode.slice(1)}</span><strong>{entry ? entry.score.toLocaleString() : "—"}</strong><small>{entry ? new Date(entry.played_at).toLocaleDateString() : "No score yet"}</small></div>;
+                  })}
+                </div>
+              </section>
+
+              <div className="profile-activity-panel">
                 <div className="profile-activity-tabs">
                   <button type="button" className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>Activity</button>
                   <button type="button" className={tab === "games" ? "active" : ""} onClick={() => setTab("games")}>Games <span>{gamesPlayed.toLocaleString()}</span></button>
