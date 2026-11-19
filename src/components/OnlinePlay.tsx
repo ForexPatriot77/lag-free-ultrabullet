@@ -51,7 +51,20 @@ type LobbyGame = {
   opponent: { username: string; display_name: string | null } | null;
 };
 
-type MyGame = {\n  id: string;\n  public_code: string;\n  status: "waiting" | "active";\n  initial_time_ms: number;\n  increment_ms: number;\n  created_at: string;\n  started_at: string | null;\n  ply: number;\n  turn_color: "white" | "black";\n  opponent: { username: string; display_name: string | null } | null;\n};\n\ntype HistoryGame = {
+type MyGame = {
+  id: string;
+  public_code: string;
+  status: "waiting" | "active";
+  initial_time_ms: number;
+  increment_ms: number;
+  created_at: string;
+  started_at: string | null;
+  ply: number;
+  turn_color: "white" | "black";
+  opponent: { username: string; display_name: string | null } | null;
+};
+
+type HistoryGame = {
   id: string;
   public_code: string;
   white_player: string;
@@ -111,7 +124,8 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
   const [game, setGame] = useState<GameRow | null>(null);
   const [moves, setMoves] = useState<MoveRow[]>([]);
   const [lobby, setLobby] = useState<LobbyGame[]>([]);
-  const [history, setHistory] = useState<HistoryGame[]>([]);\n  const [myGames, setMyGames] = useState<MyGame[]>([]);
+  const [history, setHistory] = useState<HistoryGame[]>([]);
+  const [myGames, setMyGames] = useState<MyGame[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([]);
   const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
   const [myRating, setMyRating] = useState<number | null>(null);
