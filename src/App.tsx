@@ -45,28 +45,31 @@ async function startLichessOAuth() {
 
 type Page = "home" | "play" | "watch" | "players" | "profile" | "inbox" | "arcade";
 
-function readRoute(): { page: Page; username: string | null } {
+function readRoute(): { page: Page; username: string | null; gameId: string | null } {
   const url = new URL(window.location.href);
   const recovered = url.searchParams.get("route");
   const path = recovered || url.pathname;
   const profileMatch = path.match(/\/@\/([a-zA-Z0-9_]{3,20})\/?$/);
-  if (profileMatch) return { page: "profile", username: profileMatch[1].toLowerCase() };
+  if (profileMatch) return { page: "profile", username: profileMatch[1].toLowerCase(), gameId: null };
   const normalized = path.replace(new URL(import.meta.env.BASE_URL, window.location.origin).pathname, "").replace(/^\/+|\/+$/g, "");
-  if (normalized === "inbox") return { page: "inbox", username: null };
-  if (normalized === "play") return { page: "play", username: null };
-  if (normalized === "watch") return { page: "watch", username: null };
-  if (normalized === "players") return { page: "players", username: null };
-  if (normalized === "arcade") return { page: "arcade", username: null };
-  return { page: url.searchParams.has("game") ? "play" : "home", username: null };
+  const gameMatch = normalized.match(/^game\/([a-f0-9]{10})$/i);
+  if (gameMatch) return { page: "play", username: null, gameId: gameMatch[1].toUpperCase() };
+  if (normalized === "inbox") return { page: "inbox", username: null, gameId: null };
+  if (normalized === "play") return { page: "play", username: null, gameId: null };
+  if (normalized === "watch") return { page: "watch", username: null, gameId: null };
+  if (normalized === "players") return { page: "players", username: null, gameId: null };
+  if (normalized === "arcade") return { page: "arcade", username: null, gameId: null };
+  return { page: url.searchParams.has("game") ? "play" : "home", username: null, gameId: url.searchParams.get("game") };
 }
 function App() {
   const [page, setPage] = useState<Page>(() => readRoute().page);
+  const [routeGameId, setRouteGameId] = useState<string | null>(() => readRoute().gameId);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuSection, setMenuSection] = useState<"language" | "sound" | "theme" | "board" | "pieces" | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">(() => localStorage.getItem("lagfree.theme") === "light" ? "light" : "dark");
   const [boardTheme, setBoardTheme] = useState<"brown" | "green" | "blue">(() => (localStorage.getItem("lagfree.board") as "brown" | "green" | "blue") || "brown");
   const [pieceStyle, setPieceStyle] = useState<"classic" | "high-contrast">(() => (localStorage.getItem("lagfree.pieces") as "classic" | "high-contrast") || "classic");
-  const [isInGame, setIsInGame] = useState(() => new URLSearchParams(window.location.search).has("game"));
+  const [isInGame, setIsInGame] = useState(() => Boolean(readRoute().gameId || new URLSearchParams(window.location.search).has("game")));
   const handleGameOpen = useCallback(() => { setIsInGame(true); setPage("play"); }, []);
   const handleGameClose = useCallback(() => setIsInGame(false), []);
   const [user, setUser] = useState<User | null>(null);
@@ -192,6 +195,7 @@ function App() {
     const suffix = next === "home" ? "" : next;
     window.history.pushState({}, "", basePath + suffix);
     setPage(next);
+    setRouteGameId(null);
     setProfileUsername(null);
     setMenuOpen(false);
     setMenuSection(null);
@@ -200,6 +204,7 @@ function App() {
     const clean = username.toLowerCase();
     window.history.pushState({}, "", basePath + "@/" + encodeURIComponent(clean));
     setProfileUsername(clean);
+    setRouteGameId(null);
     setPage("profile");
     setMenuOpen(false);
     setMenuSection(null);
@@ -213,6 +218,8 @@ function App() {
       const route = readRoute();
       setPage(route.page);
       setProfileUsername(route.username);
+      setRouteGameId(route.gameId);
+      setIsInGame(Boolean(route.gameId || new URLSearchParams(window.location.search).has("game")));
     };
     const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") { setMenuOpen(false); setMenuSection(null); } };
     window.addEventListener("popstate", handlePop);
@@ -367,7 +374,7 @@ function App() {
           {page === "play" && (
             <section className="content-page">
               {!isInGame && <div className="content-page-heading"><div><span className="page-kicker">FIND A GAME</span><h1>Play online</h1><p>Challenge someone, join an open game, or review a recent match.</p></div><span className="time-control-label"><CursorMark className="inline-cursor-mark" /> 8 rated time controls · no increment</span></div>}
-              {user ? <OnlinePlay user={user} initialGameId={new URLSearchParams(window.location.search).get("game")} boardTheme={boardTheme} pieceStyle={pieceStyle} onOpenProfile={navigateProfile} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : (
+              {user ? <OnlinePlay user={user} initialGameId={routeGameId ?? new URLSearchParams(window.location.search).get("game")} boardTheme={boardTheme} pieceStyle={pieceStyle} onOpenProfile={navigateProfile} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : (
                 <div className="signin-gate"><CursorMark className="gate-icon" /><h2>Sign in to play online</h2><p>Your games, rating, and challenges are connected to your player account.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="gate-secondary" onClick={() => setAuthMode("signup")}>Create an account</button></div>
               )}
             </section>
