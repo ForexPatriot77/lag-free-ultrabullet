@@ -70,7 +70,7 @@ function App() {
   const [boardTheme, setBoardTheme] = useState<"brown" | "green" | "blue">(() => (localStorage.getItem("lagfree.board") as "brown" | "green" | "blue") || "brown");
   const [pieceStyle, setPieceStyle] = useState<"classic" | "high-contrast">(() => (localStorage.getItem("lagfree.pieces") as "classic" | "high-contrast") || "classic");
   const [isInGame, setIsInGame] = useState(() => Boolean(readRoute().gameId || new URLSearchParams(window.location.search).has("game")));
-  const handleGameOpen = useCallback(() => { setIsInGame(true); setPage("play"); }, []);
+  const handleGameOpen = useCallback((gameCode: string) => { setIsInGame(true); if (page !== "play") setRouteGameId(gameCode); setPage("play"); }, [page]);
   const handleGameClose = useCallback(() => { setIsInGame(false); setRouteGameId(null); }, []);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<{ username: string; display_name: string | null; bio?: string | null } | null>(null);
