@@ -14,6 +14,7 @@ import "@lichess-org/chessground/assets/chessground.cburnett.css";
 
 type GameRow = {
   id: string;
+  public_code: string;
   white_player: string;
   black_player: string | null;
   status: "waiting" | "active" | "finished";
@@ -42,6 +43,7 @@ type MoveRow = {
 
 type LobbyGame = {
   id: string;
+  public_code: string;
   white_player: string;
   created_at: string;
   initial_time_ms: number;
@@ -51,6 +53,7 @@ type LobbyGame = {
 
 type HistoryGame = {
   id: string;
+  public_code: string;
   white_player: string;
   black_player: string | null;
   result: string | null;
@@ -63,6 +66,7 @@ type HistoryGame = {
 
 type LiveGame = {
   id: string;
+  public_code: string;
   white_player: string;
   black_player: string;
   started_at: string | null;
@@ -95,6 +99,7 @@ function destinations(chess: Chess): Map<Key, Key[]> {
 }
 
 function profileHref(username: string) { return new URL(import.meta.env.BASE_URL + "@/" + encodeURIComponent(username.toLowerCase()), window.location.origin).toString(); }
+function gameHref(code: string) { return new URL(import.meta.env.BASE_URL + "game/" + encodeURIComponent(code), window.location.origin).toString(); }
 
 function clockText(ms: number): string {
   const seconds = Math.max(0, ms / 1000);
@@ -213,25 +218,26 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
       setBoardOrientation(row.white_player === userId ? "white" : row.black_player === userId ? "black" : "white");
     }
     setMoves((data.moves ?? []) as MoveRow[]);
+    return row;
   }, [invoke, userId]);
 
   const openGame = useCallback(async (id: string, tryJoin = true) => {
     setLoading(true);
     setMessage("");
     try {
+      let openedGame: GameRow | null = null;
       try {
-        await loadState(id);
+        openedGame = await loadState(id);
       } catch (firstError) {
         if (!tryJoin) throw firstError;
         await invoke({ action: "join", gameId: id });
-        await loadState(id);
+        openedGame = await loadState(id);
       }
-      setGameId(id);
+      setGameId(openedGame?.id ?? id);
       onGameOpen?.();
       await loadMyRating();
-      const url = new URL(window.location.href);
-      url.searchParams.set("game", id);
-      window.history.replaceState({}, "", url);
+      const code = openedGame?.public_code ?? id;
+      window.history.replaceState({}, "", gameHref(code));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not open this game.");
     } finally {
@@ -429,13 +435,12 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
 
   const shareInvite = async () => {
     if (!game) return;
-    const url = new URL(window.location.href);
-    url.searchParams.set("game", game.id);
+    const url = gameHref(game.public_code);
     try {
-      await navigator.clipboard.writeText(url.toString());
-      setMessage("Challenge link copied. Send it to your opponent.");
+      await navigator.clipboard.writeText(url);
+      setMessage("Game link copied. Code: " + game.public_code);
     } catch {
-      setMessage(url.toString());
+      setMessage(url);
     }
   };
 
@@ -445,9 +450,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
     setGameId(null);
     onGameClose?.();
     orientedGameId.current = null;
-    const url = new URL(window.location.href);
-    url.searchParams.delete("game");
-    window.history.replaceState({}, "", url);
+    window.history.replaceState({}, "", new URL(import.meta.env.BASE_URL + "play", window.location.origin));
     void loadLobby();
     void loadHistory();
     void loadLeaderboard();
@@ -581,6 +584,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
               <div className="lobby-player">
                 <strong>{item.opponent?.username && onOpenProfile ? <a className="player-name-link" href={profileHref(item.opponent.username)} onClick={(event) => { event.preventDefault(); onOpenProfile(item.opponent!.username); }}>{item.opponent.display_name || item.opponent.username}</a> : (item.opponent?.display_name || item.opponent?.username || "Player")}</strong>
                 <span>{controlLabel(item.initial_time_ms, item.increment_ms)} · waiting for opponent</span>
+                <a className="online-game-link" href={gameHref(item.public_code)}>Game link · {item.public_code}</a>
               </div>
               <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id)}>
                 Join
@@ -596,6 +600,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
               <div className="lobby-player">
                 <strong>{item.opponent?.username && onOpenProfile ? <a className="player-name-link" href={profileHref(item.opponent.username)} onClick={(event) => { event.preventDefault(); onOpenProfile(item.opponent!.username); }}>{item.opponent.display_name || item.opponent.username}</a> : item.opponent?.display_name || item.opponent?.username || "Former opponent"}</strong>
                 <span>{item.result} · {item.termination} · {((item.white_player === userId ? item.white_rating_change : item.black_rating_change) ?? 0) >= 0 ? "+" : ""}{(item.white_player === userId ? item.white_rating_change : item.black_rating_change) ?? 0}</span>
+                <a className="online-game-link" href={gameHref(item.public_code)}>Review link · {item.public_code}</a>
               </div>
               <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id, false)}>
                 Review
@@ -624,6 +629,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
               <div className="lobby-player">
                 <strong>{item.white?.username && onOpenProfile ? <a className="player-name-link" href={profileHref(item.white.username)} onClick={(event) => { event.preventDefault(); onOpenProfile(item.white!.username); }}>{item.white.display_name || item.white.username}</a> : item.white?.display_name || item.white?.username || "White"} vs {item.black?.username && onOpenProfile ? <a className="player-name-link" href={profileHref(item.black.username)} onClick={(event) => { event.preventDefault(); onOpenProfile(item.black!.username); }}>{item.black.display_name || item.black.username}</a> : item.black?.display_name || item.black?.username || "Black"}</strong>
                 <span>{item.ply} half-moves · {item.turn_color} to move</span>
+                <a className="online-game-link" href={gameHref(item.public_code)}>Watch link · {item.public_code}</a>
               </div>
               <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id, false)}>
                 Watch
@@ -641,6 +647,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
               <div className="game__meta__infos">
                 <div>
                   <strong>{status}</strong>
+                  <p className="online-game-identifier">Game <a href={gameHref(game.public_code)}>{game.public_code}</a></p>
                   <p>{controlLabel(game.initial_time_ms, game.increment_ms)} · {TIME_CONTROLS.find((item) => item.initialTimeMs === game.initial_time_ms && item.incrementMs === game.increment_ms)?.category ?? "Chess"}</p>
                   <p>{isParticipant ? "You are playing" : "You are watching"} · {game.ply} half-moves</p>
                 </div>
@@ -657,10 +664,11 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
               )}
               {game.status === "waiting" && (
                 <div className="invite-box">
-                  <strong>Challenge link</strong>
-                  <p>Share this link with the person you want to play.</p>
+                  <strong>Game link</strong>
+                  <p>Every game has its own permanent link and short invite code.</p>
+                  <a className="online-game-link invite-code-link" href={gameHref(game.public_code)}>{game.public_code}</a>
                   <div className="invite-actions">
-                    <button className="online-primary" type="button" onClick={shareInvite}>Copy invite link</button>
+                    <button className="online-primary" type="button" onClick={shareInvite}>Copy game link</button>
                     <button className="online-secondary" type="button" onClick={cancelChallenge} disabled={busy}>Cancel</button>
                   </div>
                 </div>
