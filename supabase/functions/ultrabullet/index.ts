@@ -58,6 +58,34 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     return json({ ok: true });
   }
 
+  if (action === "my_games") {
+    const { data, error } = await admin
+      .from("games")
+      .select("id, public_code, white_player, black_player, status, initial_time_ms, increment_ms, created_at, started_at, ply, turn_color")
+      .or(`white_player.eq.${userId},black_player.eq.${userId}`)
+      .in("status", ["waiting", "active"])
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (error) return json({ error: error.message }, 400);
+
+    const opponents = [...new Set((data ?? []).map((g) =>
+      g.white_player === userId ? g.black_player : g.white_player
+    ).filter(Boolean))];
+    const { data: profiles } = opponents.length
+      ? await admin.from("profiles").select("id, username, display_name").in("id", opponents)
+      : { data: [] };
+    const byId = new Map((profiles ?? []).map((p) => [p.id, p]));
+    return json({
+      games: (data ?? []).map((g) => {
+        const opponentId = g.white_player === userId ? g.black_player : g.white_player;
+        return {
+          ...g,
+          opponent: opponentId ? byId.get(opponentId) ?? null : null,
+        };
+      }),
+    });
+  }
+
   if (action === "list") {
     const { data, error } = await admin
       .from("games")
