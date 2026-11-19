@@ -523,7 +523,7 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
     if (!game) return selectedControl.initialTimeMs;
     if (game.status === "active" && game.ply === 0 && game.started_at) {
       const elapsed = Date.now() + serverOffset - new Date(game.started_at).getTime();
-      return Math.max(0, 15000 - elapsed);
+      return Math.max(0, 60000 - elapsed);
     }
     const base = game.turn_color === "white" ? game.white_time_ms : game.black_time_ms;
     if (game.status !== "active" || !game.last_move_at) return base;
@@ -532,7 +532,7 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
   }, [game, serverOffset, tick]);
   const whiteClock = game
     ? game.status === "active" && game.ply === 0 && game.started_at
-      ? Math.max(0, 15000 - (Date.now() + serverOffset - new Date(game.started_at).getTime()))
+      ? Math.max(0, 60000 - (Date.now() + serverOffset - new Date(game.started_at).getTime()))
       : game.white_time_ms - (game.status === "active" && game.turn_color === "white" && game.last_move_at
         ? Math.max(0, Date.now() + serverOffset - new Date(game.last_move_at).getTime()) : 0)
     : selectedControl.initialTimeMs;
@@ -554,9 +554,9 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
 
   const status = !game ? "Choose an online game" :
     game.status === "waiting" ? "Waiting for an opponent" :
-    game.status === "finished" ? (game.termination === "aborted" ? "Game aborted · no first move within 15 seconds · no rating change" : `Game finished · ${game.result ?? ""} · ${game.termination ?? ""}`) :
+    game.status === "finished" ? (game.termination === "aborted" ? "Game aborted · White did not make the first move within 60 seconds · no rating change" : `Game finished · ${game.result ?? ""} · ${game.termination ?? ""}`) :
     !isParticipant ? "Watching live game" :
-    game.turn_color === myColor ? "Your turn" : "Opponent's turn";
+    game.turn_color === myColor ? "Your turn" : game.ply === 0 ? (myColor === "black" ? "White moves first · you're Black" : "Your turn · White moves first") : "Opponent's turn";
 
   return (
     <section className="online-section" id="online-play">
@@ -741,8 +741,8 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
               </div>
               {game.status === "active" && game.ply === 0 && (
                 <div className="first-move-deadline" role="note">
-                  <strong>15-second first-move window</strong>
-                  <span>Make the first move before it expires. Otherwise, the game is aborted and neither rating changes.</span>
+                  <strong>60-second first-move window</strong>
+                  <span>White moves first. The game is aborted only if White does not move within 60 seconds; neither rating changes.</span>
                 </div>
               )}
               {game.status === "waiting" && (
@@ -768,11 +768,11 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
           <div className="round__app">
             <div className="ruser ruser-top user-link online">
               <i className="line" />
-              <span>{boardOrientation === "white" ? "Opponent" : "You"}</span>
+              <span>{(boardOrientation === "white" ? "black" : "white") === myColor ? "You" : "Opponent"}</span>
               <span className="ruser-rating">{boardOrientation === "white" ? "Black" : "White"}</span>
             </div>
-            <div className={`rclock rclock-top ${game.status === "active" && game.turn_color === "black" ? "running" : ""}`}>
-              <div className="time">{clockText(blackClock)}</div>
+            <div className={`rclock rclock-top ${game.status === "active" && game.turn_color === (boardOrientation === "white" ? "black" : "white") ? "running" : ""}`}>
+              <div className="time">{clockText(boardOrientation === "white" ? blackClock : whiteClock)}</div>
             </div>
 
             <div className={`round__app__board main-board board-theme-${boardTheme} piece-style-${pieceStyle} ${blindfold ? "blindfold" : ""}`}>
@@ -781,11 +781,11 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
 
             <div className="ruser ruser-bottom user-link online">
               <i className="line" />
-              <span>{boardOrientation === "white" ? "You" : "Opponent"}</span>
+              <span>{(boardOrientation === "white" ? "white" : "black") === myColor ? "You" : "Opponent"}</span>
               <span className="ruser-rating">{boardOrientation === "white" ? "White" : "Black"}</span>
             </div>
-            <div className={`rclock rclock-bottom ${game.status === "active" && game.turn_color === "white" ? "running" : ""}`}>
-              <div className="time">{clockText(whiteClock)}</div>
+            <div className={`rclock rclock-bottom ${game.status === "active" && game.turn_color === (boardOrientation === "white" ? "white" : "black") ? "running" : ""}`}>
+              <div className="time">{clockText(boardOrientation === "white" ? whiteClock : blackClock)}</div>
             </div>
 
             <div className="round__app__table" />
