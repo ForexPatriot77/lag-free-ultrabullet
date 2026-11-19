@@ -61,7 +61,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (action === "list") {
     const { data, error } = await admin
       .from("games")
-      .select("id, white_player, created_at, initial_time_ms, increment_ms")
+      .select("id, public_code, white_player, created_at, initial_time_ms, increment_ms")
       .eq("status", "waiting")
       .neq("white_player", userId)
       .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
@@ -85,7 +85,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (action === "live") {
     const { data, error } = await admin
       .from("games")
-      .select("id, white_player, black_player, started_at, ply, turn_color, status")
+      .select("id, public_code, white_player, black_player, started_at, ply, turn_color, status")
       .eq("status", "active")
       .order("started_at", { ascending: false })
       .limit(25);
@@ -136,7 +136,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (action === "history") {
     const { data, error } = await admin
       .from("games")
-      .select("id, white_player, black_player, status, result, termination, created_at, finished_at, white_rating_change, black_rating_change")
+      .select("id, public_code, white_player, black_player, status, result, termination, created_at, finished_at, white_rating_change, black_rating_change")
       .or(`white_player.eq.${userId},black_player.eq.${userId}`)
       .eq("status", "finished")
       .order("finished_at", { ascending: false })
@@ -158,9 +158,18 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     });
   }
 
-  const gameId = typeof body.gameId === "string" ? body.gameId : "";
+  let gameId = typeof body.gameId === "string" ? body.gameId : "";
+  if (/^[0-9a-f]{10}$/i.test(gameId)) {
+    const { data: matchedGame, error: codeError } = await admin
+      .from("games")
+      .select("id")
+      .eq("public_code", gameId.toUpperCase())
+      .maybeSingle();
+    if (codeError || !matchedGame) return json({ error: "That game link is invalid or the game no longer exists." }, 404);
+    gameId = matchedGame.id;
+  }
   if (!gameId || !/^[0-9a-f-]{36}$/i.test(gameId)) {
-    return json({ error: "A valid game ID is required." }, 400);
+    return json({ error: "A valid game ID or game code is required." }, 400);
   }
 
   if (action === "join") {
