@@ -994,3 +994,37 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     transition: color .15s ease, background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
   }
 }
+
+
+/* Individual game links and compact public-code labels */
+.online-game-link {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: .35rem;
+  color: var(--lfu-muted, #777) !important;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .045em;
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+}
+.online-game-link:hover { color: var(--lfu-text, #333) !important; text-decoration: underline; }
+.online-game-identifier { margin-top: .25rem; color: var(--lfu-muted, #777); font-size: .72rem; }
+.online-game-identifier a { color: var(--lfu-text, #333); font-weight: 800; letter-spacing: .1em; text-decoration: none; }
+.online-game-identifier a:hover { text-decoration: underline; }
+.invite-code-link {
+  margin: .35rem 0 .7rem;
+  padding: .55rem .75rem;
+  border: 1px solid var(--lfu-border, #d4d4d4);
+  border-radius: 3px;
+  background: var(--c-bg-mid, #f2f2f2);
+  color: var(--lfu-text, #333) !important;
+  font-size: .95rem;
+  letter-spacing: .18em;
+}
+.lobby-player { min-width: 0; }
+@media (max-width: 560px) {
+  .online-game-link { font-size: .62rem; }
+  .invite-code-link { font-size: .85rem; }
+}
