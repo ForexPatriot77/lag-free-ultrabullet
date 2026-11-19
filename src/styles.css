@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700;800&display=swap');
 :root {
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -721,7 +722,6 @@ html[data-theme="light"] .player-menu-subitems { background: rgba(0,0,0,.04); }
 @media(max-width:480px) { .profile-arcade-scores { grid-template-columns:1fr; } }
 
 /* Lag Free Ultra visual identity */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
   font-family: 'Noto Sans', system-ui, sans-serif;
