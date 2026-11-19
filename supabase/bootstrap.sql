@@ -31,7 +31,7 @@ create table public.games (
   fen text not null default 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
   ply integer not null default 0 check (ply >= 0),
   result text check (result in ('1-0','0-1','1/2-1/2')),
-  termination text check (termination in ('checkmate','stalemate','draw','resignation','timeout')),
+  termination text check (termination in ('checkmate','stalemate','draw','resignation','timeout','aborted')),
   created_at timestamptz not null default now(),
   started_at timestamptz,
   last_move_at timestamptz,
@@ -43,8 +43,20 @@ create table public.games (
   ratings_applied_at timestamptz,
   constraint games_distinct_players check (black_player is null or black_player <> white_player),
   constraint games_finished_consistency check (
-    (status = 'finished' and result is not null and finished_at is not null)
-    or (status <> 'finished' and result is null and finished_at is null)
+    (
+      status = 'finished'
+      and finished_at is not null
+      and (
+        (result is not null and termination in ('checkmate','stalemate','draw','resignation','timeout'))
+        or (result is null and termination = 'aborted' and ply = 0)
+      )
+    )
+    or (
+      status <> 'finished'
+      and result is null
+      and finished_at is null
+      and termination is null
+    )
   )
 );
 
