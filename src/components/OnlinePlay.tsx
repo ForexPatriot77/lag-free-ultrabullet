@@ -106,7 +106,7 @@ function clockText(ms: number): string {
   return seconds < 1 ? seconds.toFixed(3) + "s" : seconds.toFixed(2).replace(/0+$/, "").replace(/\.$/, "") + "s";
 }
 
-export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, onGameOpen, onGameClose, boardTheme = "brown", pieceStyle = "classic" }: { user: User; view?: "play" | "watch" | "players"; initialGameId?: string | null; onOpenProfile?: (username: string) => void; onGameOpen?: () => void; onGameClose?: () => void; boardTheme?: "brown" | "green" | "blue"; pieceStyle?: "classic" | "high-contrast" }) {
+export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, onGameOpen, onGameClose, boardTheme = "brown", pieceStyle = "classic" }: { user: User; view?: "play" | "watch" | "players"; initialGameId?: string | null; onOpenProfile?: (username: string) => void; onGameOpen?: (gameCode: string) => void; onGameClose?: () => void; boardTheme?: "brown" | "green" | "blue"; pieceStyle?: "classic" | "high-contrast" }) {
   const [gameId, setGameId] = useState<string | null>(initialGameId ?? null);
   const [game, setGame] = useState<GameRow | null>(null);
   const [moves, setMoves] = useState<MoveRow[]>([]);
@@ -233,11 +233,11 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
         await invoke({ action: "join", gameId: id });
         openedGame = await loadState(id);
       }
-      setGameId(openedGame?.id ?? id);
-      onGameOpen?.();
-      await loadMyRating();
       const code = openedGame?.public_code ?? id;
+      setGameId(openedGame?.id ?? id);
       window.history.replaceState({}, "", gameHref(code));
+      onGameOpen?.(code);
+      await loadMyRating();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not open this game.");
     } finally {
