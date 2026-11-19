@@ -106,7 +106,7 @@ function clockText(ms: number): string {
   return seconds < 1 ? seconds.toFixed(3) + "s" : seconds.toFixed(2).replace(/0+$/, "").replace(/\.$/, "") + "s";
 }
 
-export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onGameClose, boardTheme = "brown", pieceStyle = "classic" }: { user: User; initialGameId?: string | null; onOpenProfile?: (username: string) => void; onGameOpen?: () => void; onGameClose?: () => void; boardTheme?: "brown" | "green" | "blue"; pieceStyle?: "classic" | "high-contrast" }) {
+export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, onGameOpen, onGameClose, boardTheme = "brown", pieceStyle = "classic" }: { user: User; view?: "play" | "watch" | "players"; initialGameId?: string | null; onOpenProfile?: (username: string) => void; onGameOpen?: () => void; onGameClose?: () => void; boardTheme?: "brown" | "green" | "blue"; pieceStyle?: "classic" | "high-contrast" }) {
   const [gameId, setGameId] = useState<string | null>(initialGameId ?? null);
   const [game, setGame] = useState<GameRow | null>(null);
   const [moves, setMoves] = useState<MoveRow[]>([]);
@@ -342,6 +342,17 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
     if (game) gameRef.current = game;
   }, [game]);
 
+  useEffect(() => {
+    if (game) return;
+    const refresh = () => {
+      if (view === "play") { void loadLobby(); void loadHistory(); }
+      if (view === "watch") void loadLiveGames();
+      if (view === "players") void loadLeaderboard();
+    };
+    const interval = window.setInterval(refresh, 10000);
+    return () => window.clearInterval(interval);
+  }, [game, view, loadLobby, loadHistory, loadLiveGames, loadLeaderboard]);
+
   const sendMove = useCallback(async (from: string, to: string) => {
     const current = gameRef.current;
     if (!current || current.status !== "active" || busy || moveInFlight.current) return;
@@ -528,9 +539,9 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
     <section className="online-section" id="online-play">
       {!game && <div className="online-heading">
         <div>
-          <span className="online-kicker">LIVE CHESS</span>
-          <h2>Online chess</h2>
-          <p>Server-validated moves · live clocks · eight no-increment time controls</p>
+          <span className="online-kicker">{view === "watch" ? "SPECTATOR LOBBY" : view === "players" ? "RATINGS" : "LIVE CHESS"}</span>
+          <h2>{view === "watch" ? "Watch games" : view === "players" ? "Players" : "Online chess"}</h2>
+          <p>{view === "watch" ? "Follow active games in real time." : view === "players" ? "Explore the leaderboard for each speed." : "Server-validated moves · live clocks · eight no-increment time controls"}</p>
           <span className="my-rating">Your {selectedControl.label} rating: <strong>{myRating ?? "Unrated"}</strong></span>
         </div>
       </div>}
@@ -539,7 +550,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
 
       {!game && (
         <div className="online-lobby">
-          <div className="lobby-create">
+          <div className="lobby-create" hidden={view !== "play"}>
             <div>
               <strong>Challenge someone</strong>
               <span>Choose your speed. Each time control has its own rating pool.</span>
@@ -576,17 +587,17 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
               {queueing && <button className="online-secondary" type="button" onClick={cancelMatchmaking}>Cancel search</button>}
             </div>
           </div>
-          {queueing && <div className="queue-status" role="status">{queueMessage}</div>}
-          {selectedControl.initialTimeMs <= 3250 && (
+          {view === "play" && queueing && <div className="queue-status" role="status">{queueMessage}</div>}
+          {view === "play" && selectedControl.initialTimeMs <= 3250 && (
             <div className="latency-warning" role="note">
               Heads-up: these ultra-short clocks still use server-validated moves. Network latency can outweigh the clock itself; peer-to-peer move transport is not available yet.
             </div>
           )}
-          <div className="lobby-list-head">
+          <div className="lobby-list-head" hidden={view !== "play"}>
             <strong>Open challenges</strong>
             <button type="button" onClick={() => void loadLobby()}>Refresh</button>
           </div>
-          {lobby.length === 0 ? (
+          {view === "play" && (lobby.length === 0 ? (
             <div className="lobby-empty">No open challenges right now. Create one and invite a friend.</div>
           ) : lobby.map((item) => (
             <div className="lobby-row" key={item.id}>
@@ -601,8 +612,9 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
               </button>
             </div>
           ))}
-          <div className="history-head"><strong>Recent games</strong><button type="button" onClick={() => void loadHistory()}>Refresh</button></div>
-          {history.length === 0 ? (
+          )}
+          <div className="history-head" hidden={view !== "play"}><strong>Recent games</strong><button type="button" onClick={() => void loadHistory()}>Refresh</button></div>
+          {view === "play" && (history.length === 0 ? (
             <div className="lobby-empty history-empty">Completed games will appear here.</div>
           ) : history.map((item) => (
             <div className="lobby-row" key={item.id}>
@@ -617,8 +629,9 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
               </button>
             </div>
           ))}
-          <div className="history-head" id="players"><strong>{selectedControl.label} leaderboard</strong><button type="button" onClick={() => void loadLeaderboard()}>Refresh</button></div>
-          {leaderboard.length === 0 ? (
+          )}
+          <div className="history-head" id="players" hidden={view !== "players"}><strong>{selectedControl.label} leaderboard</strong><button type="button" onClick={() => void loadLeaderboard()}>Refresh</button></div>
+          {view === "players" && (leaderboard.length === 0 ? (
             <div className="lobby-empty history-empty">Ratings appear after players finish their first game.</div>
           ) : leaderboard.map((player, index) => (
             <div className="lobby-row leaderboard-row" key={player.user_id}>
@@ -630,8 +643,9 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
               <strong className="leaderboard-rating">{player.rating ?? "Unrated"}</strong>
             </div>
           ))}
-          <div className="history-head" id="watch"><strong>Live games</strong><button type="button" onClick={() => void loadLiveGames()}>Refresh</button></div>
-          {liveGames.length === 0 ? (
+          )}
+          <div className="history-head" id="watch" hidden={view !== "watch"}><strong>Live games</strong><button type="button" onClick={() => void loadLiveGames()}>Refresh</button></div>
+          {view === "watch" && (liveGames.length === 0 ? (
             <div className="lobby-empty history-empty">No live games to watch right now.</div>
           ) : liveGames.map((item) => (
             <div className="lobby-row" key={item.id}>
