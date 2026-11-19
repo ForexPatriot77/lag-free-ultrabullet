@@ -51,7 +51,7 @@ type LobbyGame = {
   opponent: { username: string; display_name: string | null } | null;
 };
 
-type HistoryGame = {
+type MyGame = {\n  id: string;\n  public_code: string;\n  status: "waiting" | "active";\n  initial_time_ms: number;\n  increment_ms: number;\n  created_at: string;\n  started_at: string | null;\n  ply: number;\n  turn_color: "white" | "black";\n  opponent: { username: string; display_name: string | null } | null;\n};\n\ntype HistoryGame = {
   id: string;
   public_code: string;
   white_player: string;
@@ -111,7 +111,7 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
   const [game, setGame] = useState<GameRow | null>(null);
   const [moves, setMoves] = useState<MoveRow[]>([]);
   const [lobby, setLobby] = useState<LobbyGame[]>([]);
-  const [history, setHistory] = useState<HistoryGame[]>([]);
+  const [history, setHistory] = useState<HistoryGame[]>([]);\n  const [myGames, setMyGames] = useState<MyGame[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([]);
   const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
   const [myRating, setMyRating] = useState<number | null>(null);
@@ -160,6 +160,15 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
       setLobby((data.games ?? []) as LobbyGame[]);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not load open challenges.");
+    }
+  }, [invoke]);
+
+  const loadMyGames = useCallback(async () => {
+    try {
+      const data = await invoke({ action: "my_games" });
+      setMyGames((data.games ?? []) as MyGame[]);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not load your active games.");
     }
   }, [invoke]);
 
@@ -309,7 +318,7 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
       void loadLiveGames();
     }
     void loadMyRating();
-  }, [initialGameId, openGame, loadLobby, loadHistory, loadLeaderboard, loadLiveGames, loadMyRating]);
+  }, [initialGameId, openGame, loadLobby, loadMyGames, loadHistory, loadLeaderboard, loadLiveGames, loadMyRating]);
 
   useEffect(() => {
     if (!gameId || game?.status === "finished") return;
@@ -345,13 +354,13 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
   useEffect(() => {
     if (game) return;
     const refresh = () => {
-      if (view === "play") { void loadLobby(); void loadHistory(); }
+      if (view === "play") { void loadLobby(); void loadMyGames(); void loadHistory(); }
       if (view === "watch") void loadLiveGames();
       if (view === "players") void loadLeaderboard();
     };
     const interval = window.setInterval(refresh, 10000);
     return () => window.clearInterval(interval);
-  }, [game, view, loadLobby, loadHistory, loadLiveGames, loadLeaderboard]);
+  }, [game, view, loadLobby, loadMyGames, loadHistory, loadLiveGames, loadLeaderboard]);
 
   const sendMove = useCallback(async (from: string, to: string) => {
     const current = gameRef.current;
@@ -613,6 +622,25 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
               Heads-up: these ultra-short clocks still use server-validated moves. Network latency can outweigh the clock itself; peer-to-peer move transport is not available yet.
             </div>
           )}
+          <div className="history-head" hidden={view !== "play"}>
+            <strong>Your games</strong>
+            <button type="button" onClick={() => void loadMyGames()}>Refresh</button>
+          </div>
+          {view === "play" && (myGames.length === 0 ? (
+            <div className="lobby-empty history-empty">Your waiting challenges and active games will appear here.</div>
+          ) : myGames.map((item) => (
+            <div className="lobby-row my-game-row" key={item.id}>
+              <div className="lobby-avatar"><CursorMark /></div>
+              <div className="lobby-player">
+                <strong>{item.opponent?.display_name || item.opponent?.username || (item.status === "waiting" ? "Waiting for an opponent" : "Opponent")}</strong>
+                <span>{controlLabel(item.initial_time_ms, item.increment_ms)} · {item.status === "active" ? (item.ply === 0 ? "Game started · first move due" : `In progress · ${item.ply} half-moves`) : "Your open challenge"}</span>
+                <a className="online-game-link" href={gameHref(item.public_code)}>Game link · {item.public_code}</a>
+              </div>
+              <button type="button" className="online-join" disabled={loading} onClick={() => void openGame(item.id, false)}>
+                {item.status === "active" ? "Resume" : "Open"}
+              </button>
+            </div>
+          )))}
           <div className="lobby-list-head" hidden={view !== "play"}>
             <strong>Open challenges</strong>
             <button type="button" onClick={() => void loadLobby()}>Refresh</button>
