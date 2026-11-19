@@ -844,3 +844,153 @@ button:focus-visible, a:focus-visible {
   .lobby { width: min(100% - 1rem, 80rem); margin-top: .75rem; }
 }
 
+
+
+/* Monochrome Lichess-inspired visual refresh */
+:root {
+  color-scheme: light;
+  --lfu-page: #eeeeee;
+  --lfu-card: #ffffff;
+  --lfu-border: #d4d4d4;
+  --lfu-text: #333333;
+  --lfu-muted: #777777;
+  --lfu-blue: #444444;
+  --lfu-orange: #222222;
+  --c-bg: #eeeeee;
+  --c-bg-page: #eeeeee;
+  --c-bg-box: #ffffff;
+  --c-bg-low: #e4e4e4;
+  --c-bg-mid: #f2f2f2;
+  --c-bg-zebra: #f6f6f6;
+  --c-bg-zebra2: #eaeaea;
+  --c-bg-input: #ffffff;
+  --c-border: #d4d4d4;
+  --c-font: #555555;
+  --c-font-clear: #333333;
+  --c-font-clearer: #202020;
+  --c-font-dim: #777777;
+  --c-font-dimmer: #999999;
+  --c-primary: #555555;
+  --c-link: #333333;
+  --c-secondary: #333333;
+  --c-good: #555555;
+  --c-live: #555555;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --lfu-page: #171717;
+  --lfu-card: #222222;
+  --lfu-border: #3b3b3b;
+  --lfu-text: #dddddd;
+  --lfu-muted: #a0a0a0;
+  --lfu-blue: #dddddd;
+  --lfu-orange: #f0f0f0;
+  --c-bg: #171717;
+  --c-bg-page: #171717;
+  --c-bg-box: #222222;
+  --c-bg-low: #303030;
+  --c-bg-mid: #282828;
+  --c-bg-zebra: #292929;
+  --c-bg-zebra2: #333333;
+  --c-bg-input: #1d1d1d;
+  --c-border: #3b3b3b;
+  --c-font: #c5c5c5;
+  --c-font-clear: #e0e0e0;
+  --c-font-clearer: #f4f4f4;
+  --c-font-dim: #a0a0a0;
+  --c-font-dimmer: #858585;
+  --c-primary: #cfcfcf;
+  --c-link: #e0e0e0;
+  --c-secondary: #dddddd;
+  --c-good: #bdbdbd;
+  --c-live: #bdbdbd;
+}
+html, body { background: var(--lfu-page); color: var(--lfu-text); }
+#top {
+  background: color-mix(in srgb, var(--lfu-card) 94%, transparent);
+  color: var(--lfu-text);
+  border-bottom: 1px solid var(--lfu-border);
+  box-shadow: 0 1px 5px rgb(0 0 0 / .045);
+}
+.site-title .site-name, .site-title .site-name > span { color: var(--lfu-text); }
+#topnav section > a,
+.site-buttons .link,
+.site-status,
+.site-footer { color: var(--lfu-muted); }
+#topnav section > a:hover,
+#topnav section.active > a,
+.site-buttons .link:hover { color: var(--lfu-text); }
+#topnav section.active::after { background: var(--lfu-text); }
+.site-status i { background: #777777; }
+.button-green, .online-primary, .small-green-button,
+.auth-lichess-button, .arcade-start, .auth-submit {
+  color: #ffffff !important;
+  background: #454545 !important;
+  border-color: #454545 !important;
+  box-shadow: none !important;
+}
+.button-green:hover, .online-primary:hover, .small-green-button:hover,
+.auth-lichess-button:hover, .arcade-start:hover, .auth-submit:hover {
+  background: #303030 !important;
+  filter: none;
+}
+.button-metal, .button-empty, .online-secondary, .online-join,
+.online-board-tools button, .board-tools button {
+  color: var(--lfu-text) !important;
+  background: var(--c-bg-low) !important;
+  border-color: var(--lfu-border) !important;
+}
+.lobby__box, .lobby__app, .lobby__table, .lobby__tv,
+.signin-gate, .roadmap-card, .inbox-empty, .auth-dialog,
+.profile-dialog, .arcade-game-column, .arcade-info-card {
+  background: var(--lfu-card) !important;
+  border: 1px solid var(--lfu-border);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / .035);
+}
+.lobby__box__top, .tabs-horiz, .lobby-create,
+.lobby-list-head, .history-head, .online-heading,
+.profile-hero, .arcade-hud > div, .arcade-records {
+  background: var(--c-bg-mid) !important;
+  border-color: var(--lfu-border) !important;
+}
+.lobby__box__top .title, .tabs-horiz, .lobby__box__top h2,
+.lobby-player-card strong, .lobby-info-card strong, .about-side h2,
+.lobby-signin h1, .content-page-heading h1, .signin-gate h2,
+.arcade-heading h1, .arcade-info-card h2, .profile-hero h1 {
+  color: var(--lfu-text) !important;
+}
+.lobby-signin__piece, .gate-icon, .page-kicker, .online-kicker,
+.arcade-best, .arcade-best strong.new-best, .profile-activity-date,
+.profile-activity-medallion { color: var(--lfu-text) !important; }
+.profile-activity-medallion { background: #d7d7d7; }
+.site-footer { background: var(--c-bg-mid) !important; border-top: 1px solid var(--lfu-border); }
+a, .player-name-link, .arcade-player-link, .auth-switch { color: var(--c-link); }
+input, select, textarea, .auth-field input, .auth-field textarea {
+  color: var(--lfu-text);
+  background: var(--c-bg-input);
+  border-color: var(--lfu-border);
+}
+.online-primary, .online-secondary, .online-join, .quick-pair-option,
+.arcade-controls > button, .arcade-mode-tabs button.active {
+  border-radius: 3px;
+}
+.online-board-frame, .board-frame { background: #bdbdbd; box-shadow: 0 1px 4px rgb(0 0 0 / .12); }
+.online-board, .board { filter: grayscale(1); }
+.online-player-bar, .online-game-panel, .online-moves,
+.lobby-row, .lobby-row:nth-child(even), .online-game-status {
+  background-color: var(--lfu-card);
+}
+.online-game.round .round__app__board { filter: grayscale(1); }
+.arcade-tile.white { background: #eeeeee; }
+.arcade-tile.black { background: #333333; }
+.arcade-tile { border-color: #777777; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--lfu-text);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  button, a, .lobby__box, .lobby__app, .signin-gate {
+    transition: color .15s ease, background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+}
