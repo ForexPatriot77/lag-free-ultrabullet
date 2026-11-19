@@ -233,7 +233,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
 
   if (action === "state") {
     if (game.status === "active" && game.ply === 0 && game.started_at && isParticipant) {
-      const firstMoveDeadline = new Date(game.started_at).getTime() + 15000;
+      const firstMoveDeadline = new Date(game.started_at).getTime() + 60000;
       if (Date.now() >= firstMoveDeadline) {
         const { error } = await admin.rpc("abort_ultrabullet_game", {
           p_game_id: gameId,
@@ -280,13 +280,13 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     const firstMoveElapsed = game.ply === 0 && game.started_at
       ? Math.max(0, Date.now() - new Date(game.started_at).getTime())
       : 0;
-    if (game.ply === 0 && firstMoveElapsed >= 15000) {
+    if (game.ply === 0 && firstMoveElapsed >= 60000) {
       const { error } = await admin.rpc("abort_ultrabullet_game", {
         p_game_id: gameId,
         p_user_id: userId,
       });
       if (error) return json({ error: error.message }, 409);
-      return json({ aborted: true, message: "Game aborted: no first move was made within 15 seconds. No rating change." });
+      return json({ aborted: true, message: "Game aborted: no first move was made within 60 seconds. No rating change." });
     }
     const currentTime = game.turn_color === "white" ? game.white_time_ms : game.black_time_ms;
     if (game.ply !== 0 && elapsed >= currentTime) {
