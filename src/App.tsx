@@ -54,7 +54,7 @@ function readRoute(): { page: Page; username: string | null; gameId: string | nu
   const normalized = path.replace(new URL(import.meta.env.BASE_URL, window.location.origin).pathname, "").replace(/^\/+|\/+$/g, "");
   const gameMatch = normalized.match(/^game\/([a-f0-9]{10})$/i);
   if (gameMatch) return { page: "play", username: null, gameId: gameMatch[1].toUpperCase() };
-  if (normalized === "inbox") return { page: "inbox", username: null, gameId: null };
+  if (normalized === "inbox") return { page: "play", username: null, gameId: null };
   if (normalized === "play") return { page: "play", username: null, gameId: null };
   if (normalized === "watch") return { page: "watch", username: null, gameId: null };
   if (normalized === "players") return { page: "players", username: null, gameId: null };
@@ -241,7 +241,7 @@ function App() {
     localStorage.setItem("lagfree.theme", theme);
   }, [theme]);
   const openPlay = () => {
-    setPage("play");
+    navigate("play");
     if (!user) setAuthMode("signin");
   };
 
@@ -267,7 +267,7 @@ function App() {
               </button>
               {menuOpen && <div className="player-dropdown" role="menu" aria-label="Player menu">
                 <button role="menuitem" type="button" onClick={() => profile?.username ? navigateProfile(profile.username) : navigate("profile")}><span className="menu-dot" />Profile</button>
-                <button role="menuitem" type="button" onClick={() => navigate("inbox")}><span className="menu-icon">✉</span>Inbox</button>
+                <button role="menuitem" type="button" onClick={() => navigate("play")}><span className="menu-icon">♟</span>Challenges</button>
                 <button role="menuitem" type="button" onClick={() => { setProfileOpen(true); setMenuOpen(false); }}><span className="menu-icon">⚙</span>Preferences</button>
                 <button role="menuitem" type="button" onClick={() => { void signOut(); setMenuOpen(false); }}><span className="menu-icon">⏻</span>Sign out</button>
                 <div className="player-dropdown-separator" />
@@ -374,7 +374,7 @@ function App() {
           {page === "play" && (
             <section className="content-page">
               {!isInGame && <div className="content-page-heading"><div><span className="page-kicker">FIND A GAME</span><h1>Play online</h1><p>Challenge someone, join an open game, or review a recent match.</p></div><span className="time-control-label"><CursorMark className="inline-cursor-mark" /> 8 rated time controls · no increment</span></div>}
-              {user ? <OnlinePlay user={user} initialGameId={routeGameId ?? new URLSearchParams(window.location.search).get("game")} boardTheme={boardTheme} pieceStyle={pieceStyle} onOpenProfile={navigateProfile} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : (
+              {user ? <OnlinePlay user={user} view="play" initialGameId={routeGameId ?? new URLSearchParams(window.location.search).get("game")} boardTheme={boardTheme} pieceStyle={pieceStyle} onOpenProfile={navigateProfile} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : (
                 <div className="signin-gate"><CursorMark className="gate-icon" /><h2>Sign in to play online</h2><p>Your games, rating, and challenges are connected to your player account.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button><button className="gate-secondary" onClick={() => setAuthMode("signup")}>Create an account</button></div>
               )}
             </section>
@@ -404,7 +404,7 @@ function App() {
           {(page === "watch" || page === "players") && (
             <section className="content-page">
               <div className="content-page-heading"><div><span className="page-kicker">COMMUNITY</span><h1>{page === "watch" ? "Watch games" : "Players"}</h1><p>{page === "watch" ? "See live games and follow the action." : "Find the players climbing the ultrabullet ladder."}</p></div></div>
-              {user ? <OnlinePlay user={user} initialGameId={null} boardTheme={boardTheme} pieceStyle={pieceStyle} onOpenProfile={navigateProfile} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : <div className="signin-gate compact-gate"><CursorMark className="gate-icon" /><h2>Join the community</h2><p>Sign in to view live games, recent results, and the player leaderboard.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>}
+              {user ? <OnlinePlay user={user} view={page} initialGameId={null} boardTheme={boardTheme} pieceStyle={pieceStyle} onOpenProfile={navigateProfile} onGameOpen={handleGameOpen} onGameClose={handleGameClose} /> : <div className="signin-gate compact-gate"><CursorMark className="gate-icon" /><h2>Join the community</h2><p>Sign in to view live games, recent results, and the player leaderboard.</p><button className="small-green-button" onClick={() => setAuthMode("signin")}>Log in</button></div>}
             </section>
           )}
 
