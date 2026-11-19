@@ -210,11 +210,11 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
     // transit time from the player's clock estimate.
     const midpoint = requestStartedAt + (responseReceivedAt - requestStartedAt) / 2;
     if (requestId !== stateRequestSequence.current) return null;
+    const row = data.game as GameRow;
     setServerOffset((data.serverTime ?? responseReceivedAt) - midpoint);
-    setGame(data.game as GameRow);
+    setGame(row);
     if (orientedGameId.current !== id) {
       orientedGameId.current = id;
-      const row = data.game as GameRow;
       setBoardOrientation(row.white_player === userId ? "white" : row.black_player === userId ? "black" : "white");
     }
     setMoves((data.moves ?? []) as MoveRow[]);
