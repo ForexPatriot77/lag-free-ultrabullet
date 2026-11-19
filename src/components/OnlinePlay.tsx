@@ -200,7 +200,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
     setMyRating(data?.[column] ?? null);
   }, [userId, selectedControl.initialTimeMs]);
 
-  const loadState = useCallback(async (id: string) => {
+  const loadState = useCallback(async (id: string): Promise<GameRow | null> => {
     const requestId = ++stateRequestSequence.current;
     const requestStartedAt = Date.now();
     const data = await invoke({ action: "state", gameId: id });
@@ -209,7 +209,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
     // request midpoint to avoid systematically subtracting the full response
     // transit time from the player's clock estimate.
     const midpoint = requestStartedAt + (responseReceivedAt - requestStartedAt) / 2;
-    if (requestId !== stateRequestSequence.current) return;
+    if (requestId !== stateRequestSequence.current) return null;
     setServerOffset((data.serverTime ?? responseReceivedAt) - midpoint);
     setGame(data.game as GameRow);
     if (orientedGameId.current !== id) {
@@ -444,6 +444,16 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
     }
   };
 
+  const copyGameCode = async () => {
+    if (!game) return;
+    try {
+      await navigator.clipboard.writeText(game.public_code);
+      setMessage("Game code copied: " + game.public_code);
+    } catch {
+      setMessage("Game code: " + game.public_code);
+    }
+  };
+
   const backToLobby = () => {
     setGame(null);
     setMoves([]);
@@ -669,6 +679,7 @@ export function OnlinePlay({ user, initialGameId, onOpenProfile, onGameOpen, onG
                   <a className="online-game-link invite-code-link" href={gameHref(game.public_code)}>{game.public_code}</a>
                   <div className="invite-actions">
                     <button className="online-primary" type="button" onClick={shareInvite}>Copy game link</button>
+                    <button className="online-secondary" type="button" onClick={copyGameCode}>Copy code</button>
                     <button className="online-secondary" type="button" onClick={cancelChallenge} disabled={busy}>Cancel</button>
                   </div>
                 </div>
