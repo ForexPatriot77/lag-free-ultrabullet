@@ -263,3 +263,133 @@
 @media (max-width: 520px) {
   .quick-pair-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+// Dedicated responsive game layout for the standalone app.
+// Lila's default round grid assumes the full Lichess page shell and its
+// viewport-driven col1/col2/col3 breakpoints. Our game is inside a narrower
+// application content column, so those breakpoints can collapse the board.
+// Keep the board as an explicit square grid item at every desktop size.
+.online-game.round {
+  display: grid;
+  grid-template-columns: minmax(14rem, 0.72fr) minmax(0, 1.28fr);
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "side app"
+    "under under";
+  gap: 1rem;
+  width: min(100%, 88rem);
+  margin-inline: auto;
+  align-items: start;
+}
+
+.online-game.round .round__side {
+  grid-area: side;
+  width: 100%;
+  min-width: 0;
+  align-self: start;
+}
+
+.online-game.round .round__app {
+  grid-area: app;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, 17rem);
+  grid-template-rows: auto auto minmax(7rem, 1fr) auto auto auto;
+  grid-template-areas:
+    "board user-top"
+    "board clock-top"
+    "board moves"
+    "board clock-bot"
+    "board user-bot"
+    "board controls";
+  gap: 0.45rem 0.8rem;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  align-items: start;
+}
+
+.online-game.round .round__app__board {
+  grid-area: board;
+  display: block;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  aspect-ratio: 1;
+  align-self: start;
+  overflow: hidden;
+}
+
+.online-game.round .round__app__board .online-board {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.online-game.round .ruser-top { grid-area: user-top; }
+.online-game.round .rclock-top { grid-area: clock-top; }
+.online-game.round .rmoves {
+  grid-area: moves;
+  width: 100%;
+  min-width: 0;
+  min-height: 7rem;
+  max-height: min(38vh, 24rem);
+  overflow: auto;
+}
+.online-game.round .rclock-bottom { grid-area: clock-bot; }
+.online-game.round .ruser-bottom { grid-area: user-bot; }
+.online-game.round .rcontrols {
+  grid-area: controls;
+  min-width: 0;
+  width: 100%;
+}
+.online-game.round .round__app__table { display: none; }
+.online-game.round .round__underboard {
+  grid-area: under;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .online-game.round {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "app" "side" "under";
+    width: min(100%, 44rem);
+  }
+  .online-game.round .round__app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto auto auto auto auto;
+    grid-template-areas:
+      "user-top"
+      "clock-top"
+      "board"
+      "clock-bot"
+      "user-bot"
+      "moves"
+      "controls";
+    gap: 0.3rem;
+  }
+  .online-game.round .round__app__board {
+    width: min(100%, 72vh);
+    justify-self: center;
+  }
+  .online-game.round .rmoves {
+    max-height: 14rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .online-game.round .round__side .game__meta {
+    padding: 0.75rem;
+  }
+  .online-game.round .round__app .ricons {
+    gap: 0.25rem;
+  }
+  .online-game.round .round__app .ricons .fbt {
+    min-height: 2rem;
+    padding: 0.3rem 0.45rem;
+    font-size: 0.78rem;
+  }
+}
