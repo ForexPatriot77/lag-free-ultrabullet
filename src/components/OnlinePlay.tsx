@@ -612,7 +612,6 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
               </button>
             </div>
           ))}
-          )}
           <div className="history-head" hidden={view !== "play"}><strong>Recent games</strong><button type="button" onClick={() => void loadHistory()}>Refresh</button></div>
           {view === "play" && (history.length === 0 ? (
             <div className="lobby-empty history-empty">Completed games will appear here.</div>
@@ -629,7 +628,6 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
               </button>
             </div>
           ))}
-          )}
           <div className="history-head" id="players" hidden={view !== "players"}><strong>{selectedControl.label} leaderboard</strong><button type="button" onClick={() => void loadLeaderboard()}>Refresh</button></div>
           {view === "players" && (leaderboard.length === 0 ? (
             <div className="lobby-empty history-empty">Ratings appear after players finish their first game.</div>
@@ -643,7 +641,6 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
               <strong className="leaderboard-rating">{player.rating ?? "Unrated"}</strong>
             </div>
           ))}
-          )}
           <div className="history-head" id="watch" hidden={view !== "watch"}><strong>Live games</strong><button type="button" onClick={() => void loadLiveGames()}>Refresh</button></div>
           {view === "watch" && (liveGames.length === 0 ? (
             <div className="lobby-empty history-empty">No live games to watch right now.</div>
