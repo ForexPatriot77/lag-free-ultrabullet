@@ -587,6 +587,26 @@ export function OnlinePlay({ user, view = "play", initialGameId, onOpenProfile, 
               {queueing && <button className="online-secondary" type="button" onClick={cancelMatchmaking}>Cancel search</button>}
             </div>
           </div>
+          <div className="quick-pair-picker players-control-picker" hidden={view !== "players"}>
+            <div className="quick-pair-picker__heading">
+              <strong>Rating pool</strong>
+              <span>Choose which speed leaderboard to view.</span>
+            </div>
+            <div className="quick-pair-grid">
+              {TIME_CONTROLS.map((item) => (
+                <button
+                  key={item.initialTimeMs + "-" + item.incrementMs}
+                  type="button"
+                  className={`quick-pair-option ${selectedControl.initialTimeMs === item.initialTimeMs ? "selected" : ""}`}
+                  aria-pressed={selectedControl.initialTimeMs === item.initialTimeMs}
+                  onClick={() => setSelectedControl(item)}
+                >
+                  <strong>{item.label}</strong>
+                  <span>{item.category}</span>
+                </button>
+              ))}
+            </div>
+          </div>
           {view === "play" && queueing && <div className="queue-status" role="status">{queueMessage}</div>}
           {view === "play" && selectedControl.initialTimeMs <= 3250 && (
             <div className="latency-warning" role="note">
