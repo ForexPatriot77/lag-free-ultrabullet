@@ -1028,3 +1028,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .online-game-link { font-size: .62rem; }
   .invite-code-link { font-size: .85rem; }
 }
+
+
+/* Keep view-specific lobby sections hidden even when component styles set display. */
+[hidden] { display: none !important; }
